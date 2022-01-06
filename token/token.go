@@ -1,58 +1,37 @@
-package jsonpath
+package token
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/evilmokeyinc/jsonpath/errors"
 )
 
-type tokenOperation string
-
-// TODO: NOTE
-// SCRIPT @ is current object/array
-// FILTER @ is child element
-
-const (
-	tokenOperationRoot      tokenOperation = "$"
-	tokenOperationCurrent   tokenOperation = "@"
-	tokenOperationWildcard  tokenOperation = "*"
-	tokenOperationRecursive tokenOperation = ".."
-	tokenOperationKey       tokenOperation = "KEY"
-	tokenOperationFilter    tokenOperation = "FILTER"
-	tokenOperationRange     tokenOperation = "RANGE"
-	tokenOperationScript    tokenOperation = "SCRIPT"
-	tokenOperationIndex     tokenOperation = "INDEX"
-	tokenOperationUnion     tokenOperation = "UNION"
-)
-
-type token struct {
-	operation tokenOperation
-	arguments []interface{}
+type Token interface {
+	Apply(root, current interface{}, next []Token) (interface{}, error)
 }
 
-// TODO: either here or in functions that call tokenize
-// 1. validate scripts and filters are valid syntax (@. etc)
-// 2. validate that subset commands [] are valid (must be scripts or numerical operations or single quotes)
-func tokenize(query string) ([]string, error) {
+func Tokenize(query string) ([]string, string, error) {
 	if query == "" {
-		return nil, errors.ErrQueryNotSpecified
+		return nil, query, errors.ErrQueryNotSpecified
 	}
 
 	tokens := []string{}
 	tokenString := ""
+	remainder := query
 
+tokenize:
 	for idx, rne := range query {
 		tokenString += string(rne)
+		remainder = remainder[1:]
 
 		if idx == 0 {
 			if tokenString != "$" && tokenString != "@" {
-				return nil, errors.ErrInvalidInitialToken
+				return nil, "", errors.ErrInvalidInitialToken
 			}
 
 			if next := query[1]; next != '.' && next != '[' {
-				return nil, errors.ErrInvalidInitialToken
+				return nil, "", errors.ErrInvalidInitialToken
 			}
 
 			tokens = append(tokens, tokenString[:])
@@ -98,7 +77,7 @@ func tokenize(query string) ([]string, error) {
 		if strings.Contains(tokenString, "[") {
 			startCount := strings.Count(tokenString, "[")
 			endCount := strings.Count(tokenString, "]")
-			// if end bracket, as long as it's not been escaped
+
 			if rne == ']' && startCount == endCount {
 				if tokenString[0] == '.' {
 					tokenString = tokenString[1:]
@@ -122,6 +101,26 @@ func tokenize(query string) ([]string, error) {
 
 			tokenString = "."
 			continue
+		} else {
+			// check for script operators outside of subscript
+			switch rne {
+			case '*':
+				// * is an operator if it is part of a larger token
+				// * is a wildcard if by self or with proceding .
+				if tokenString == ".*" || tokenString == "*" {
+					continue
+				}
+				fallthrough
+			case '-', '+', '/', '%', '>', '<', '=', '!':
+				// strip operator and break loop
+				tokenString = tokenString[0 : len(tokenString)-1]
+				remainder = query[idx:]
+
+				break tokenize
+			default:
+				// not a script operator
+				continue
+			}
 		}
 	}
 
@@ -134,10 +133,14 @@ func tokenize(query string) ([]string, error) {
 		tokens = append(tokens, tokenString[:])
 	}
 
-	return tokens, nil
+	return tokens, remainder, nil
 }
 
-func parseToken(tkn string) (*token, error) {
+// TODO: NOTE
+// SCRIPT @ is current object/array
+// FILTER @ is child element
+// do we want to parse/validate scripts?
+func Parse(tokenString string) (Token, error) {
 
 	isScript := func(token string) bool {
 		return strings.HasPrefix(token, "(") && strings.HasSuffix(token, ")")
@@ -147,73 +150,58 @@ func parseToken(tkn string) (*token, error) {
 		return strings.HasPrefix(token, "'") && strings.HasSuffix(token, "'")
 	}
 
-	tkn = strings.TrimSpace(tkn)
-	if tkn == "" {
+	tokenString = strings.TrimSpace(tokenString)
+	if tokenString == "" {
 		return nil, errors.GetInvalidTokenError("token can not be empty")
 	}
 
-	if tkn == "$" {
-		return &token{operation: tokenOperationRoot}, nil
+	if tokenString == "$" {
+		return &rootToken{}, nil
 	}
-	if tkn == "@" {
-		return &token{operation: tokenOperationCurrent}, nil
+	if tokenString == "@" {
+		return &currentToken{}, nil
 	}
-	if tkn == "*" {
-		return &token{operation: tokenOperationWildcard}, nil
+	if tokenString == "*" {
+		return &wildcardToken{}, nil
 	}
-	if tkn == ".." {
-		return &token{operation: tokenOperationRecursive}, nil
+	if tokenString == ".." {
+		return &recursiveToken{}, nil
 	}
 
-	if !strings.HasPrefix(tkn, "[") {
+	if !strings.HasPrefix(tokenString, "[") {
 
-		if _, err := strconv.Atoi(tkn); err == nil {
+		if _, err := strconv.Atoi(tokenString); err == nil {
 			return nil, errors.GetInvalidTokenError("index specified as key")
 		}
 
-		return &token{
-			operation: tokenOperationKey,
-			arguments: []interface{}{fmt.Sprintf("'%s'", tkn)},
-		}, nil
+		if tokenString == "length" {
+			return &lengthToken{}, nil
+		}
+
+		return &keyToken{key: tokenString}, nil
 
 	}
 
-	if !strings.HasSuffix(tkn, "]") {
+	if !strings.HasSuffix(tokenString, "]") {
 		return nil, errors.GetInvalidTokenError("missing subscript close")
 	}
 	// subscript, or child operator
 
-	/**
-	if in brackets it is one of the following:
-	wild: wildcard symbol, states that everything in array or map should be returned
-	index: an integer, positive or negative, an index in an array
-	key: a string quoted with 'single quotes', the key in a map
-	filter: a filter query ?(x), used to filter an array or map based on child attributes
-	query: a script (x), used to calculate an index or key based on the current attribute
-	range: a range, two or three values seperated by : characters used to determine the range of an array to return. they could be indexes or scripts that return indexes
-	union: a union, two or more comma , seperated values. they can be indexes, keys, or a filter that returns an index or key. used to state the elements in an array or map to return
-	**/
-
-	subscript := strings.TrimSpace(tkn[1 : len(tkn)-1])
+	subscript := strings.TrimSpace(tokenString[1 : len(tokenString)-1])
 	if subscript == "" {
 		return nil, errors.GetInvalidTokenError("empty subscript")
 	}
 
 	if subscript == "*" {
 		// range all
-		return &token{
-			operation: tokenOperationWildcard,
-		}, nil
+		return &wildcardToken{}, nil
 	} else if strings.HasPrefix(subscript, "?") {
 		// filter
 		if !strings.HasPrefix(subscript, "?(") || !strings.HasSuffix(subscript, ")") {
 			return nil, errors.GetInvalidTokenError("expected filter '?(' prefix and ')' suffix")
 		}
-		return &token{
-			operation: tokenOperationFilter,
-			arguments: []interface{}{
-				strings.TrimSpace(subscript[:]),
-			},
+		return &filterToken{
+			expression: strings.TrimSpace(subscript[2 : len(subscript)-1]),
 		}, nil
 	}
 
@@ -319,93 +307,129 @@ func parseToken(tkn string) (*token, error) {
 		}
 	}
 
-	var operation tokenOperation
-
 	if len(args) == 1 {
 		// key, index, or script
 		arg := args[0]
 		if strArg, ok := arg.(string); ok {
 			if isKey(strArg) {
-				operation = tokenOperationKey
+				return &keyToken{
+					key: strArg[1 : len(strArg)-1],
+				}, nil
 			} else if isScript(strArg) {
-				operation = tokenOperationScript
-			} else {
-				return nil, errors.GetInvalidTokenError("unexpected string")
+				return &scriptToken{
+					expression: strArg[1 : len(strArg)-1],
+				}, nil
 			}
-		} else if _, ok := arg.(int); ok {
-			operation = tokenOperationIndex
-		} else {
-			return nil, errors.GetInvalidTokenError("invalid index")
+			return nil, errors.GetInvalidTokenError("unexpected string")
+		} else if intArg, ok := arg.(int); ok {
+			return &indexToken{index: intArg}, nil
 		}
-	} else {
-		// range or union
-		colonCount := 0
-		lastWasColon := false
-		commaCount := 0
-
-		includesKeys := false
-		justArgs := []interface{}{}
-
-		for _, arg := range args {
-			switch arg {
-			case ":":
-				colonCount++
-				if lastWasColon {
-					justArgs = append(justArgs, nil)
-				}
-				lastWasColon = true
-				continue
-			case ",":
-				commaCount++
-				break
-			default:
-				justArgs = append(justArgs, arg)
-				if strArg, ok := arg.(string); ok {
-					if isKey(strArg) {
-						includesKeys = true
-					}
-				}
-				break
-			}
-			lastWasColon = false
-		}
-
-		args = justArgs
-
-		if colonCount > 0 && commaCount > 0 {
-			return nil, errors.GetInvalidTokenError("cannot specify a range in a union")
-		} else if commaCount > 0 {
-			operation = tokenOperationUnion
-
-			// we should always have one more comma than arg
-			if commaCount >= len(args) {
-				return nil, errors.GetInvalidTokenError("empty argument in union")
-			}
-			for _, arg := range args {
-				if strArg, ok := arg.(string); ok {
-					if !isScript(strArg) && !isKey(strArg) {
-						return nil, errors.GetInvalidTokenError("unexpected union argument")
-					}
-				} else if _, ok := arg.(int); !ok {
-					return nil, errors.GetInvalidTokenError("unexpected union argument")
-				}
-			}
-		} else if colonCount > 0 {
-			if colonCount > 2 {
-				return nil, errors.GetInvalidTokenError("incorrect number of arguments in range")
-			}
-			if colonCount == 1 && colonCount == len(args) {
-				args = append(args, nil)
-			}
-			operation = tokenOperationRange
-			if includesKeys {
-				return nil, errors.GetInvalidTokenError("only integer or scripts allowed in range arguments")
-			}
-		}
+		return nil, errors.GetInvalidTokenError("invalid index")
 	}
 
-	return &token{
-		operation: operation,
-		arguments: args,
-	}, nil
+	// range or union
+	colonCount := 0
+	lastWasColon := false
+	commaCount := 0
+
+	// includesKeys := false
+	justArgs := []interface{}{}
+
+	for _, arg := range args {
+		switch arg {
+		case ":":
+			colonCount++
+			if lastWasColon {
+				justArgs = append(justArgs, nil)
+			}
+			lastWasColon = true
+			continue
+		case ",":
+			commaCount++
+			break
+		default:
+			justArgs = append(justArgs, arg)
+			break
+		}
+		lastWasColon = false
+	}
+
+	args = justArgs
+
+	if colonCount > 0 && commaCount > 0 {
+		return nil, errors.GetInvalidTokenError("cannot specify a range in a union")
+	} else if commaCount > 0 {
+		// Union
+
+		// we should always have one more comma than arg
+		if commaCount >= len(args) {
+			return nil, errors.GetInvalidTokenError("empty argument in union")
+		}
+		for idx, arg := range args {
+			if strArg, ok := arg.(string); ok {
+				// TODO: if script, wrap in scriptToken?
+				if isScript(strArg) {
+					arg = &scriptToken{
+						expression: strArg[1 : len(strArg)-1],
+					}
+					args[idx] = arg
+				} else if isKey(strArg) {
+					args[idx] = strArg[1 : len(strArg)-1]
+				} else {
+					return nil, errors.GetInvalidTokenError("unexpected union argument")
+				}
+			} else if _, ok := arg.(int); !ok {
+				return nil, errors.GetInvalidTokenError("unexpected union argument")
+			}
+		}
+
+		return &unionToken{arguments: args}, nil
+	} else if colonCount > 0 {
+		// Range
+		if colonCount > 2 {
+			return nil, errors.GetInvalidTokenError("incorrect number of arguments in range")
+		}
+		if colonCount == 1 && colonCount == len(args) {
+			args = append(args, nil)
+		}
+
+		var from, to, step interface{} = args[0], args[1], 1
+		if len(args) > 2 {
+			step = args[2]
+		}
+
+		if strFrom, ok := from.(string); ok {
+			if !isScript(strFrom) {
+				return nil, errors.GetInvalidTokenError("only integer or scripts allowed in range arguments")
+			}
+			from = &scriptToken{
+				expression: strFrom[1 : len(strFrom)-1],
+			}
+		}
+		if strTo, ok := to.(string); ok {
+			if !isScript(strTo) {
+				return nil, errors.GetInvalidTokenError("only integer or scripts allowed in range arguments")
+			}
+			to = &scriptToken{
+				expression: strTo[1 : len(strTo)-1],
+			}
+		}
+		if strStep, ok := step.(string); ok {
+			if !isScript(strStep) {
+				return nil, errors.GetInvalidTokenError("only integer or scripts allowed in range arguments")
+			}
+			step = &scriptToken{
+				expression: strStep[1 : len(strStep)-1],
+			}
+		}
+
+		return &rangeToken{
+			from: from,
+			to:   to,
+			step: step,
+		}, nil
+	}
+
+	// TODO : invalid token, too many arguments and not union or range
+	panic("should not get here")
 }

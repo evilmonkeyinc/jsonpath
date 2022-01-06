@@ -13,13 +13,16 @@ var (
 	ErrInvalidToken = fmt.Errorf("invalid token")
 
 	// TODO : tody up and test errors
-	ErrGetKeyFromNilMap     error = fmt.Errorf("cannot get key from nil map")
-	ErrGetIndexFromNilSlice error = fmt.Errorf("cannot get index from nil slice")
-	ErrGetRangeFromNilSlice error = fmt.Errorf("cannot get range from nil slice")
+	ErrGetKeyFromNilMap         error = fmt.Errorf("cannot get key from nil map")
+	ErrGetIndexFromNilSlice     error = fmt.Errorf("cannot get index from nil slice")
+	ErrGetRangeFromNilSlice     error = fmt.Errorf("cannot get range from nil slice")
+	ErrGetUnionFromNilObject    error = fmt.Errorf("cannot get union from nil object")
+	ErrGetElementsFromNilObject error = fmt.Errorf("cannot get elements from nil object")
 
-	ErrInvalidObject      error = fmt.Errorf("invalid object")
-	ErrInvalidObjectMap   error = fmt.Errorf("%w. expected map", ErrInvalidObject)
-	ErrInvalidObjectSlice error = fmt.Errorf("%w. expected slice", ErrInvalidObject)
+	ErrInvalidObject           error = fmt.Errorf("invalid object")
+	ErrInvalidObjectMap        error = fmt.Errorf("%w. expected map", ErrInvalidObject)
+	ErrInvalidObjectSlice      error = fmt.Errorf("%w. expected slice", ErrInvalidObject)
+	ErrInvalidObjectMapOrSlice error = fmt.Errorf("%w. expected map or slice", ErrInvalidObject)
 
 	ErrKeyNotFound error = fmt.Errorf("key not found in object")
 

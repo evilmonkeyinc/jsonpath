@@ -1,6 +1,13 @@
 package jsonpath
 
-func Find(queryPath string, jsonData string) ([]interface{}, error) {
+import (
+	"encoding/json"
+	"fmt"
+
+	"github.com/evilmokeyinc/jsonpath/token"
+)
+
+func Find(queryPath string, jsonData string) (interface{}, error) {
 	jsonPath, err := Compile(queryPath)
 	if err != nil {
 		return nil, err
@@ -19,20 +26,21 @@ func Compile(queryPath string) (*JSONPath, error) {
 
 type JSONPath struct {
 	queryPath string
-	tokens    []*token
+	tokens    []token.Token
+	// TODO : marshaller should be customizable
 }
 
 func (query *JSONPath) compile(queryPath string) error {
 	query.queryPath = queryPath
 
-	tokenStrings, err := tokenize(queryPath)
+	tokenStrings, _, err := token.Tokenize(queryPath)
 	if err != nil {
 		return err
 	}
 
-	tokens := make([]*token, len(tokenStrings))
+	tokens := make([]token.Token, len(tokenStrings))
 	for idx, tokenString := range tokenStrings {
-		token, err := parseToken(tokenString)
+		token, err := token.Parse(tokenString)
 		if err != nil {
 			return err
 		}
@@ -43,7 +51,25 @@ func (query *JSONPath) compile(queryPath string) error {
 	return nil
 }
 
-func (query *JSONPath) Find(jsonData interface{}) ([]interface{}, error) {
+func (query *JSONPath) Find(jsonData string) (interface{}, error) {
 
-	return nil, nil
+	root := make(map[string]interface{})
+	// TODO : should be able to pass in marshaller to JSONPath
+	if err := json.Unmarshal([]byte(jsonData), &root); err != nil {
+		return nil, fmt.Errorf("json marshalling error : %s", err.Error())
+	}
+
+	if len(query.tokens) == 0 {
+		// TODO : var error
+		return nil, fmt.Errorf("invalid query: no tokens")
+	}
+
+	found, err := query.tokens[0].Apply(root, root, query.tokens[1:])
+	if err != nil {
+		return nil, err
+	}
+	if array, ok := found.([]interface{}); ok {
+		return array, nil
+	}
+	return found, nil
 }
