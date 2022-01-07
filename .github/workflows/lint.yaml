@@ -1,0 +1,26 @@
+name: Lint
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-go@v2
+      with:
+        go-version: '1.17'
+    - name: Install dependencies
+      run: |
+        go version
+        go install golang.org/x/lint/golint@latest
+        go mod download
+    - name: Run Lint
+      run: |
+        golint -set_exit_status=1 ./...
