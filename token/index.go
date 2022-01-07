@@ -15,7 +15,7 @@ func (token *indexToken) Apply(root, current interface{}, next []Token) (interfa
 
 	objType := reflect.TypeOf(current)
 	if objType == nil {
-		return nil, errors.ErrGetIndexFromNilSlice
+		return nil, errors.ErrGetIndexFromNilArray
 	}
 	switch objType.Kind() {
 	case reflect.Array, reflect.Slice:
@@ -35,6 +35,6 @@ func (token *indexToken) Apply(root, current interface{}, next []Token) (interfa
 		}
 		return value, nil
 	default:
-		return nil, errors.ErrInvalidObjectSlice
+		return nil, errors.ErrInvalidObjectArray
 	}
 }

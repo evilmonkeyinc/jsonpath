@@ -37,15 +37,15 @@ func Test_IndexToken_Apply(t *testing.T) {
 				obj: nil,
 			},
 			expected: expected{
-				err: "cannot get index from nil slice",
+				err: "cannot get index from nil array",
 			},
 		},
 		{
 			input: input{
-				obj: "not a slice",
+				obj: "not a array",
 			},
 			expected: expected{
-				err: "invalid object. expected slice",
+				err: "invalid object. expected array",
 			},
 		},
 		{

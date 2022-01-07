@@ -33,10 +33,10 @@ func Test_getUnion(t *testing.T) {
 		},
 		{
 			input: input{
-				obj: "not a map or slice",
+				obj: "not a array or map",
 			},
 			expected: expected{
-				err: "invalid object. expected map or slice",
+				err: "invalid object. expected array or map",
 			},
 		},
 		{
@@ -105,7 +105,7 @@ func Test_getUnion(t *testing.T) {
 				keys: []interface{}{"one"},
 			},
 			expected: expected{
-				err: "invalid parameter. expected int keys",
+				err: "invalid parameter. expected integer keys",
 			},
 		},
 		{

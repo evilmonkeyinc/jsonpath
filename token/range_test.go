@@ -35,15 +35,15 @@ func Test_getRange(t *testing.T) {
 				obj: nil,
 			},
 			expected: expected{
-				err: "cannot get range from nil slice",
+				err: "cannot get range from nil array",
 			},
 		},
 		{
 			input: input{
-				obj: "not a slice",
+				obj: "not a array",
 			},
 			expected: expected{
-				err: "invalid object. expected slice",
+				err: "invalid object. expected array",
 			},
 		},
 		{

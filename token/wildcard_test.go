@@ -33,11 +33,11 @@ func Test_WildcardToken_Apply(t *testing.T) {
 		},
 		{
 			input: input{
-				obj: "not map or slice",
+				obj: "not array or map",
 			},
 			expected: expected{
 				obj: nil,
-				err: "invalid object. expected map or slice",
+				err: "invalid object. expected array or map",
 			},
 		},
 		{

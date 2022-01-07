@@ -1,7 +1,6 @@
 package token
 
 import (
-	"fmt"
 	"reflect"
 
 	"github.com/evilmokeyinc/jsonpath/errors"
@@ -25,13 +24,12 @@ func (token *rangeToken) Apply(root, current interface{}, next []Token) (interfa
 			if intVal, ok := result.(int); ok {
 				fromInt = &intVal
 			} else {
-				// TODO : move to errors package
-				return nil, fmt.Errorf("expect int value from script")
+				return nil, errors.ErrUnexpectedScriptResultInteger
 			}
 		} else if intVal, ok := token.from.(int); ok {
 			fromInt = &intVal
 		} else {
-			return nil, fmt.Errorf("expect int value for from")
+			return nil, errors.ErrInvalidParameterInteger
 		}
 	}
 
@@ -45,13 +43,12 @@ func (token *rangeToken) Apply(root, current interface{}, next []Token) (interfa
 			if intVal, ok := result.(int); ok {
 				toInt = &intVal
 			} else {
-				// TODO : move to errors package
-				return nil, fmt.Errorf("expect int value to script")
+				return nil, errors.ErrUnexpectedScriptResultInteger
 			}
 		} else if intVal, ok := token.to.(int); ok {
 			toInt = &intVal
 		} else {
-			return nil, fmt.Errorf("expect int value for to")
+			return nil, errors.ErrInvalidParameterInteger
 		}
 	}
 
@@ -65,13 +62,12 @@ func (token *rangeToken) Apply(root, current interface{}, next []Token) (interfa
 			if intVal, ok := result.(int); ok {
 				stepInt = &intVal
 			} else {
-				// TODO : move to errors package
-				return nil, fmt.Errorf("expect int value step script")
+				return nil, errors.ErrUnexpectedScriptResultInteger
 			}
 		} else if intVal, ok := token.step.(int); ok {
 			stepInt = &intVal
 		} else {
-			return nil, fmt.Errorf("expect int value for step")
+			return nil, errors.ErrInvalidParameterInteger
 		}
 	}
 
@@ -102,7 +98,7 @@ func (token *rangeToken) Apply(root, current interface{}, next []Token) (interfa
 func getRange(obj interface{}, start, end, step *int) ([]interface{}, error) {
 	objType := reflect.TypeOf(obj)
 	if objType == nil {
-		return nil, errors.ErrGetRangeFromNilSlice
+		return nil, errors.ErrGetRangeFromNilArray
 	}
 
 	switch objType.Kind() {
@@ -138,7 +134,7 @@ func getRange(obj interface{}, start, end, step *int) ([]interface{}, error) {
 		if step != nil {
 			stp = *step
 			if stp < 1 {
-				return nil, errors.GetInvalidParameterError("step should be greater than 1")
+				return nil, errors.ErrInvalidParameterRangeNegativeStep
 			}
 		}
 
@@ -149,6 +145,6 @@ func getRange(obj interface{}, start, end, step *int) ([]interface{}, error) {
 		}
 		return array, nil
 	default:
-		return nil, errors.ErrInvalidObjectSlice
+		return nil, errors.ErrInvalidObjectArray
 	}
 }

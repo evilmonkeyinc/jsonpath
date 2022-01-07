@@ -267,6 +267,27 @@ func Test_SpecificationTests(t *testing.T) {
 			},
 		},
 		{
+			name:  "filter all books that are not expensive",
+			query: "$..book[?(@.price<$.expensive)]",
+			expected: expected{
+				target: []interface{}{
+					map[string]interface{}{
+						"category": "reference",
+						"author":   "Nigel Rees",
+						"title":    "Sayings of the Century",
+						"price":    8.95,
+					},
+					map[string]interface{}{
+						"category": "fiction",
+						"author":   "Herman Melville",
+						"title":    "Moby Dick",
+						"isbn":     "0-553-21311-3",
+						"price":    8.99,
+					},
+				},
+			},
+		},
+		{
 			name:  "All members of JSON structure.",
 			query: "$..*",
 			expected: expected{
@@ -391,7 +412,7 @@ func Test_SpecificationTests(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			actual, actualErr := Find(test.query, sampleData)
+			actual, actualErr := FindFromJSONString(test.query, sampleData)
 			assert.ElementsMatch(t, test.expected.target, actual, fmt.Sprintf("'%s' invalid result", test.query))
 			assert.Equal(t, test.expected.err, actualErr, fmt.Sprintf("'%s' invalid error", test.query))
 		})
@@ -505,7 +526,7 @@ func Test_JSONPath_Find(t *testing.T) {
 
 			assert.Nil(t, err)
 
-			obj, err := jsonPath.Find(sampleData)
+			obj, err := jsonPath.FindFromJSONString(sampleData)
 			if test.expected.err != "" {
 				assert.EqualError(t, err, test.expected.err)
 			} else {

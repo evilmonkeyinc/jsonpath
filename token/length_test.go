@@ -35,7 +35,7 @@ func Test_LengthToken_Apply(t *testing.T) {
 				obj: 1000,
 			},
 			expected: expected{
-				err: "invalid object. expected map or slice",
+				err: "invalid object. expected array, map, or string",
 			},
 		},
 		{

@@ -74,7 +74,7 @@ func (token *filterToken) Apply(root, current interface{}, next []Token) (interf
 		}
 
 	default:
-		return nil, errors.ErrInvalidObjectMapOrSlice
+		return nil, errors.ErrInvalidObjectArrayOrMap
 	}
 
 	if len(next) > 0 {
@@ -91,7 +91,6 @@ func (token *filterToken) Apply(root, current interface{}, next []Token) (interf
 
 		for _, element := range elements {
 
-			// TODO : do we care about errors?
 			result, _ := nextToken.Apply(root, element, futureTokens)
 			if result != nil {
 				results = append(results, result)

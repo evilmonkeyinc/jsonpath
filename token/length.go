@@ -32,8 +32,7 @@ func (token *lengthToken) Apply(root, current interface{}, next []Token) (interf
 		objVal := reflect.ValueOf(current)
 		current = objVal.Len()
 	default:
-		// TODO : should be map slice or string
-		return nil, errors.ErrInvalidObjectMapOrSlice
+		return nil, errors.ErrInvalidObjectArrayMapOrString
 	}
 
 	if len(next) > 0 {

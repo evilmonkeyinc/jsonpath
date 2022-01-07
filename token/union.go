@@ -60,7 +60,7 @@ func getUnion(obj interface{}, keys []interface{}) ([]interface{}, error) {
 		for _, key := range keys {
 			strKey, ok := key.(string)
 			if !ok {
-				return nil, errors.GetInvalidParameterError("expected string keys")
+				return nil, errors.ErrInvalidParameterUnionExpectedString
 			}
 			keyMap[strKey] = true
 		}
@@ -95,7 +95,7 @@ func getUnion(obj interface{}, keys []interface{}) ([]interface{}, error) {
 		for _, key := range keys {
 			idx, ok := key.(int)
 			if !ok {
-				return nil, errors.GetInvalidParameterError("expected int keys")
+				return nil, errors.ErrInvalidParameterUnionExpectedInteger
 			}
 
 			if idx >= 0 {
@@ -112,6 +112,6 @@ func getUnion(obj interface{}, keys []interface{}) ([]interface{}, error) {
 		}
 		return values, nil
 	default:
-		return nil, errors.ErrInvalidObjectMapOrSlice
+		return nil, errors.ErrInvalidObjectArrayOrMap
 	}
 }

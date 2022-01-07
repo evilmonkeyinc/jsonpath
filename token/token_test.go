@@ -22,43 +22,43 @@ func Test_Parse(t *testing.T) {
 		{
 			input: "",
 			expected: expected{
-				err: "invalid token: token can not be empty",
+				err: "invalid token. token can not be empty",
 			},
 		},
 		{
 			input: "['fail'",
 			expected: expected{
-				err: "invalid token: missing subscript close",
+				err: "invalid token. missing subscript close",
 			},
 		},
 		{
 			input: "[ ]",
 			expected: expected{
-				err: "invalid token: empty subscript",
+				err: "invalid token. empty subscript",
 			},
 		},
 		{
 			input: "[?]",
 			expected: expected{
-				err: "invalid token: expected filter '?(' prefix and ')' suffix",
+				err: "invalid token. invalid filter format",
 			},
 		},
 		{
 			input: "[why though]",
 			expected: expected{
-				err: "invalid token: unexpected space",
+				err: "invalid token. unexpected space",
 			},
 		},
 		{
 			input: "[1'2']",
 			expected: expected{
-				err: "invalid token: unexpected single quote",
+				err: "invalid token. unexpected single quote",
 			},
 		},
 		{
 			input: "[1(@.length)]",
 			expected: expected{
-				err: "invalid token: invalid script format",
+				err: "invalid token. invalid script format",
 			},
 		},
 		{
@@ -78,7 +78,7 @@ func Test_Parse(t *testing.T) {
 		{
 			input: "1",
 			expected: expected{
-				err: "invalid token: index specified as key",
+				err: "invalid token. index specified as key",
 			},
 		},
 		{
@@ -186,25 +186,25 @@ func Test_Parse(t *testing.T) {
 		{
 			input: "[0,]",
 			expected: expected{
-				err: "invalid token: empty argument in union",
+				err: "invalid token. empty argument in union",
 			},
 		},
 		{
 			input: "[,1]",
 			expected: expected{
-				err: "invalid token: empty argument in union",
+				err: "invalid token. empty argument in union",
 			},
 		},
 		{
 			input: "[(0),]",
 			expected: expected{
-				err: "invalid token: empty argument in union",
+				err: "invalid token. empty argument in union",
 			},
 		},
 		{
 			input: "[0,'1',]",
 			expected: expected{
-				err: "invalid token: empty argument in union",
+				err: "invalid token. empty argument in union",
 			},
 		},
 		{
@@ -285,13 +285,13 @@ func Test_Parse(t *testing.T) {
 		{
 			input: "[store]",
 			expected: expected{
-				err: "invalid token: unexpected string",
+				err: "invalid token. unexpected string",
 			},
 		},
 		{
 			input: "[store,book]",
 			expected: expected{
-				err: "invalid token: unexpected union argument",
+				err: "invalid token. unexpected union argument",
 			},
 		},
 		{
@@ -313,25 +313,25 @@ func Test_Parse(t *testing.T) {
 		{
 			input: "[1,2:4]",
 			expected: expected{
-				err: "invalid token: cannot specify a range in a union",
+				err: "invalid token. cannot specify a range in a union",
 			},
 		},
 		{
 			input: "[1:2:3:]",
 			expected: expected{
-				err: "invalid token: incorrect number of arguments in range",
+				err: "invalid token. incorrect number of arguments in range",
 			},
 		},
 		{
 			input: "[1:2:3:4]",
 			expected: expected{
-				err: "invalid token: incorrect number of arguments in range",
+				err: "invalid token. incorrect number of arguments in range",
 			},
 		},
 		{
 			input: "['key':'end]",
 			expected: expected{
-				err: "invalid token: only integer or scripts allowed in range arguments",
+				err: "invalid token. only integer or scripts allowed in range arguments",
 			},
 		},
 		{
@@ -347,7 +347,7 @@ func Test_Parse(t *testing.T) {
 		{
 			input: "[:end:2]",
 			expected: expected{
-				err: "invalid token: only integer or scripts allowed in range arguments",
+				err: "invalid token. only integer or scripts allowed in range arguments",
 			},
 		},
 		{
@@ -359,7 +359,7 @@ func Test_Parse(t *testing.T) {
 		{
 			input: "[length]",
 			expected: expected{
-				err: "invalid token: unexpected string",
+				err: "invalid token. unexpected string",
 			},
 		},
 		{

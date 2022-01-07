@@ -34,7 +34,7 @@ func (token *wildcardToken) Apply(root, current interface{}, next []Token) (inte
 			elements = append(elements, value)
 		}
 	default:
-		return nil, errors.ErrInvalidObjectMapOrSlice
+		return nil, errors.ErrInvalidObjectArrayOrMap
 	}
 
 	if len(next) > 0 {

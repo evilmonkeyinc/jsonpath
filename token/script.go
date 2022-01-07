@@ -19,8 +19,7 @@ type scriptToken struct {
 func (token *scriptToken) Apply(root, current interface{}, next []Token) (interface{}, error) {
 	value, err := evaluateExpression(root, current, token.expression)
 	if err != nil {
-		// TODO : wrap error?
-		return nil, err
+		return nil, errors.GetInvalidExpressionError(err)
 	}
 
 	// No current
@@ -28,8 +27,6 @@ func (token *scriptToken) Apply(root, current interface{}, next []Token) (interf
 		return value, nil
 	}
 
-	// TODO : if current is array/slice/map value should be used to interperate that
-	// if nore return/pass value
 	objType := reflect.TypeOf(current)
 	if objType == nil {
 		return nil, errors.ErrGetElementsFromNilObject
@@ -38,7 +35,7 @@ func (token *scriptToken) Apply(root, current interface{}, next []Token) (interf
 	case reflect.Map:
 		strValue, ok := value.(string)
 		if !ok {
-			return nil, errors.GetInvalidParameterError("expected script to return key")
+			return nil, errors.ErrInvalidParameterScriptExpectedToReturnString
 		}
 
 		objVal := reflect.ValueOf(current)
@@ -60,7 +57,7 @@ func (token *scriptToken) Apply(root, current interface{}, next []Token) (interf
 
 		intValue, ok := value.(int64)
 		if !ok {
-			return nil, errors.GetInvalidParameterError("expected script to return integer")
+			return nil, errors.ErrInvalidParameterScriptExpectedToReturnInteger
 		}
 
 		objVal := reflect.ValueOf(current)
@@ -76,7 +73,7 @@ func (token *scriptToken) Apply(root, current interface{}, next []Token) (interf
 
 		current = objVal.Index(int(intValue)).Interface()
 	default:
-		return nil, errors.ErrInvalidObjectMapOrSlice
+		return nil, errors.ErrInvalidObjectArrayOrMap
 	}
 
 	if len(next) > 0 {
@@ -87,15 +84,9 @@ func (token *scriptToken) Apply(root, current interface{}, next []Token) (interf
 
 func evaluateExpression(root, current interface{}, expression string) (interface{}, error) {
 	if expression == "" {
-		return nil, errors.GetInvalidParameterError("expression is empty")
+		return nil, errors.ErrInvalidParameterExpressionEmpty
 	}
-	/**
-	TODO
-	1. replace special tokens with evaluation
-	2. run updated expression string through go/types.Eval
-	**/
 
-	// TODO : while loop around this block, update expression as we go along
 	rootIndex := strings.Index(expression, "$")
 	currentIndex := strings.Index(expression, "@")
 
@@ -106,43 +97,43 @@ func evaluateExpression(root, current interface{}, expression string) (interface
 			query = expression[rootIndex:]
 		} else if currentIndex > -1 {
 			query = expression[currentIndex:]
-		} else {
-			panic("something went wrong here")
 		}
 
-		tokenStrings, remainder, err := Tokenize(query) // TODO : tokenize remainder
+		tokenStrings, remainder, err := Tokenize(query)
 		if err != nil {
-			// TODO : wrap error, invalid script
-			return nil, err
+			return nil, errors.GetInvalidExpressionError(err)
 		}
 		if remainder != "" {
 			// shorten query to only what is being replaced
 			query = query[0 : len(query)-len(remainder)]
 		}
 		if len(tokenStrings) > 0 {
-			// TODO : this
 			tokens := make([]Token, 0)
 			for _, tokenString := range tokenStrings {
 				token, err := Parse(tokenString)
 				if err != nil {
-					// TODO : wrap error
-					return nil, err
+					return nil, errors.GetInvalidExpressionError(err)
 				}
 				tokens = append(tokens, token)
 			}
 
 			value, err := tokens[0].Apply(root, current, tokens[1:])
 			if err != nil {
-				// TODO : wrap error
-				return nil, err
+				return nil, errors.GetInvalidExpressionError(err)
 			}
 
+			new := fmt.Sprintf("%v", value)
 			if strValue, ok := value.(string); ok {
-				value = fmt.Sprintf("\"%s\"", strValue)
+				new = fmt.Sprintf("\"%s\"", strValue)
+			} else if intValue, ok := value.(int64); ok {
+				new = fmt.Sprintf("%d", intValue)
+			} else if boolValue, ok := value.(bool); ok {
+				new = fmt.Sprintf("%t", boolValue)
+			} else if floatValue, ok := value.(float64); ok {
+				new = strconv.FormatFloat(floatValue, 'f', -1, 64)
 			}
-			// TODO : value needs to be primitive
-			// TODO : need to convert value to string safely
-			expression = strings.ReplaceAll(expression, query, fmt.Sprintf("%v", value))
+
+			expression = strings.ReplaceAll(expression, query, new)
 		}
 
 		rootIndex = strings.Index(expression, "$")
@@ -158,8 +149,7 @@ func evaluateExpression(root, current interface{}, expression string) (interface
 	fs := token.NewFileSet()
 	tv, err := types.Eval(fs, nil, token.NoPos, expression)
 	if err != nil {
-		// TODO : need to wrap error
-		return nil, fmt.Errorf("failed to parse expression : %s", err.Error())
+		return nil, errors.GetFailedToParseExpressionError(err)
 	}
 	if tv.Value == nil {
 		return nil, nil
@@ -169,17 +159,14 @@ func evaluateExpression(root, current interface{}, expression string) (interface
 		return tv.Value.String(), nil
 	case constant.Bool:
 		strValue := tv.Value.String()
-		// TODO : parse error
 		boolVal, _ := strconv.ParseBool(strValue)
 		return boolVal, nil
 	case constant.Float:
 		strValue := tv.Value.String()
-		// TODO : parse error
 		floatVal, _ := strconv.ParseFloat(strValue, 64)
 		return floatVal, nil
 	case constant.Int:
 		strValue := tv.Value.String()
-		// TODO : parse error
 		intVal, _ := strconv.ParseInt(strValue, 10, 64)
 		return intVal, nil
 	case constant.Complex:
