@@ -7,10 +7,12 @@ import (
 	"github.com/evilmokeyinc/jsonpath/errors"
 )
 
+// Token represents a component of a JSON Path query
 type Token interface {
 	Apply(root, current interface{}, next []Token) (interface{}, error)
 }
 
+// Tokenize converts a JSON Path query to a collection of parsable tokens
 func Tokenize(query string) ([]string, string, error) {
 	if query == "" {
 		return nil, query, errors.ErrQueryNotSpecified
@@ -105,14 +107,14 @@ tokenize:
 			// check for script operators outside of subscript
 			switch rne {
 			case '*':
-				// * is an operator if it is part of a larger token
-				// * is a wildcard if by self or with proceding .
+				// '*' is an operator if it is part of a larger token
+				// '*' is a wildcard if by self or with proceding '.'
 				if tokenString == ".*" || tokenString == "*" {
 					continue
 				}
 				fallthrough
 			case '-', '+', '/', '%', '>', '<', '=', '!':
-				// strip operator and break loop
+				// strip operator and break tokenize loop
 				tokenString = tokenString[0 : len(tokenString)-1]
 				remainder = query[idx:]
 
@@ -136,6 +138,7 @@ tokenize:
 	return tokens, remainder, nil
 }
 
+// Parse will parse a single token string and return an actionable token
 func Parse(tokenString string) (Token, error) {
 
 	isScript := func(token string) bool {

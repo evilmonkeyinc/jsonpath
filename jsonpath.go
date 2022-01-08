@@ -7,6 +7,7 @@ import (
 	"github.com/evilmokeyinc/jsonpath/token"
 )
 
+// Find will return the result of the JSONPath query applied against the specified JSON data.
 func Find(queryPath string, jsonData map[string]interface{}) (interface{}, error) {
 	jsonPath, err := Compile(queryPath)
 	if err != nil {
@@ -15,6 +16,7 @@ func Find(queryPath string, jsonData map[string]interface{}) (interface{}, error
 	return jsonPath.Find(jsonData)
 }
 
+// FindFromJSONString will return the result of the JSONPath query applied against the specified JSON data.
 func FindFromJSONString(queryPath string, jsonData string) (interface{}, error) {
 	jsonPath, err := Compile(queryPath)
 	if err != nil {
@@ -23,6 +25,7 @@ func FindFromJSONString(queryPath string, jsonData string) (interface{}, error) 
 	return jsonPath.FindFromJSONString(jsonData)
 }
 
+// Compile compile the JSON path query
 func Compile(queryPath string) (*JSONPath, error) {
 	jsonPath := &JSONPath{}
 	if err := jsonPath.compile(queryPath); err != nil {
@@ -32,6 +35,7 @@ func Compile(queryPath string) (*JSONPath, error) {
 	return jsonPath, nil
 }
 
+// JSONPath i need to expand this
 type JSONPath struct {
 	queryPath string
 	tokens    []token.Token
@@ -62,8 +66,8 @@ func (query *JSONPath) compile(queryPath string) error {
 	return nil
 }
 
+// FindFromJSONString will return the result of the JSONPath query applied against the specified JSON data.
 func (query *JSONPath) FindFromJSONString(jsonData string) (interface{}, error) {
-
 	root := make(map[string]interface{})
 	if err := json.Unmarshal([]byte(jsonData), &root); err != nil {
 		return nil, errors.GetJSONMarshalFailedError(err)
@@ -72,8 +76,8 @@ func (query *JSONPath) FindFromJSONString(jsonData string) (interface{}, error) 
 	return query.Find(root)
 }
 
+// Find will return the result of the JSONPath query applied against the specified JSON data.
 func (query *JSONPath) Find(jsonData map[string]interface{}) (interface{}, error) {
-
 	if len(query.tokens) == 0 {
 		return nil, errors.ErrInvalidQueryNoTokens
 	}
