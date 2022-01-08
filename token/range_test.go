@@ -70,7 +70,7 @@ func Test_getRange(t *testing.T) {
 				step: intPtr(0),
 			},
 			expected: expected{
-				err: "invalid parameter. step should be greater than 1",
+				err: "invalid parameter. step should be greater than or equal to 1",
 			},
 		},
 		{
