@@ -146,11 +146,11 @@ tokenize:
 func Parse(tokenString string) (Token, error) {
 
 	isScript := func(token string) bool {
-		return strings.HasPrefix(token, "(") && strings.HasSuffix(token, ")")
+		return len(token) > 2 && strings.HasPrefix(token, "(") && strings.HasSuffix(token, ")")
 	}
 
 	isKey := func(token string) bool {
-		return strings.HasPrefix(token, "'") && strings.HasSuffix(token, "'")
+		return len(token) > 2 && strings.HasPrefix(token, "'") && strings.HasSuffix(token, "'")
 	}
 
 	tokenString = strings.TrimSpace(tokenString)

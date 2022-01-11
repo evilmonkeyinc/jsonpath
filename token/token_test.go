@@ -382,6 +382,42 @@ func Test_Parse(t *testing.T) {
 				},
 			},
 		},
+		{
+			input: "['']",
+			expected: expected{
+				err: "invalid token. invalid key format",
+			},
+		},
+		{
+			input: "['1':(@.length)]",
+			expected: expected{
+				err: "invalid token. only integer or scripts allowed in range arguments",
+			},
+		},
+		{
+			input: "[0:'1']",
+			expected: expected{
+				err: "invalid token. only integer or scripts allowed in range arguments",
+			},
+		},
+		{
+			input: "[0:1:'1']",
+			expected: expected{
+				err: "invalid token. only integer or scripts allowed in range arguments",
+			},
+		},
+		{
+			input: "[0:100:(1+1)]",
+			expected: expected{
+				token: &rangeToken{
+					from: int64(0),
+					to:   int64(100),
+					step: &expressionToken{
+						expression: "1+1",
+					},
+				},
+			},
+		},
 	}
 
 	for idx, test := range tests {

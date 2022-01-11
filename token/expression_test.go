@@ -314,6 +314,109 @@ func Test_evaluateExpression(t *testing.T) {
 				value: false,
 			},
 		},
+		{
+			input: input{
+				root: map[string]interface{}{
+					"expensive": 10,
+				},
+				current: map[string]interface{}{
+					"price": 5,
+				},
+				expression: "$.missing < @.price",
+			},
+			expected: expected{
+				err: "invalid expression. 'missing' key not found in object",
+			},
+		},
+		{
+			input: input{
+				root: map[string]interface{}{
+					"expensive": 9.99,
+				},
+				expression: "$.expensive == float64(9.99)",
+			},
+			expected: expected{
+				value: true,
+			},
+		},
+		{
+			input: input{
+				root: map[string]interface{}{
+					"name": "target",
+				},
+				expression: "$.name == \"target\"",
+			},
+			expected: expected{
+				value: true,
+			},
+		},
+		{
+			input: input{
+				root: map[string]interface{}{
+					"valid": true,
+				},
+				expression: "$.valid",
+			},
+			expected: expected{
+				value: true,
+			},
+		},
+		{
+			input: input{
+				expression: "true && true",
+			},
+			expected: expected{
+				value: true,
+			},
+		},
+		{
+			input: input{
+				expression: "true && false",
+			},
+			expected: expected{
+				value: false,
+			},
+		},
+		{
+			input: input{
+				expression: "true || true",
+			},
+			expected: expected{
+				value: true,
+			},
+		},
+		{
+			input: input{
+				expression: "true || false",
+			},
+			expected: expected{
+				value: true,
+			},
+		},
+		{
+			input: input{
+				expression: "(true || false) && true",
+			},
+			expected: expected{
+				value: true,
+			},
+		},
+		{
+			input: input{
+				expression: "(true && false) && true",
+			},
+			expected: expected{
+				value: false,
+			},
+		},
+		{
+			input: input{
+				expression: "(true && false) || true",
+			},
+			expected: expected{
+				value: true,
+			},
+		},
 	}
 
 	for idx, test := range tests {

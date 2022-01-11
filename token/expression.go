@@ -32,6 +32,11 @@ func (token *expressionToken) Apply(root, current interface{}, next []Token) (in
 	return value, nil
 }
 
+// TODO : add extra support
+/*
+1. regex
+*/
+
 func evaluateExpression(root, current interface{}, expression string) (interface{}, error) {
 	if expression == "" {
 		return nil, errors.ErrInvalidParameterExpressionEmpty
@@ -105,8 +110,6 @@ func evaluateExpression(root, current interface{}, expression string) (interface
 		return nil, nil
 	}
 	switch tv.Value.Kind() {
-	case constant.String:
-		return tv.Value.String(), nil
 	case constant.Bool:
 		strValue := tv.Value.String()
 		boolVal, _ := strconv.ParseBool(strValue)
@@ -119,9 +122,7 @@ func evaluateExpression(root, current interface{}, expression string) (interface
 		strValue := tv.Value.String()
 		intVal, _ := strconv.ParseInt(strValue, 10, 64)
 		return intVal, nil
-	case constant.Complex:
-		fallthrough
-	case constant.Unknown:
+	case constant.String, constant.Complex, constant.Unknown:
 		fallthrough
 	default:
 		return tv.Value.String(), nil
