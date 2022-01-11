@@ -160,9 +160,8 @@ func Test_Parse(t *testing.T) {
 			expected: expected{
 				token: &rangeToken{
 					from: int64(1),
-					to: &scriptToken{
-						expression:       "@.length-1",
-						returnEvaluation: true,
+					to: &expressionToken{
+						expression: "@.length-1",
 					},
 					step: int64(1),
 				},
@@ -215,9 +214,8 @@ func Test_Parse(t *testing.T) {
 				token: &unionToken{
 					arguments: []interface{}{
 						int64(0),
-						&scriptToken{
-							expression:       "@.length-1",
-							returnEvaluation: true,
+						&expressionToken{
+							expression: "@.length-1",
 						},
 					},
 				},
@@ -231,9 +229,8 @@ func Test_Parse(t *testing.T) {
 						int64(0),
 						"one",
 						int64(2),
-						&scriptToken{
-							expression:       "1+2",
-							returnEvaluation: true,
+						&expressionToken{
+							expression: "1+2",
 						},
 					},
 				},
@@ -244,13 +241,11 @@ func Test_Parse(t *testing.T) {
 			expected: expected{
 				token: &unionToken{
 					arguments: []interface{}{
-						&scriptToken{
-							expression:       "@.length-2",
-							returnEvaluation: true,
+						&expressionToken{
+							expression: "@.length-2",
 						},
-						&scriptToken{
-							expression:       "@.length-1",
-							returnEvaluation: true,
+						&expressionToken{
+							expression: "@.length-1",
 						},
 						int64(1),
 					},
@@ -272,9 +267,8 @@ func Test_Parse(t *testing.T) {
 			expected: expected{
 				token: &rangeToken{
 					from: int64(0),
-					to: &scriptToken{
-						expression:       "@.length-1",
-						returnEvaluation: true,
+					to: &expressionToken{
+						expression: "@.length-1",
 					},
 					step: int64(2),
 				},
@@ -284,9 +278,8 @@ func Test_Parse(t *testing.T) {
 			input: "[(@.length-1):1:2]",
 			expected: expected{
 				token: &rangeToken{
-					from: &scriptToken{
-						expression:       "@.length-1",
-						returnEvaluation: true,
+					from: &expressionToken{
+						expression: "@.length-1",
 					},
 					to:   int64(1),
 					step: int64(2),

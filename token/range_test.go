@@ -220,7 +220,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 		},
 		{
 			token: &rangeToken{
-				from: &scriptToken{expression: "", returnEvaluation: true},
+				from: &expressionToken{expression: ""},
 			},
 			input: input{
 				current: []interface{}{
@@ -235,7 +235,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 		},
 		{
 			token: &rangeToken{
-				from: &scriptToken{expression: "\"key\"", returnEvaluation: true},
+				from: &expressionToken{expression: "\"key\""},
 			},
 			input: input{
 				current: []interface{}{
@@ -265,7 +265,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 		},
 		{
 			token: &rangeToken{
-				from: &scriptToken{expression: "@.length-1", returnEvaluation: true},
+				from: &expressionToken{expression: "@.length-1"},
 			},
 			input: input{
 				current: []interface{}{
@@ -282,7 +282,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 		},
 		{
 			token: &rangeToken{
-				to: &scriptToken{expression: "", returnEvaluation: true},
+				to: &expressionToken{expression: ""},
 			},
 			input: input{
 				current: []interface{}{
@@ -297,7 +297,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 		},
 		{
 			token: &rangeToken{
-				to: &scriptToken{expression: "\"key\"", returnEvaluation: true},
+				to: &expressionToken{expression: "\"key\""},
 			},
 			input: input{
 				current: []interface{}{
@@ -327,7 +327,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 		},
 		{
 			token: &rangeToken{
-				to: &scriptToken{expression: "@.length-2", returnEvaluation: true},
+				to: &expressionToken{expression: "@.length-2"},
 			},
 			input: input{
 				current: []interface{}{
@@ -345,7 +345,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 		},
 		{
 			token: &rangeToken{
-				step: &scriptToken{expression: "", returnEvaluation: true},
+				step: &expressionToken{expression: ""},
 			},
 			input: input{
 				current: []interface{}{
@@ -360,7 +360,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 		},
 		{
 			token: &rangeToken{
-				step: &scriptToken{expression: "\"key\"", returnEvaluation: true},
+				step: &expressionToken{expression: "\"key\""},
 			},
 			input: input{
 				current: []interface{}{
@@ -390,7 +390,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 		},
 		{
 			token: &rangeToken{
-				step: &scriptToken{expression: "@.length-1", returnEvaluation: true},
+				step: &expressionToken{expression: "@.length-1"},
 			},
 			input: input{
 				current: []interface{}{
@@ -494,6 +494,25 @@ func Test_RangeToken_Apply(t *testing.T) {
 				value: "s",
 			},
 		},
+		{
+			token: &rangeToken{from: 1},
+			input: input{
+				current: []interface{}{
+					"one",
+					"two",
+					"three",
+					"four",
+				},
+				tokens: []Token{
+					&indexToken{
+						index: 0,
+					},
+				},
+			},
+			expected: expected{
+				value: "two",
+			},
+		},
 	}
 
 	batchTokenTests(t, tests)
@@ -533,7 +552,7 @@ func Test_getRange(t *testing.T) {
 				obj: 123,
 			},
 			expected: expected{
-				err: "invalid object. expected array",
+				err: "invalid object. expected array, map, or string",
 			},
 		},
 		{

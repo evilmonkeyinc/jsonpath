@@ -25,7 +25,7 @@ func Test_IndexToken_Apply(t *testing.T) {
 				current: 123,
 			},
 			expected: expected{
-				err: "invalid object. expected array",
+				err: "invalid object. expected array, map, or string",
 			},
 		},
 		{

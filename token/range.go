@@ -94,6 +94,11 @@ func (token *rangeToken) Apply(root, current interface{}, next []Token) (interfa
 		nextToken := next[0]
 		futureTokens := next[1:]
 
+		if indexToken, ok := nextToken.(*indexToken); ok {
+			// if next is asking for specific index
+			return indexToken.Apply(current, elements, futureTokens)
+		}
+		// any other token type
 		results := make([]interface{}, 0)
 
 		for _, item := range elements {

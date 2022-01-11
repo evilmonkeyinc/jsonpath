@@ -371,9 +371,8 @@ func Parse(tokenString string) (Token, error) {
 		for idx, arg := range args {
 			if strArg, ok := arg.(string); ok {
 				if isScript(strArg) {
-					arg = &scriptToken{
-						expression:       strArg[1 : len(strArg)-1],
-						returnEvaluation: true,
+					arg = &expressionToken{
+						expression: strArg[1 : len(strArg)-1],
 					}
 					args[idx] = arg
 				} else if isKey(strArg) {
@@ -405,27 +404,24 @@ func Parse(tokenString string) (Token, error) {
 			if !isScript(strFrom) {
 				return nil, errors.ErrInvalidTokenInvalidRangeArguments
 			}
-			from = &scriptToken{
-				expression:       strFrom[1 : len(strFrom)-1],
-				returnEvaluation: true,
+			from = &expressionToken{
+				expression: strFrom[1 : len(strFrom)-1],
 			}
 		}
 		if strTo, ok := to.(string); ok {
 			if !isScript(strTo) {
 				return nil, errors.ErrInvalidTokenInvalidRangeArguments
 			}
-			to = &scriptToken{
-				expression:       strTo[1 : len(strTo)-1],
-				returnEvaluation: true,
+			to = &expressionToken{
+				expression: strTo[1 : len(strTo)-1],
 			}
 		}
 		if strStep, ok := step.(string); ok {
 			if !isScript(strStep) {
 				return nil, errors.ErrInvalidTokenInvalidRangeArguments
 			}
-			step = &scriptToken{
-				expression:       strStep[1 : len(strStep)-1],
-				returnEvaluation: true,
+			step = &expressionToken{
+				expression: strStep[1 : len(strStep)-1],
 			}
 		}
 

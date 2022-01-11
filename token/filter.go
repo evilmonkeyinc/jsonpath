@@ -39,7 +39,6 @@ func (token *filterToken) Apply(root, current interface{}, next []Token) (interf
 	}
 	switch objType.Kind() {
 	case reflect.Map:
-
 		objVal := reflect.ValueOf(current)
 		keys := objVal.MapKeys()
 
@@ -55,11 +54,8 @@ func (token *filterToken) Apply(root, current interface{}, next []Token) (interf
 			if shouldInclude(evaluation) {
 				elements = append(elements, element)
 			}
-
 		}
-
 	case reflect.Array, reflect.Slice:
-
 		objVal := reflect.ValueOf(current)
 		length := objVal.Len()
 
@@ -75,7 +71,6 @@ func (token *filterToken) Apply(root, current interface{}, next []Token) (interf
 				elements = append(elements, element)
 			}
 		}
-
 	default:
 		return nil, errors.ErrInvalidObjectArrayOrMap
 	}

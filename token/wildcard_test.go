@@ -101,6 +101,45 @@ func Test_WildcardToken_Apply(t *testing.T) {
 				value: []interface{}{"1", "2", "3"},
 			},
 		},
+		{
+			token: &wildcardToken{},
+			input: input{
+				current: []map[string]interface{}{
+					{"name": "one"},
+					{"name": "two"},
+					{"name": "three"},
+				},
+			},
+			expected: expected{
+				value: []interface{}{
+					map[string]interface{}{"name": "one"},
+					map[string]interface{}{"name": "two"},
+					map[string]interface{}{"name": "three"},
+				},
+			},
+		},
+		{
+			token: &wildcardToken{},
+			input: input{
+				current: []map[string]interface{}{
+					{"name": "one"},
+					{"name": "two"},
+					{"name": "three"},
+				},
+				tokens: []Token{
+					&keyToken{
+						key: "name",
+					},
+				},
+			},
+			expected: expected{
+				value: []interface{}{
+					"one",
+					"two",
+					"three",
+				},
+			},
+		},
 	}
 
 	batchTokenTests(t, tests)

@@ -19,7 +19,6 @@ func (token *wildcardToken) Apply(root, current interface{}, next []Token) (inte
 	}
 	switch objType.Kind() {
 	case reflect.Map:
-
 		objVal := reflect.ValueOf(current)
 		keys := objVal.MapKeys()
 		for _, kv := range keys {

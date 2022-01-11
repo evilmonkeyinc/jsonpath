@@ -19,6 +19,255 @@ func Test_UnionToken_Apply(t *testing.T) {
 				err: "invalid parameter. expected arguments",
 			},
 		},
+		{
+			token: &unionToken{
+				arguments: []interface{}{"one", 2},
+			},
+			input: input{
+				current: []interface{}{},
+			},
+			expected: expected{
+				err: "invalid parameter. expected string keys",
+			},
+		},
+		{
+			token: &unionToken{
+				arguments: []interface{}{2, "one"},
+			},
+			input: input{
+				current: []interface{}{},
+			},
+			expected: expected{
+				err: "invalid parameter. expected integer keys",
+			},
+		},
+		{
+			token: &unionToken{
+				arguments: []interface{}{3.14},
+			},
+			input: input{
+				current: []interface{}{},
+			},
+			expected: expected{
+				err: "invalid parameter. expected integer or string keys",
+			},
+		},
+		{
+			token: &unionToken{
+				arguments: []interface{}{
+					&expressionToken{
+						expression: "",
+					},
+					"one",
+				},
+			},
+			input: input{
+				current: []interface{}{},
+			},
+			expected: expected{
+				err: "invalid parameter. expression is empty",
+			},
+		},
+		{
+			token: &unionToken{
+				arguments: []interface{}{
+					&expressionToken{
+						expression: "1+1",
+					},
+					"one",
+				},
+			},
+			input: input{
+				current: []interface{}{},
+			},
+			expected: expected{
+				err: "invalid parameter. expected integer keys",
+			},
+		},
+		{
+			token: &unionToken{
+				arguments: []interface{}{
+					&expressionToken{
+						expression: "1+1",
+					},
+					3,
+				},
+			},
+			input: input{
+				current: []interface{}{
+					"one",
+					"two",
+					"three",
+					"four",
+				},
+			},
+			expected: expected{
+				value: []interface{}{
+					"three",
+					"four",
+				},
+			},
+		},
+		{
+			token: &unionToken{
+				arguments: []interface{}{
+					0,
+					3,
+					4,
+				},
+			},
+			input: input{
+				current: []interface{}{
+					"one",
+					"two",
+					"three",
+					"four",
+				},
+			},
+			expected: expected{
+				err: "index out of range",
+			},
+		},
+		{
+			token: &unionToken{
+				arguments: []interface{}{
+					0,
+					3,
+				},
+			},
+			input: input{
+				current: []interface{}{
+					"one",
+					"two",
+					"three",
+					"four",
+				},
+			},
+			expected: expected{
+				value: []interface{}{
+					"one",
+					"four",
+				},
+			},
+		},
+		{
+			token: &unionToken{
+				arguments: []interface{}{
+					"a",
+					"d",
+				},
+			},
+			input: input{
+				current: map[string]interface{}{
+					"a": "one",
+					"b": "two",
+					"c": "three",
+					"d": "four",
+				},
+			},
+			expected: expected{
+				value: []interface{}{
+					"one",
+					"four",
+				},
+			},
+		},
+		{
+			token: &unionToken{
+				arguments: []interface{}{
+					"a",
+					"d",
+					"e",
+				},
+			},
+			input: input{
+				current: map[string]interface{}{
+					"a": "one",
+					"b": "two",
+					"c": "three",
+					"d": "four",
+				},
+			},
+			expected: expected{
+				err: "'e' key not found in object",
+			},
+		},
+		{
+			token: &unionToken{
+				arguments: []interface{}{0, 2, 4},
+			},
+			input: input{
+				current: "abcdefghijkl",
+			},
+			expected: expected{
+				value: "ace",
+			},
+		},
+		{
+			token: &unionToken{
+				arguments: []interface{}{0, 2, 4},
+			},
+			input: input{
+				current: "abcdefghijkl",
+				tokens: []Token{
+					&indexToken{index: 1},
+				},
+			},
+			expected: expected{
+				value: "c",
+			},
+		},
+		{
+			token: &unionToken{
+				arguments: []interface{}{
+					0,
+					3,
+				},
+			},
+			input: input{
+				current: []interface{}{
+					"one",
+					"two",
+					"three",
+					"four",
+				},
+				tokens: []Token{
+					&indexToken{
+						index: -1,
+					},
+				},
+			},
+			expected: expected{
+				value: "four",
+			},
+		},
+		{
+			token: &unionToken{
+				arguments: []interface{}{
+					0,
+					3,
+				},
+			},
+			input: input{
+				current: []map[string]interface{}{
+					{"name": "one"},
+					{"name": "two"},
+					{"name": "three"},
+					{"name": "four"},
+				},
+				tokens: []Token{
+					&keyToken{
+						key: "name",
+					},
+				},
+			},
+			expected: expected{
+				value: []interface{}{
+					"one",
+					"four",
+				},
+			},
+		},
 	}
 
 	batchTokenTests(t, tests)

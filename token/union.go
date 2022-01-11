@@ -15,7 +15,7 @@ type unionToken struct {
 
 func (token *unionToken) Apply(root, current interface{}, next []Token) (interface{}, error) {
 	arguments := token.arguments
-	if len(arguments) > 0 {
+	if len(arguments) == 0 {
 		return nil, errors.ErrInvalidParameterUnionExpectedArguments
 	}
 
@@ -34,12 +34,12 @@ func (token *unionToken) Apply(root, current interface{}, next []Token) (interfa
 		if strArg, ok := arg.(string); ok {
 			keys = append(keys, strArg)
 			if len(indices) > 0 {
-				return nil, errors.ErrInvalidParameterUnionExpectedString
+				return nil, errors.ErrInvalidParameterUnionExpectedInteger
 			}
 		} else if intArg, ok := isInteger(arg); ok {
 			indices = append(indices, intArg)
 			if len(keys) > 0 {
-				return nil, errors.ErrInvalidParameterUnionExpectedInteger
+				return nil, errors.ErrInvalidParameterUnionExpectedString
 			}
 		} else {
 			return nil, errors.ErrInvalidParameterUnionExpectedIntegerOrString
@@ -75,6 +75,11 @@ func (token *unionToken) Apply(root, current interface{}, next []Token) (interfa
 		nextToken := next[0]
 		futureTokens := next[1:]
 
+		if indexToken, ok := nextToken.(*indexToken); ok {
+			// if next is asking for specific index
+			return indexToken.Apply(current, elements, futureTokens)
+		}
+		// any other token type
 		results := make([]interface{}, 0)
 
 		for _, item := range elements {

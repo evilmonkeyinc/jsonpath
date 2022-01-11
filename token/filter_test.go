@@ -24,6 +24,17 @@ func Test_FilterToken_Apply(t *testing.T) {
 				expression: "@.isbn",
 			},
 			input: input{
+				current: nil,
+			},
+			expected: expected{
+				err: "cannot get elements from nil object",
+			},
+		},
+		{
+			token: &filterToken{
+				expression: "@.isbn",
+			},
+			input: input{
 				current: "this is a string",
 			},
 			expected: expected{
