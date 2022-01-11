@@ -12,11 +12,10 @@ type firstNToken struct {
 	number interface{}
 }
 
-// TODO : refactor errors not to use range specific ones
-func (token *firstNToken) Apply(root, current interface{}, next []Token) (interface{}, error) {
-	// TODO: get first N elements of current
+// TODO : get rid of range errors
 
-	to := int64(0) // TODO : token.number
+func (token *firstNToken) Apply(root, current interface{}, next []Token) (interface{}, error) {
+	to := int64(0)
 
 	if intValue, ok := isInteger(token.number); ok {
 		to = intValue
@@ -30,11 +29,10 @@ func (token *firstNToken) Apply(root, current interface{}, next []Token) (interf
 		if intValue, ok := isInteger(evaluate); ok {
 			to = intValue
 		} else {
-			panic("this should be a proper error")
+			return nil, errors.ErrInvalidParameterInteger
 		}
-
 	} else {
-		panic("this should be a proper error")
+		return nil, errors.ErrInvalidParameterInteger
 	}
 
 	var objValue reflect.Value
