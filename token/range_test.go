@@ -14,7 +14,24 @@ func Test_RangeToken_Apply(t *testing.T) {
 
 	tests := []*tokenTest{
 		{
-			token: &rangeToken{},
+			token: &rangeToken{
+				from: nil,
+			},
+			input: input{
+				current: []interface{}{
+					"one",
+					"two",
+					"three",
+				},
+			},
+			expected: expected{
+				err: "invalid parameter",
+			},
+		},
+		{
+			token: &rangeToken{
+				from: 0,
+			},
 			input: input{
 				current: []interface{}{
 					"one",
@@ -106,7 +123,8 @@ func Test_RangeToken_Apply(t *testing.T) {
 		},
 		{
 			token: &rangeToken{
-				to: 1,
+				from: 0,
+				to:   1,
 			},
 			input: input{
 				current: []interface{}{
@@ -124,6 +142,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 		},
 		{
 			token: &rangeToken{
+				from: 0,
 				to:   1,
 				step: 2,
 			},
@@ -142,6 +161,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 		},
 		{
 			token: &rangeToken{
+				from: 0,
 				step: 2,
 			},
 			input: input{
@@ -159,7 +179,10 @@ func Test_RangeToken_Apply(t *testing.T) {
 			},
 		},
 		{
-			token: &rangeToken{to: 100},
+			token: &rangeToken{
+				from: 0,
+				to:   100,
+			},
 			input: input{
 				current: []interface{}{},
 			},
@@ -282,7 +305,8 @@ func Test_RangeToken_Apply(t *testing.T) {
 		},
 		{
 			token: &rangeToken{
-				to: &expressionToken{expression: ""},
+				from: 0,
+				to:   &expressionToken{expression: ""},
 			},
 			input: input{
 				current: []interface{}{
@@ -297,7 +321,8 @@ func Test_RangeToken_Apply(t *testing.T) {
 		},
 		{
 			token: &rangeToken{
-				to: &expressionToken{expression: "\"key\""},
+				from: 0,
+				to:   &expressionToken{expression: "\"key\""},
 			},
 			input: input{
 				current: []interface{}{
@@ -312,7 +337,8 @@ func Test_RangeToken_Apply(t *testing.T) {
 		},
 		{
 			token: &rangeToken{
-				to: &indexToken{index: 0},
+				from: 0,
+				to:   &indexToken{index: 0},
 			},
 			input: input{
 				current: []interface{}{
@@ -327,7 +353,8 @@ func Test_RangeToken_Apply(t *testing.T) {
 		},
 		{
 			token: &rangeToken{
-				to: &expressionToken{expression: "@.length-2"},
+				from: 0,
+				to:   &expressionToken{expression: "@.length-2"},
 			},
 			input: input{
 				current: []interface{}{
@@ -345,6 +372,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 		},
 		{
 			token: &rangeToken{
+				from: 0,
 				step: &expressionToken{expression: ""},
 			},
 			input: input{
@@ -360,6 +388,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 		},
 		{
 			token: &rangeToken{
+				from: 0,
 				step: &expressionToken{expression: "\"key\""},
 			},
 			input: input{
@@ -375,6 +404,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 		},
 		{
 			token: &rangeToken{
+				from: 0,
 				step: &indexToken{index: 0},
 			},
 			input: input{
@@ -390,6 +420,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 		},
 		{
 			token: &rangeToken{
+				from: 0,
 				step: &expressionToken{expression: "@.length-1"},
 			},
 			input: input{
@@ -407,7 +438,9 @@ func Test_RangeToken_Apply(t *testing.T) {
 			},
 		},
 		{
-			token: &rangeToken{},
+			token: &rangeToken{
+				from: 0,
+			},
 			input: input{
 				tokens: []Token{&keyToken{key: "name"}},
 				current: []map[string]interface{}{
@@ -520,8 +553,9 @@ func Test_RangeToken_Apply(t *testing.T) {
 
 func Test_getRange(t *testing.T) {
 	type input struct {
-		obj              interface{}
-		start, end, step *int64
+		obj       interface{}
+		start     int64
+		end, step *int64
 	}
 
 	type expected struct {
@@ -558,7 +592,7 @@ func Test_getRange(t *testing.T) {
 		{
 			input: input{
 				obj:   "return after this:result text",
-				start: intPtr(18),
+				start: 18,
 			},
 			expected: expected{
 				obj: "result text",
@@ -567,7 +601,7 @@ func Test_getRange(t *testing.T) {
 		{
 			input: input{
 				obj:   testArray,
-				start: intPtr(15),
+				start: 15,
 			},
 			expected: expected{
 				err: "index out of range",
@@ -620,7 +654,7 @@ func Test_getRange(t *testing.T) {
 		{
 			input: input{
 				obj:   testArray,
-				start: intPtr(-3),
+				start: -3,
 				end:   intPtr(-1),
 			},
 			expected: expected{
@@ -639,7 +673,7 @@ func Test_getRange(t *testing.T) {
 		{
 			input: input{
 				obj:   []string{"one", "two", "three", "four", "five"},
-				start: intPtr(1),
+				start: 1,
 				step:  intPtr(2),
 			},
 			expected: expected{
@@ -649,7 +683,7 @@ func Test_getRange(t *testing.T) {
 		{
 			input: input{
 				obj:   []string{"one", "two", "three", "four", "five"},
-				start: intPtr(1),
+				start: 1,
 				end:   intPtr(1),
 			},
 			expected: expected{
@@ -713,7 +747,7 @@ func Test_getRange(t *testing.T) {
 					"g": "gee",
 					"d": "dee",
 				},
-				start: intPtr(1),
+				start: 1,
 				end:   intPtr(-2),
 			},
 			expected: expected{

@@ -7,8 +7,6 @@ import (
 	"github.com/evilmokeyinc/jsonpath/errors"
 )
 
-// TODO : something like [:2] is not the same as [0:2] it is more like [0:1]
-
 // Token represents a component of a JSON Path query
 type Token interface {
 	Apply(root, current interface{}, next []Token) (interface{}, error)
@@ -36,8 +34,10 @@ tokenize:
 				return nil, "", errors.ErrInvalidInitialToken
 			}
 
-			if next := query[1]; next != '.' && next != '[' {
-				return nil, "", errors.ErrInvalidInitialToken
+			if len(query) > 1 {
+				if next := query[1]; next != '.' && next != '[' {
+					return nil, "", errors.ErrInvalidInitialToken
+				}
 			}
 
 			tokens = append(tokens, tokenString[:])
@@ -343,7 +343,8 @@ func Parse(tokenString string) (Token, error) {
 		case ":":
 			colonCount++
 			if lastWasColon {
-				justArgs = append(justArgs, nil)
+				// cannot have two colons in a row
+				return nil, errors.ErrInvalidTokenIncorrectNumberOfRangeArguments
 			}
 			lastWasColon = true
 			continue
@@ -391,13 +392,37 @@ func Parse(tokenString string) (Token, error) {
 		if colonCount > 2 {
 			return nil, errors.ErrInvalidTokenIncorrectNumberOfRangeArguments
 		}
-		if colonCount == 1 && colonCount == len(args) {
+		if colonCount == 1 && len(args) == 1 {
+			// to help support [x:] tokens
 			args = append(args, nil)
 		}
 
 		var from, to, step interface{} = args[0], args[1], int64(1)
 		if len(args) > 2 {
 			step = args[2]
+		}
+
+		if from == nil {
+			// This could be a firstN token if step is not set
+			if len(args) == 2 && args[1] != nil {
+
+				number := args[1]
+				if strValue, ok := number.(string); ok {
+					if !isScript(strValue) {
+						return nil, errors.ErrInvalidTokenInvalidRangeArguments
+					}
+					number = &expressionToken{
+						expression: strValue[1 : len(strValue)-1],
+					}
+				}
+
+				return &firstNToken{
+					number: number,
+				}, nil
+
+			}
+			// TODO: from cannot be nil error?
+			return nil, errors.ErrInvalidTokenInvalidRangeArguments
 		}
 
 		if strFrom, ok := from.(string); ok {

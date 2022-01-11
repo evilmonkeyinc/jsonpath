@@ -14,26 +14,30 @@ type rangeToken struct {
 
 func (token *rangeToken) Apply(root, current interface{}, next []Token) (interface{}, error) {
 
-	var fromInt, toInt, stepInt *int64
+	var fromInt int64
+	var toInt, stepInt *int64
 
-	if token.from != nil {
-		if script, ok := token.from.(Token); ok {
-			result, err := script.Apply(root, current, nil)
-			if err != nil {
-				return nil, err
-			}
+	// TODO: now we have firstn, from should never be nil
+	if token.from == nil {
+		// TODO : error
+		return nil, errors.ErrInvalidParameter
+	}
 
-			if intVal, ok := isInteger(result); ok {
-				tmp := int64(intVal)
-				fromInt = &tmp
-			} else {
-				return nil, errors.ErrUnexpectedScriptResultInteger
-			}
-		} else if intVal, ok := isInteger(token.from); ok {
-			fromInt = &intVal
-		} else {
-			return nil, errors.ErrInvalidParameterInteger
+	if script, ok := token.from.(Token); ok {
+		result, err := script.Apply(root, current, nil)
+		if err != nil {
+			return nil, err
 		}
+
+		if intVal, ok := isInteger(result); ok {
+			fromInt = int64(intVal)
+		} else {
+			return nil, errors.ErrUnexpectedScriptResultInteger
+		}
+	} else if intVal, ok := isInteger(token.from); ok {
+		fromInt = intVal
+	} else {
+		return nil, errors.ErrInvalidParameterInteger
 	}
 
 	if token.to != nil {
@@ -122,7 +126,7 @@ expected responses
 2. []interface{}, nil - if an array, map, or slice is processed correctly
 3. string, nil - if a string is processed correctly
 **/
-func getRange(obj interface{}, start, end, step *int64) (interface{}, error) {
+func getRange(obj interface{}, start int64, end, step *int64) (interface{}, error) {
 	objType := reflect.TypeOf(obj)
 	if objType == nil {
 		return nil, errors.ErrGetRangeFromNilArray
@@ -161,15 +165,13 @@ func getRange(obj interface{}, start, end, step *int64) (interface{}, error) {
 	}
 
 	var from int64 = 0
-	if start != nil {
-		from = *start
-		if from < 0 {
-			from = length + from
-		}
+	from = start
+	if from < 0 {
+		from = length + from
+	}
 
-		if from < 0 || from >= length {
-			return nil, errors.ErrIndexOutOfRange
-		}
+	if from < 0 || from >= length {
+		return nil, errors.ErrIndexOutOfRange
 	}
 
 	to := length

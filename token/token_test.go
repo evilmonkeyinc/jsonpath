@@ -255,11 +255,25 @@ func Test_Parse(t *testing.T) {
 		{
 			input: "[:2]",
 			expected: expected{
-				token: &rangeToken{
-					from: nil,
-					to:   int64(2),
-					step: int64(1),
+				token: &firstNToken{
+					number: int64(2),
 				},
+			},
+		},
+		{
+			input: "[:(@.length-1)]",
+			expected: expected{
+				token: &firstNToken{
+					number: &expressionToken{
+						expression: "@.length-1",
+					},
+				},
+			},
+		},
+		{
+			input: "[:'key']",
+			expected: expected{
+				err: "invalid token. only integer or scripts allowed in range arguments",
 			},
 		},
 		{
@@ -349,11 +363,7 @@ func Test_Parse(t *testing.T) {
 		{
 			input: "[::2]",
 			expected: expected{
-				token: &rangeToken{
-					from: nil,
-					to:   nil,
-					step: int64(2),
-				},
+				err: "invalid token. incorrect number of arguments in range",
 			},
 		},
 		{
@@ -416,6 +426,12 @@ func Test_Parse(t *testing.T) {
 						expression: "1+1",
 					},
 				},
+			},
+		},
+		{
+			input: "[:10:1]",
+			expected: expected{
+				err: "invalid token. only integer or scripts allowed in range arguments",
 			},
 		},
 	}
