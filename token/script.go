@@ -5,7 +5,6 @@ import (
 	"go/constant"
 	"go/token"
 	"go/types"
-	"reflect"
 	"strconv"
 	"strings"
 
@@ -13,73 +12,32 @@ import (
 )
 
 type scriptToken struct {
-	expression string
+	expression       string
+	returnEvaluation bool
 }
 
 func (token *scriptToken) Apply(root, current interface{}, next []Token) (interface{}, error) {
+	if token.expression == "" {
+		return nil, errors.ErrInvalidParameterExpressionEmpty
+	}
+
 	value, err := evaluateExpression(root, current, token.expression)
 	if err != nil {
 		return nil, errors.GetInvalidExpressionError(err)
 	}
 
-	// No current
-	if current == nil {
+	if token.returnEvaluation {
 		return value, nil
 	}
 
-	objType := reflect.TypeOf(current)
-	if objType == nil {
-		return nil, errors.ErrGetElementsFromNilObject
+	if strValue, ok := value.(string); ok {
+		nextToken := &keyToken{key: strValue}
+		return nextToken.Apply(root, current, next)
+	} else if intValue, ok := isInteger(value); ok {
+		nextToken := &indexToken{index: int64(intValue)}
+		return nextToken.Apply(root, current, next)
 	}
-	switch objType.Kind() {
-	case reflect.Map:
-		strValue, ok := value.(string)
-		if !ok {
-			return nil, errors.ErrInvalidParameterScriptExpectedToReturnString
-		}
-
-		objVal := reflect.ValueOf(current)
-		keys := objVal.MapKeys()
-
-		var found interface{} = nil
-
-		for _, kv := range keys {
-			if kv.String() == strValue {
-				found = objVal.MapIndex(kv).Interface()
-			}
-		}
-
-		if found == nil {
-			return nil, errors.GetKeyNotFoundError(strValue)
-		}
-		current = found
-	case reflect.Array, reflect.Slice:
-
-		intValue, ok := value.(int64)
-		if !ok {
-			return nil, errors.ErrInvalidParameterScriptExpectedToReturnInteger
-		}
-
-		objVal := reflect.ValueOf(current)
-		length := objVal.Len()
-
-		if intValue < 0 {
-			intValue += int64(length)
-		}
-
-		if intValue < 0 || intValue >= int64(length) {
-			return nil, errors.ErrIndexOutOfRange
-		}
-
-		current = objVal.Index(int(intValue)).Interface()
-	default:
-		return nil, errors.ErrInvalidObjectArrayOrMap
-	}
-
-	if len(next) > 0 {
-		return next[0].Apply(root, current, next[1:])
-	}
-	return current, nil
+	return nil, errors.ErrUnexpectedScriptResultIntegerOrString
 }
 
 func evaluateExpression(root, current interface{}, expression string) (interface{}, error) {
@@ -125,7 +83,7 @@ func evaluateExpression(root, current interface{}, expression string) (interface
 			new := fmt.Sprintf("%v", value)
 			if strValue, ok := value.(string); ok {
 				new = fmt.Sprintf("\"%s\"", strValue)
-			} else if intValue, ok := value.(int64); ok {
+			} else if intValue, ok := isInteger(value); ok {
 				new = fmt.Sprintf("%d", intValue)
 			} else if boolValue, ok := value.(bool); ok {
 				new = fmt.Sprintf("%t", boolValue)

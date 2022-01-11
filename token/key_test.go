@@ -1,97 +1,79 @@
 package token
 
 import (
-	"fmt"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
+
+// Test keyToken struct conforms to Token interface
+var _ Token = &keyToken{}
 
 func Test_KeyToken_Apply(t *testing.T) {
 
-	t.Run("nested", func(t *testing.T) {
-		token := &keyToken{key: "one"}
-		next := &currentToken{}
-
-		actual, err := token.Apply(nil, map[string]string{"one": "two"}, []Token{next})
-		assert.Nil(t, err)
-		assert.Equal(t, "two", actual)
-	})
-
-	type input struct {
-		obj interface{}
-		key string
-	}
-
-	type expected struct {
-		obj interface{}
-		err string
-	}
-
-	tests := []struct {
-		input    input
-		expected expected
-	}{
+	tests := []*tokenTest{
 		{
+			token: &keyToken{key: "key"},
 			input: input{
-				obj: nil,
+				current: nil,
 			},
 			expected: expected{
-				obj: nil,
-				err: "cannot get key from nil map",
+				value: nil,
+				err:   "cannot get key from nil map",
 			},
 		},
 		{
+			token: &keyToken{key: "key"},
 			input: input{
-				obj: "",
+				current: "",
 			},
 			expected: expected{
-				obj: nil,
-				err: "invalid object. expected map",
+				value: nil,
+				err:   "invalid object. expected map",
 			},
 		},
 		{
+			token: &keyToken{key: "key"},
 			input: input{
-				obj: map[string]interface{}{
+				current: map[string]interface{}{
 					"key": true,
 				},
-				key: "key",
 			},
 			expected: expected{
-				obj: true,
-				err: "",
+				value: true,
+				err:   "",
 			},
 		},
 		{
+			token: &keyToken{key: "missing"},
 			input: input{
-				obj: map[string]interface{}{
+				current: map[string]interface{}{
 					"key": true,
 				},
-				key: "missing",
 			},
 			expected: expected{
-				obj: nil,
-				err: "'missing' key not found in object",
+				value: nil,
+				err:   "'missing' key not found in object",
+			},
+		},
+		{
+			token: &keyToken{key: "key"},
+			input: input{
+				current: map[string]interface{}{
+					"key": map[string]interface{}{
+						"next": "nested target",
+					},
+				},
+				tokens: []Token{
+					&keyToken{
+						key: "next",
+					},
+				},
+			},
+			expected: expected{
+				value: "nested target",
+				err:   "",
 			},
 		},
 	}
 
-	for idx, test := range tests {
-		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
-
-			token := keyToken{
-				key: test.input.key,
-			}
-
-			obj, err := token.Apply(test.input.obj, test.input.obj, nil)
-
-			assert.Equal(t, test.expected.obj, obj)
-
-			if test.expected.err == "" {
-				assert.Nil(t, err)
-			} else {
-				assert.EqualError(t, err, test.expected.err)
-			}
-		})
-	}
+	batchTokenTests(t, tests)
 }

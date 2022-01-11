@@ -149,9 +149,9 @@ func Test_Parse(t *testing.T) {
 			input: "[-1:]",
 			expected: expected{
 				token: &rangeToken{
-					from: -1,
+					from: int64(-1),
 					to:   nil,
-					step: 1,
+					step: int64(1),
 				},
 			},
 		},
@@ -159,11 +159,12 @@ func Test_Parse(t *testing.T) {
 			input: "[1:(@.length-1)]",
 			expected: expected{
 				token: &rangeToken{
-					from: 1,
+					from: int64(1),
 					to: &scriptToken{
-						expression: "@.length-1",
+						expression:       "@.length-1",
+						returnEvaluation: true,
 					},
-					step: 1,
+					step: int64(1),
 				},
 			},
 		},
@@ -171,7 +172,7 @@ func Test_Parse(t *testing.T) {
 			input: "[0,1]",
 			expected: expected{
 				token: &unionToken{
-					arguments: []interface{}{0, 1},
+					arguments: []interface{}{int64(0), int64(1)},
 				},
 			},
 		},
@@ -213,8 +214,11 @@ func Test_Parse(t *testing.T) {
 
 				token: &unionToken{
 					arguments: []interface{}{
-						0,
-						&scriptToken{expression: "@.length-1"},
+						int64(0),
+						&scriptToken{
+							expression:       "@.length-1",
+							returnEvaluation: true,
+						},
 					},
 				},
 			},
@@ -224,10 +228,13 @@ func Test_Parse(t *testing.T) {
 			expected: expected{
 				token: &unionToken{
 					arguments: []interface{}{
-						0,
+						int64(0),
 						"one",
-						2,
-						&scriptToken{expression: "1+2"},
+						int64(2),
+						&scriptToken{
+							expression:       "1+2",
+							returnEvaluation: true,
+						},
 					},
 				},
 			},
@@ -237,9 +244,15 @@ func Test_Parse(t *testing.T) {
 			expected: expected{
 				token: &unionToken{
 					arguments: []interface{}{
-						&scriptToken{expression: "@.length-2"},
-						&scriptToken{expression: "@.length-1"},
-						1,
+						&scriptToken{
+							expression:       "@.length-2",
+							returnEvaluation: true,
+						},
+						&scriptToken{
+							expression:       "@.length-1",
+							returnEvaluation: true,
+						},
+						int64(1),
 					},
 				},
 			},
@@ -249,8 +262,8 @@ func Test_Parse(t *testing.T) {
 			expected: expected{
 				token: &rangeToken{
 					from: nil,
-					to:   2,
-					step: 1,
+					to:   int64(2),
+					step: int64(1),
 				},
 			},
 		},
@@ -258,9 +271,12 @@ func Test_Parse(t *testing.T) {
 			input: "[0:(@.length-1):2]",
 			expected: expected{
 				token: &rangeToken{
-					from: 0,
-					to:   &scriptToken{expression: "@.length-1"},
-					step: 2,
+					from: int64(0),
+					to: &scriptToken{
+						expression:       "@.length-1",
+						returnEvaluation: true,
+					},
+					step: int64(2),
 				},
 			},
 		},
@@ -268,9 +284,12 @@ func Test_Parse(t *testing.T) {
 			input: "[(@.length-1):1:2]",
 			expected: expected{
 				token: &rangeToken{
-					from: &scriptToken{expression: "@.length-1"},
-					to:   1,
-					step: 2,
+					from: &scriptToken{
+						expression:       "@.length-1",
+						returnEvaluation: true,
+					},
+					to:   int64(1),
+					step: int64(2),
 				},
 			},
 		},
@@ -340,7 +359,7 @@ func Test_Parse(t *testing.T) {
 				token: &rangeToken{
 					from: nil,
 					to:   nil,
-					step: 2,
+					step: int64(2),
 				},
 			},
 		},
@@ -381,7 +400,7 @@ func Test_Parse(t *testing.T) {
 			} else {
 				assert.EqualError(t, err, test.expected.err, fmt.Sprintf("input '%s' err check failed. expected '%s' actual '%v'", test.input, test.expected.err, err))
 			}
-			assert.Equal(t, test.expected.token, token, fmt.Sprintf("input '%s' token check failed. expected '%v' actual '%v'", test.input, test.expected.token, token))
+			assert.EqualValues(t, test.expected.token, token, fmt.Sprintf("input '%s' token check failed. expected '%v' actual '%v'", test.input, test.expected.token, token))
 		})
 	}
 
@@ -659,4 +678,48 @@ func Test_Tokenize(t *testing.T) {
 		})
 	}
 
+}
+
+type input struct {
+	root, current interface{}
+	tokens        []Token
+}
+
+type expected struct {
+	value interface{}
+	err   string
+}
+
+type tokenTest struct {
+	token    Token
+	input    input
+	expected expected
+}
+
+func batchTokenTests(t *testing.T, tests []*tokenTest) {
+	for idx, test := range tests {
+		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
+			actual, err := test.token.Apply(test.input.root, test.input.current, test.input.tokens)
+
+			if test.expected.err == "" {
+				assert.Nil(t, err)
+			} else {
+				assert.EqualError(t, err, test.expected.err)
+			}
+
+			if test.expected.value != nil {
+				if actual == nil {
+					assert.Fail(t, "expected non-nil response")
+					return
+				}
+				if array, ok := test.expected.value.([]interface{}); ok {
+					assert.ElementsMatch(t, array, actual)
+				} else {
+					assert.Equal(t, test.expected.value, actual)
+				}
+			} else {
+				assert.Nil(t, actual)
+			}
+		})
+	}
 }

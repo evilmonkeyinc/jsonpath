@@ -7,10 +7,14 @@ import (
 	"github.com/evilmokeyinc/jsonpath/errors"
 )
 
+// TODO : something like [:2] is not the same as [0:2] it is more like [0:1]
+
 // Token represents a component of a JSON Path query
 type Token interface {
 	Apply(root, current interface{}, next []Token) (interface{}, error)
 }
+
+// TODO : need fix and unit tests for just giving $ or @
 
 // Tokenize converts a JSON Path query to a collection of parsable tokens
 func Tokenize(query string) ([]string, string, error) {
@@ -169,7 +173,7 @@ func Parse(tokenString string) (Token, error) {
 
 	if !strings.HasPrefix(tokenString, "[") {
 
-		if _, err := strconv.Atoi(tokenString); err == nil {
+		if _, err := strconv.ParseInt(tokenString, 10, 64); err == nil {
 			return nil, errors.ErrInvalidTokenUnexpectedIndex
 		}
 
@@ -266,7 +270,7 @@ func Parse(tokenString string) (Token, error) {
 				continue
 			}
 			if arg := remainder[:len(remainder)-1]; arg != "" {
-				if num, err := strconv.Atoi(arg); err == nil {
+				if num, err := strconv.ParseInt(arg, 10, 64); err == nil {
 					args = append(args, num)
 				} else {
 					return nil, errors.ErrInvalidTokenInvalidRangeArguments
@@ -285,7 +289,7 @@ func Parse(tokenString string) (Token, error) {
 			}
 
 			if arg := remainder[:len(remainder)-1]; arg != "" {
-				if num, err := strconv.Atoi(arg); err == nil {
+				if num, err := strconv.ParseInt(arg, 10, 64); err == nil {
 					args = append(args, num)
 				} else {
 					args = append(args, arg)
@@ -299,7 +303,7 @@ func Parse(tokenString string) (Token, error) {
 	}
 
 	if remainder != "" {
-		if num, err := strconv.Atoi(remainder); err == nil {
+		if num, err := strconv.ParseInt(remainder, 10, 64); err == nil {
 			args = append(args, num)
 		} else {
 			args = append(args, remainder[:])
@@ -320,7 +324,7 @@ func Parse(tokenString string) (Token, error) {
 				}, nil
 			}
 			return nil, errors.ErrInvalidTokenUnexpectedString
-		} else if intArg, ok := arg.(int); ok {
+		} else if intArg, ok := isInteger(arg); ok {
 			return &indexToken{index: intArg}, nil
 		}
 		return nil, errors.ErrInvalidTokenInvalidIndex
@@ -368,7 +372,8 @@ func Parse(tokenString string) (Token, error) {
 			if strArg, ok := arg.(string); ok {
 				if isScript(strArg) {
 					arg = &scriptToken{
-						expression: strArg[1 : len(strArg)-1],
+						expression:       strArg[1 : len(strArg)-1],
+						returnEvaluation: true,
 					}
 					args[idx] = arg
 				} else if isKey(strArg) {
@@ -376,7 +381,7 @@ func Parse(tokenString string) (Token, error) {
 				} else {
 					return nil, errors.ErrInvalidTokenUnexpectedUnionArguments
 				}
-			} else if _, ok := arg.(int); !ok {
+			} else if _, ok := isInteger(arg); !ok {
 				return nil, errors.ErrInvalidTokenUnexpectedUnionArguments
 			}
 		}
@@ -391,7 +396,7 @@ func Parse(tokenString string) (Token, error) {
 			args = append(args, nil)
 		}
 
-		var from, to, step interface{} = args[0], args[1], 1
+		var from, to, step interface{} = args[0], args[1], int64(1)
 		if len(args) > 2 {
 			step = args[2]
 		}
@@ -401,7 +406,8 @@ func Parse(tokenString string) (Token, error) {
 				return nil, errors.ErrInvalidTokenInvalidRangeArguments
 			}
 			from = &scriptToken{
-				expression: strFrom[1 : len(strFrom)-1],
+				expression:       strFrom[1 : len(strFrom)-1],
+				returnEvaluation: true,
 			}
 		}
 		if strTo, ok := to.(string); ok {
@@ -409,7 +415,8 @@ func Parse(tokenString string) (Token, error) {
 				return nil, errors.ErrInvalidTokenInvalidRangeArguments
 			}
 			to = &scriptToken{
-				expression: strTo[1 : len(strTo)-1],
+				expression:       strTo[1 : len(strTo)-1],
+				returnEvaluation: true,
 			}
 		}
 		if strStep, ok := step.(string); ok {
@@ -417,7 +424,8 @@ func Parse(tokenString string) (Token, error) {
 				return nil, errors.ErrInvalidTokenInvalidRangeArguments
 			}
 			step = &scriptToken{
-				expression: strStep[1 : len(strStep)-1],
+				expression:       strStep[1 : len(strStep)-1],
+				returnEvaluation: true,
 			}
 		}
 

@@ -1,124 +1,108 @@
 package token
 
 import (
-	"fmt"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func Test_WildcardToken_Apply(t *testing.T) {
 
-	type input struct {
-		obj interface{}
-	}
-
-	type expected struct {
-		obj []interface{}
-		err string
-	}
-
-	tests := []struct {
-		input    input
-		expected expected
-	}{
+	tests := []*tokenTest{
 		{
+			token: &wildcardToken{},
 			input: input{
-				obj: nil,
+				current: nil,
 			},
 			expected: expected{
-				obj: nil,
-				err: "cannot get elements from nil object",
+				value: nil,
+				err:   "cannot get elements from nil object",
 			},
 		},
 		{
+			token: &wildcardToken{},
 			input: input{
-				obj: "not array or map",
+				current: "not array or map",
 			},
 			expected: expected{
-				obj: nil,
-				err: "invalid object. expected array or map",
+				value: nil,
+				err:   "invalid object. expected array or map",
 			},
 		},
 		{
+			token: &wildcardToken{},
 			input: input{
-				obj: []string{"one", "two", "three"},
+				current: []string{"one", "two", "three"},
 			},
 			expected: expected{
-				obj: []interface{}{"one", "two", "three"},
+				value: []interface{}{"one", "two", "three"},
 			},
 		},
 		{
+			token: &wildcardToken{},
 			input: input{
-				obj: []interface{}{"one", "two", "three", 4, 5},
+				current: []interface{}{"one", "two", "three", 4, 5},
 			},
 			expected: expected{
-				obj: []interface{}{"one", "two", "three", 4, 5},
+				value: []interface{}{"one", "two", "three", 4, 5},
 			},
 		},
 		{
+			token: &wildcardToken{},
 			input: input{
-				obj: map[string]int{
+				current: map[string]int64{
 					"one":   1,
 					"two":   2,
 					"three": 3,
 				},
 			},
 			expected: expected{
-				obj: []interface{}{1, 2, 3},
+				value: []interface{}{
+					int64(1),
+					int64(2),
+					int64(3),
+				},
 			},
 		},
 		{
+			token: &wildcardToken{},
 			input: input{
-				obj: map[string]string{
+				current: map[string]string{
 					"one":   "1",
 					"two":   "2",
 					"three": "3",
 				},
 			},
 			expected: expected{
-				obj: []interface{}{"1", "2", "3"},
+				value: []interface{}{"1", "2", "3"},
 			},
 		},
 		{
+			token: &wildcardToken{},
 			input: input{
-				obj: map[string]interface{}{
+				current: map[string]interface{}{
 					"one":   "1",
 					"two":   2,
 					"three": "3",
 				},
 			},
 			expected: expected{
-				obj: []interface{}{"1", 2, "3"},
+				value: []interface{}{"1", 2, "3"},
 			},
 		},
 		{
+			token: &wildcardToken{},
 			input: input{
-				obj: [3]string{
+				current: [3]string{
 					"1",
 					"2",
 					"3",
 				},
 			},
 			expected: expected{
-				obj: []interface{}{"1", "2", "3"},
+				value: []interface{}{"1", "2", "3"},
 			},
 		},
 	}
 
-	for idx, test := range tests {
-		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
-			token := &wildcardToken{}
-			obj, err := token.Apply(nil, test.input.obj, nil)
-
-			assert.ElementsMatch(t, test.expected.obj, obj)
-
-			if test.expected.err == "" {
-				assert.Nil(t, err)
-			} else {
-				assert.EqualError(t, err, test.expected.err)
-			}
-		})
-	}
+	batchTokenTests(t, tests)
 
 }

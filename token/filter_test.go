@@ -1,36 +1,40 @@
 package token
 
 import (
-	"fmt"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
+
+// Test filterToken struct conforms to Token interface
+var _ Token = &filterToken{}
 
 func Test_FilterToken_Apply(t *testing.T) {
 
-	type input struct {
-		expression    string
-		root, current interface{}
-	}
-	type expected struct {
-		value []interface{}
-		err   string
-	}
-
-	tests := []struct {
-		input    input
-		expected expected
-	}{
+	tests := []*tokenTest{
 		{
-			input: input{},
+			token: &filterToken{expression: ""},
+			input: input{
+				current: []interface{}{"one"},
+			},
 			expected: expected{
 				err: "invalid parameter. expression is empty",
 			},
 		},
 		{
-			input: input{
+			token: &filterToken{
 				expression: "@.isbn",
+			},
+			input: input{
+				current: "this is a string",
+			},
+			expected: expected{
+				err: "invalid object. expected array or map",
+			},
+		},
+		{
+			token: &filterToken{
+				expression: "@.isbn",
+			},
+			input: input{
 				current: []map[string]interface{}{
 					{
 						"isbn": 5,
@@ -63,8 +67,10 @@ func Test_FilterToken_Apply(t *testing.T) {
 			},
 		},
 		{
-			input: input{
+			token: &filterToken{
 				expression: "@.price<10",
+			},
+			input: input{
 				current: []map[string]interface{}{
 					{
 						"price": 5,
@@ -94,6 +100,9 @@ func Test_FilterToken_Apply(t *testing.T) {
 			},
 		},
 		{
+			token: &filterToken{
+				expression: "@.price<$.expensive",
+			},
 			input: input{
 				root: map[string]interface{}{
 					"expensive": 10,
@@ -112,7 +121,6 @@ func Test_FilterToken_Apply(t *testing.T) {
 						"name":  "three",
 					},
 				},
-				expression: "@.price<$.expensive",
 			},
 			expected: expected{
 				value: []interface{}{
@@ -127,25 +135,116 @@ func Test_FilterToken_Apply(t *testing.T) {
 				},
 			},
 		},
+		{
+			token: &filterToken{
+				expression: "@.price<$.expensive",
+			},
+			input: input{
+				root: map[string]interface{}{
+					"expensive": 10,
+				},
+				current: map[string]interface{}{
+					"one": map[string]interface{}{
+						"price": 5,
+						"name":  "one",
+					},
+					"two": map[string]interface{}{
+						"price": 9.99,
+						"name":  "two",
+					},
+					"three": map[string]interface{}{
+						"price": 15,
+						"name":  "three",
+					},
+					"four": map[string]interface{}{
+						"name": "three",
+					},
+				},
+			},
+			expected: expected{
+				value: []interface{}{
+					map[string]interface{}{
+						"price": 5,
+						"name":  "one",
+					},
+					map[string]interface{}{
+						"price": 9.99,
+						"name":  "two",
+					},
+				},
+			},
+		},
+		{
+			token: &filterToken{
+				expression: "@.price<$.expensive",
+			},
+			input: input{
+				root: map[string]interface{}{
+					"expensive": 10,
+				},
+				current: []map[string]interface{}{
+					{
+						"price": 5,
+						"name":  "one",
+					},
+					{
+						"price": 9.99,
+						"name":  "two",
+					},
+					{
+						"price": 15,
+						"name":  "three",
+					},
+				},
+				tokens: []Token{
+					&indexToken{index: 1},
+				},
+			},
+			expected: expected{
+				value: map[string]interface{}{
+					"price": 9.99,
+					"name":  "two",
+				},
+			},
+		},
+		{
+			token: &filterToken{
+				expression: "@.price<$.expensive",
+			},
+			input: input{
+				root: map[string]interface{}{
+					"expensive": 10,
+				},
+				current: map[string]interface{}{
+					"one": map[string]interface{}{
+						"price": 5,
+						"name":  "one",
+					},
+					"two": map[string]interface{}{
+						"price": 9.99,
+						"name":  "two",
+					},
+					"three": map[string]interface{}{
+						"price": 15,
+						"name":  "three",
+					},
+					"four": map[string]interface{}{
+						"name": "three",
+					},
+				},
+				tokens: []Token{
+					&keyToken{key: "name"},
+				},
+			},
+			expected: expected{
+				value: []interface{}{
+					"one",
+					"two",
+				},
+			},
+		},
 	}
 
-	for idx, test := range tests {
-		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
-			token := &filterToken{expression: test.input.expression}
-			actual, err := token.Apply(test.input.root, test.input.current, nil)
-
-			if test.expected.err == "" {
-				assert.Nil(t, err)
-			} else {
-				assert.Error(t, err, test.expected.err)
-			}
-
-			if test.expected.value != nil {
-				assert.ElementsMatch(t, test.expected.value, actual)
-			} else {
-				assert.Nil(t, actual)
-			}
-		})
-	}
+	batchTokenTests(t, tests)
 
 }

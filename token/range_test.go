@@ -7,12 +7,502 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TODO : need tests that cover all inputs being nil
+// Test rangeToken struct conforms to Token interface
+var _ Token = &rangeToken{}
+
+func Test_RangeToken_Apply(t *testing.T) {
+
+	tests := []*tokenTest{
+		{
+			token: &rangeToken{},
+			input: input{
+				current: []interface{}{
+					"one",
+					"two",
+					"three",
+				},
+			},
+			expected: expected{
+				value: []interface{}{
+					"one",
+					"two",
+					"three",
+				},
+			},
+		},
+		{
+			token: &rangeToken{
+				from: 1,
+			},
+			input: input{
+				current: []interface{}{
+					"one",
+					"two",
+					"three",
+				},
+			},
+			expected: expected{
+				value: []interface{}{
+					"two",
+					"three",
+				},
+			},
+		},
+		{
+			token: &rangeToken{
+				from: 1,
+				to:   1,
+			},
+			input: input{
+				current: []interface{}{
+					"one",
+					"two",
+					"three",
+				},
+			},
+			expected: expected{
+				value: []interface{}{
+					"two",
+				},
+			},
+		},
+		{
+			token: &rangeToken{
+				from: 1,
+				step: 2,
+			},
+			input: input{
+				current: []interface{}{
+					"one",
+					"two",
+					"three",
+				},
+			},
+			expected: expected{
+				value: []interface{}{
+					"two",
+				},
+			},
+		},
+		{
+			token: &rangeToken{
+				from: 0,
+				to:   2,
+				step: 2,
+			},
+			input: input{
+				current: []interface{}{
+					"one",
+					"two",
+					"three",
+				},
+			},
+			expected: expected{
+				value: []interface{}{
+					"one",
+					"three",
+				},
+			},
+		},
+		{
+			token: &rangeToken{
+				to: 1,
+			},
+			input: input{
+				current: []interface{}{
+					"one",
+					"two",
+					"three",
+				},
+			},
+			expected: expected{
+				value: []interface{}{
+					"one",
+					"two",
+				},
+			},
+		},
+		{
+			token: &rangeToken{
+				to:   1,
+				step: 2,
+			},
+			input: input{
+				current: []interface{}{
+					"one",
+					"two",
+					"three",
+				},
+			},
+			expected: expected{
+				value: []interface{}{
+					"one",
+				},
+			},
+		},
+		{
+			token: &rangeToken{
+				step: 2,
+			},
+			input: input{
+				current: []interface{}{
+					"one",
+					"two",
+					"three",
+				},
+			},
+			expected: expected{
+				value: []interface{}{
+					"one",
+					"three",
+				},
+			},
+		},
+		{
+			token: &rangeToken{to: 100},
+			input: input{
+				current: []interface{}{},
+			},
+			expected: expected{
+				err: "index out of range",
+			},
+		},
+		{
+			token: &rangeToken{
+				from: "string",
+				to:   2,
+				step: 2,
+			},
+			input: input{
+				current: []interface{}{
+					"one",
+					"two",
+					"three",
+				},
+			},
+			expected: expected{
+				err: "invalid parameter. expected integer",
+			},
+		},
+		{
+			token: &rangeToken{
+				from: 0,
+				to:   "string",
+				step: 2,
+			},
+			input: input{
+				current: []interface{}{
+					"one",
+					"two",
+					"three",
+				},
+			},
+			expected: expected{
+				err: "invalid parameter. expected integer",
+			},
+		},
+		{
+			token: &rangeToken{
+				from: 0,
+				to:   1,
+				step: "string",
+			},
+			input: input{
+				current: []interface{}{
+					"one",
+					"two",
+					"three",
+				},
+			},
+			expected: expected{
+				err: "invalid parameter. expected integer",
+			},
+		},
+		{
+			token: &rangeToken{
+				from: &scriptToken{expression: "", returnEvaluation: true},
+			},
+			input: input{
+				current: []interface{}{
+					"one",
+					"two",
+					"three",
+				},
+			},
+			expected: expected{
+				err: "invalid parameter. expression is empty",
+			},
+		},
+		{
+			token: &rangeToken{
+				from: &scriptToken{expression: "\"key\"", returnEvaluation: true},
+			},
+			input: input{
+				current: []interface{}{
+					"one",
+					"two",
+					"three",
+				},
+			},
+			expected: expected{
+				err: "unexpected script result. expected integer",
+			},
+		},
+		{
+			token: &rangeToken{
+				from: &indexToken{index: 0},
+			},
+			input: input{
+				current: []interface{}{
+					"one",
+					"two",
+					"three",
+				},
+			},
+			expected: expected{
+				err: "unexpected script result. expected integer",
+			},
+		},
+		{
+			token: &rangeToken{
+				from: &scriptToken{expression: "@.length-1", returnEvaluation: true},
+			},
+			input: input{
+				current: []interface{}{
+					"one",
+					"two",
+					"three",
+				},
+			},
+			expected: expected{
+				value: []interface{}{
+					"three",
+				},
+			},
+		},
+		{
+			token: &rangeToken{
+				to: &scriptToken{expression: "", returnEvaluation: true},
+			},
+			input: input{
+				current: []interface{}{
+					"one",
+					"two",
+					"three",
+				},
+			},
+			expected: expected{
+				err: "invalid parameter. expression is empty",
+			},
+		},
+		{
+			token: &rangeToken{
+				to: &scriptToken{expression: "\"key\"", returnEvaluation: true},
+			},
+			input: input{
+				current: []interface{}{
+					"one",
+					"two",
+					"three",
+				},
+			},
+			expected: expected{
+				err: "unexpected script result. expected integer",
+			},
+		},
+		{
+			token: &rangeToken{
+				to: &indexToken{index: 0},
+			},
+			input: input{
+				current: []interface{}{
+					"one",
+					"two",
+					"three",
+				},
+			},
+			expected: expected{
+				err: "unexpected script result. expected integer",
+			},
+		},
+		{
+			token: &rangeToken{
+				to: &scriptToken{expression: "@.length-2", returnEvaluation: true},
+			},
+			input: input{
+				current: []interface{}{
+					"one",
+					"two",
+					"three",
+				},
+			},
+			expected: expected{
+				value: []interface{}{
+					"one",
+					"two",
+				},
+			},
+		},
+		{
+			token: &rangeToken{
+				step: &scriptToken{expression: "", returnEvaluation: true},
+			},
+			input: input{
+				current: []interface{}{
+					"one",
+					"two",
+					"three",
+				},
+			},
+			expected: expected{
+				err: "invalid parameter. expression is empty",
+			},
+		},
+		{
+			token: &rangeToken{
+				step: &scriptToken{expression: "\"key\"", returnEvaluation: true},
+			},
+			input: input{
+				current: []interface{}{
+					"one",
+					"two",
+					"three",
+				},
+			},
+			expected: expected{
+				err: "unexpected script result. expected integer",
+			},
+		},
+		{
+			token: &rangeToken{
+				step: &indexToken{index: 0},
+			},
+			input: input{
+				current: []interface{}{
+					"one",
+					"two",
+					"three",
+				},
+			},
+			expected: expected{
+				err: "unexpected script result. expected integer",
+			},
+		},
+		{
+			token: &rangeToken{
+				step: &scriptToken{expression: "@.length-1", returnEvaluation: true},
+			},
+			input: input{
+				current: []interface{}{
+					"one",
+					"two",
+					"three",
+				},
+			},
+			expected: expected{
+				value: []interface{}{
+					"one",
+					"three",
+				},
+			},
+		},
+		{
+			token: &rangeToken{},
+			input: input{
+				tokens: []Token{&keyToken{key: "name"}},
+				current: []map[string]interface{}{
+					{
+						"name": "one",
+					},
+					{
+						"name": "two",
+					},
+					{
+						"name": "three",
+					},
+					{
+						"name": "four",
+					},
+					{
+						"name": "five",
+					},
+				},
+			},
+			expected: expected{
+				value: []interface{}{
+					"one",
+					"two",
+					"three",
+					"four",
+					"five",
+				},
+			},
+		},
+		{
+			token: &rangeToken{
+				from: 1,
+				to:   -2,
+			},
+			input: input{
+				tokens: []Token{&keyToken{key: "name"}},
+				current: []map[string]interface{}{
+					{
+						"name": "one",
+					},
+					{
+						"name": "two",
+					},
+					{
+						"name": "three",
+					},
+					{
+						"name": "four",
+					},
+					{
+						"name": "five",
+					},
+				},
+			},
+			expected: expected{
+				value: []interface{}{
+					"two",
+					"three",
+					"four",
+				},
+			},
+		},
+		{
+			token: &rangeToken{from: 10},
+			input: input{
+				current: "this is a substring",
+			},
+			expected: expected{
+				value: "substring",
+			},
+		},
+		{
+			token: &rangeToken{from: -9},
+			input: input{
+				current: "this is a substring",
+				tokens: []Token{
+					&indexToken{
+						index: 0,
+					},
+				},
+			},
+			expected: expected{
+				value: "s",
+			},
+		},
+	}
+
+	batchTokenTests(t, tests)
+}
 
 func Test_getRange(t *testing.T) {
 	type input struct {
 		obj              interface{}
-		start, end, step *int
+		start, end, step *int64
 	}
 
 	type expected struct {
@@ -22,7 +512,7 @@ func Test_getRange(t *testing.T) {
 
 	testArray := []interface{}{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, "ten", "eleven", "twelve", 13}
 
-	intPtr := func(i int) *int {
+	intPtr := func(i int64) *int64 {
 		return &i
 	}
 
@@ -40,10 +530,19 @@ func Test_getRange(t *testing.T) {
 		},
 		{
 			input: input{
-				obj: "not a array",
+				obj: 123,
 			},
 			expected: expected{
 				err: "invalid object. expected array",
+			},
+		},
+		{
+			input: input{
+				obj:   "return after this:result text",
+				start: intPtr(18),
+			},
+			expected: expected{
+				obj: "result text",
 			},
 		},
 		{
@@ -87,7 +586,7 @@ func Test_getRange(t *testing.T) {
 				end: intPtr(-1),
 			},
 			expected: expected{
-				obj: testArray[0:13],
+				obj: testArray[0:14],
 			},
 		},
 		{
@@ -96,7 +595,7 @@ func Test_getRange(t *testing.T) {
 				end: intPtr(-3),
 			},
 			expected: expected{
-				obj: testArray[0:11],
+				obj: testArray[0:12],
 			},
 		},
 		{
@@ -106,7 +605,7 @@ func Test_getRange(t *testing.T) {
 				end:   intPtr(-1),
 			},
 			expected: expected{
-				obj: testArray[11:13],
+				obj: testArray[11:14],
 			},
 		},
 		{
@@ -126,6 +625,86 @@ func Test_getRange(t *testing.T) {
 			},
 			expected: expected{
 				obj: []interface{}{"two", "four"},
+			},
+		},
+		{
+			input: input{
+				obj:   []string{"one", "two", "three", "four", "five"},
+				start: intPtr(1),
+				end:   intPtr(1),
+			},
+			expected: expected{
+				obj: []interface{}{"two"},
+			},
+		},
+		{
+			input: input{
+				obj: map[string]interface{}{
+					"b": "bee",
+					"a": "ae",
+					"c": "see",
+					"e": "ee",
+					"f": "eff",
+					"g": "gee",
+					"d": "dee",
+				},
+			},
+			expected: expected{
+				obj: []interface{}{
+					"ae",
+					"bee",
+					"see",
+					"dee",
+					"ee",
+					"eff",
+					"gee",
+				},
+			},
+		},
+		{
+			input: input{
+				obj: map[string]interface{}{
+					"b": "bee",
+					"a": "ae",
+					"c": "see",
+					"e": "ee",
+					"f": "eff",
+					"g": "gee",
+					"d": "dee",
+				},
+				step: intPtr(2),
+			},
+			expected: expected{
+				obj: []interface{}{
+					"ae",
+					"see",
+					"ee",
+					"gee",
+				},
+			},
+		},
+		{
+			input: input{
+				obj: map[string]interface{}{
+					"b": "bee",
+					"a": "ae",
+					"c": "see",
+					"e": "ee",
+					"f": "eff",
+					"g": "gee",
+					"d": "dee",
+				},
+				start: intPtr(1),
+				end:   intPtr(-2),
+			},
+			expected: expected{
+				obj: []interface{}{
+					"bee",
+					"see",
+					"dee",
+					"ee",
+					"eff",
+				},
 			},
 		},
 	}

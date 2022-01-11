@@ -9,40 +9,79 @@ import (
 
 func Test_ScriptToken_Apply(t *testing.T) {
 
-	type input struct {
-		expression    string
-		root, current interface{}
-	}
-	type expected struct {
-		value interface{}
-		err   string
-	}
-
-	tests := []struct {
-		input    input
-		expected expected
-	}{
+	tests := []*tokenTest{
 		{
+			token: &scriptToken{},
 			input: input{},
 			expected: expected{
 				err: "invalid parameter. expression is empty",
 			},
 		},
 		{
-			input: input{
+			token: &scriptToken{
+				expression: "length",
+			},
+			input: input{},
+			expected: expected{
+				err: "invalid expression. failed to parse expression. eval:1:1: undeclared name: length",
+			},
+		},
+		{
+			token: &scriptToken{
 				expression: "2*10",
-				root:       nil,
-				current:    nil,
+			},
+			input: input{
+				root:    nil,
+				current: nil,
+			},
+			expected: expected{
+				err: "cannot get index from nil array",
+			},
+		},
+		{
+			token: &scriptToken{
+				expression: "\"key\"",
+			},
+			input: input{
+				root:    nil,
+				current: nil,
+			},
+			expected: expected{
+				err: "cannot get key from nil map",
+			},
+		},
+		{
+			token: &scriptToken{
+				expression: "true",
+			},
+			input: input{
+				root:    nil,
+				current: nil,
+			},
+			expected: expected{
+				err: "unexpected script result. expected integer or string",
+			},
+		},
+		{
+			token: &scriptToken{
+				expression:       "2*10",
+				returnEvaluation: true,
+			},
+			input: input{
+				root:    nil,
+				current: "something",
 			},
 			expected: expected{
 				value: int64(20),
 			},
 		},
 		{
-			input: input{
+			token: &scriptToken{
 				expression: "@.length-1",
-				root:       nil,
-				current:    []interface{}{"one", "two", "three"},
+			},
+			input: input{
+				root:    nil,
+				current: []interface{}{"one", "two", "three"},
 			},
 			expected: expected{
 				value: "three",
@@ -50,22 +89,10 @@ func Test_ScriptToken_Apply(t *testing.T) {
 		},
 	}
 
-	for idx, test := range tests {
-		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
-			token := &scriptToken{expression: test.input.expression}
-			actual, err := token.Apply(test.input.root, test.input.current, nil)
-
-			if test.expected.err == "" {
-				assert.Nil(t, err)
-			} else {
-				assert.Error(t, err, test.expected.err)
-			}
-
-			assert.Equal(t, test.expected.value, actual)
-		})
-	}
-
+	batchTokenTests(t, tests)
 }
+
+// TODO : this still needs expanded
 
 func Test_evaluateExpression(t *testing.T) {
 
@@ -85,6 +112,30 @@ func Test_evaluateExpression(t *testing.T) {
 	}{
 		{
 			input: input{
+				expression: "",
+			},
+			expected: expected{
+				err: "invalid parameter. expression is empty",
+			},
+		},
+		{
+			input: input{
+				expression: "@]",
+			},
+			expected: expected{
+				err: "invalid expression. query must start with '$'",
+			},
+		},
+		{
+			input: input{
+				expression: "@[]",
+			},
+			expected: expected{
+				err: "invalid expression. invalid token. empty subscript",
+			},
+		},
+		{
+			input: input{
 				expression: "\"key\"",
 			},
 			expected: expected{
@@ -96,7 +147,7 @@ func Test_evaluateExpression(t *testing.T) {
 				expression: "1--1",
 			},
 			expected: expected{
-				err: "failed to parse expression : eval:1:2: expected 'EOF', found '--'",
+				err: "failed to parse expression. eval:1:2: expected 'EOF', found '--'",
 			},
 		},
 		{
@@ -282,7 +333,7 @@ func Test_evaluateExpression(t *testing.T) {
 			if test.expected.err == "" {
 				assert.Nil(t, err)
 			} else {
-				assert.Error(t, err, test.expected.err)
+				assert.EqualError(t, err, test.expected.err)
 			}
 
 			assert.Equal(t, test.expected.value, actual)

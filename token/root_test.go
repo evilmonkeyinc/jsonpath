@@ -4,16 +4,16 @@ import (
 	"testing"
 )
 
-// Test currentToken struct conforms to Token interface
-var _ Token = &currentToken{}
+// Test rootToken struct conforms to Token interface
+var _ Token = &rootToken{}
 
-func Test_CurrentToken_Apply(t *testing.T) {
+func Test_RootToken_Apply(t *testing.T) {
 
 	tests := []*tokenTest{
 		{
-			token: &currentToken{},
+			token: &rootToken{},
 			input: input{
-				current: map[string]interface{}{
+				root: map[string]interface{}{
 					"name": "first",
 				},
 			},
@@ -24,9 +24,9 @@ func Test_CurrentToken_Apply(t *testing.T) {
 			},
 		},
 		{
-			token: &currentToken{},
+			token: &rootToken{},
 			input: input{
-				current: map[string]interface{}{
+				root: map[string]interface{}{
 					"name": "first",
 				},
 				tokens: []Token{&keyToken{

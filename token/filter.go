@@ -12,6 +12,9 @@ type filterToken struct {
 }
 
 func (token *filterToken) Apply(root, current interface{}, next []Token) (interface{}, error) {
+	if token.expression == "" {
+		return nil, errors.ErrInvalidParameterExpressionEmpty
+	}
 
 	shouldInclude := func(evaluation interface{}) bool {
 		if evaluation == nil {

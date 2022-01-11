@@ -1,143 +1,174 @@
 package token
 
 import (
-	"fmt"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
+
+// Test indexToken struct conforms to Token interface
+var _ Token = &indexToken{}
 
 func Test_IndexToken_Apply(t *testing.T) {
 
-	t.Run("nested", func(t *testing.T) {
-		token := &indexToken{index: 0}
-		next := &currentToken{}
-
-		actual, err := token.Apply(nil, []string{"one", "two"}, []Token{next})
-		assert.Nil(t, err)
-		assert.Equal(t, "one", actual)
-	})
-
-	type input struct {
-		obj interface{}
-		idx int
-	}
-
-	type expected struct {
-		obj interface{}
-		err string
-	}
-
-	tests := []struct {
-		input    input
-		expected expected
-	}{
+	tests := []*tokenTest{
 		{
+			token: &indexToken{index: 0},
 			input: input{
-				obj: nil,
+				current: nil,
 			},
 			expected: expected{
 				err: "cannot get index from nil array",
 			},
 		},
 		{
+			token: &indexToken{index: 0},
 			input: input{
-				obj: "not a array",
+				current: 123,
 			},
 			expected: expected{
 				err: "invalid object. expected array",
 			},
 		},
 		{
+			token: &indexToken{index: 5},
 			input: input{
-				obj: []string{"one", "two", "three"},
-				idx: 0,
+				current: "Find(X)",
 			},
 			expected: expected{
-				obj: "one",
+				value: "X",
 			},
 		},
 		{
+			token: &indexToken{index: 0},
 			input: input{
-				obj: []string{"one", "two", "three"},
-				idx: 2,
+				current: [3]string{"one", "two", "three"},
 			},
 			expected: expected{
-				obj: "three",
+				value: "one",
 			},
 		},
 		{
+			token: &indexToken{index: 0},
 			input: input{
-				obj: []string{"one", "two", "three"},
-				idx: 4,
+				current: []string{"one", "two", "three"},
+			},
+			expected: expected{
+				value: "one",
+			},
+		},
+		{
+			token: &indexToken{index: 2},
+			input: input{
+				current: []string{"one", "two", "three"},
+			},
+			expected: expected{
+				value: "three",
+			},
+		},
+		{
+			token: &indexToken{index: 4},
+			input: input{
+				current: []string{"one", "two", "three"},
 			},
 			expected: expected{
 				err: "index out of range",
 			},
 		},
 		{
+			token: &indexToken{index: 1},
 			input: input{
-				obj: []interface{}{"one", 2, "three"},
-				idx: 1,
+				current: []interface{}{"one", 2, "three"},
 			},
 			expected: expected{
-				obj: 2,
+				value: 2,
 			},
 		},
 		{
+			token: &indexToken{index: -1},
 			input: input{
-				obj: []interface{}{"one", 2, "three"},
-				idx: -1,
+				current: []interface{}{"one", 2, "three"},
 			},
 			expected: expected{
-				obj: "three",
+				value: "three",
 			},
 		},
 		{
+			token: &indexToken{index: -2},
 			input: input{
-				obj: []interface{}{"one", 2, "three"},
-				idx: -2,
+				current: []interface{}{"one", 2, "three"},
 			},
 			expected: expected{
-				obj: 2,
+				value: 2,
 			},
 		},
 		{
+			token: &indexToken{index: -3},
 			input: input{
-				obj: []interface{}{"one", 2, "three"},
-				idx: -3,
+				current: []interface{}{"one", 2, "three"},
 			},
 			expected: expected{
-				obj: "one",
+				value: "one",
 			},
 		},
 		{
+			token: &indexToken{index: -4},
 			input: input{
-				obj: []interface{}{"one", 2, "three"},
-				idx: -4,
+				current: []interface{}{"one", 2, "three"},
 			},
 			expected: expected{
 				err: "index out of range",
 			},
 		},
+		{
+			token: &indexToken{index: 1},
+			input: input{
+				current: []interface{}{
+					map[string]interface{}{
+						"name":  "one",
+						"value": 1,
+					},
+					map[string]interface{}{
+						"name":  "two",
+						"value": 2,
+					},
+					map[string]interface{}{
+						"name":  "three",
+						"value": 3,
+					},
+				},
+				tokens: []Token{
+					&keyToken{key: "name"},
+				},
+			},
+			expected: expected{
+				value: "two",
+			},
+		},
+		{
+			token: &indexToken{index: 1},
+			input: input{
+				current: map[string]interface{}{
+					"a": map[string]interface{}{
+						"name":  "one",
+						"value": 1,
+					},
+					"c": map[string]interface{}{
+						"name":  "three",
+						"value": 3,
+					},
+					"b": map[string]interface{}{
+						"name":  "two",
+						"value": 2,
+					},
+				},
+			},
+			expected: expected{
+				value: map[string]interface{}{
+					"name":  "two",
+					"value": 2,
+				},
+			},
+		},
 	}
 
-	for idx, test := range tests {
-		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
-			token := &indexToken{
-				index: test.input.idx,
-			}
-
-			obj, err := token.Apply(nil, test.input.obj, nil)
-
-			assert.Equal(t, test.expected.obj, obj)
-
-			if test.expected.err == "" {
-				assert.Nil(t, err)
-			} else {
-				assert.EqualError(t, err, test.expected.err)
-			}
-		})
-	}
-
+	batchTokenTests(t, tests)
 }

@@ -28,8 +28,6 @@ var (
 	ErrInvalidParameterInteger error = fmt.Errorf("%w. expected integer", ErrInvalidParameter)
 	// ErrInvalidObjectMap error returned when an invalid object is found when expecting a map
 	ErrInvalidObjectMap error = fmt.Errorf("%w. expected map", ErrInvalidObject)
-	// ErrInvalidObjectArray error returned when an invalid object is found when expecting an array
-	ErrInvalidObjectArray error = fmt.Errorf("%w. expected array", ErrInvalidObject)
 	// ErrInvalidObjectArrayOrMap error returned when an invalid object is found when expecting an array or map
 	ErrInvalidObjectArrayOrMap error = fmt.Errorf("%w. expected array or map", ErrInvalidObject)
 	// ErrInvalidObjectArrayMapOrString error returned when an invalid object is found when expecting an array, map, or string
@@ -38,10 +36,14 @@ var (
 	ErrInvalidParameter error = fmt.Errorf("invalid parameter")
 	// ErrInvalidParameterRangeNegativeStep error returned with the range token is given a step value that is less than one
 	ErrInvalidParameterRangeNegativeStep error = fmt.Errorf("%w. step should be greater than or equal to 1", ErrInvalidParameter)
+	// ErrInvalidParameterUnionExpectedArguments error returned when union is given no arguments
+	ErrInvalidParameterUnionExpectedArguments error = fmt.Errorf("%w. expected arguments", ErrInvalidParameter)
 	// ErrInvalidParameterUnionExpectedString error returned when union token is expecting string keys but did not
 	ErrInvalidParameterUnionExpectedString error = fmt.Errorf("%w. expected string keys", ErrInvalidParameter)
 	// ErrInvalidParameterUnionExpectedInteger error returned when union token is expecting integer keys but did not
 	ErrInvalidParameterUnionExpectedInteger error = fmt.Errorf("%w. expected integer keys", ErrInvalidParameter)
+	// ErrInvalidParameterUnionExpectedIntegerOrString error returned when union token is expecting integer or string keys but did not
+	ErrInvalidParameterUnionExpectedIntegerOrString error = fmt.Errorf("%w. expected integer or string keys", ErrInvalidParameter)
 	// ErrInvalidParameterScriptExpectedToReturnString error returned when expected to get a string value from an expression but did not
 	ErrInvalidParameterScriptExpectedToReturnString error = fmt.Errorf("%w. expected script to return string", ErrInvalidParameter)
 	// ErrInvalidParameterScriptExpectedToReturnInteger error returned when expected to get an integer value from an expression but did not
@@ -92,6 +94,8 @@ var (
 	ErrQueryNotSpecified error = fmt.Errorf("no valid JSONPath query has been specified")
 	// ErrUnexpectedScriptResultInteger error returned when receive unexpected result from script when expecting an integer
 	ErrUnexpectedScriptResultInteger error = fmt.Errorf("%w. expected integer", errUnexpectedScriptResult)
+	// ErrUnexpectedScriptResultIntegerOrString error returned when receive unexpected result from script when expecting an integer or string
+	ErrUnexpectedScriptResultIntegerOrString error = fmt.Errorf("%w. expected integer or string", errUnexpectedScriptResult)
 
 	errFailedToParseExpression error = fmt.Errorf("failed to parse expression")
 	errInvalidExpression       error = fmt.Errorf("invalid expression")

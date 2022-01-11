@@ -1,106 +1,111 @@
 package token
 
 import (
-	"fmt"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
+
+// Test lengthToken struct conforms to Token interface
+var _ Token = &lengthToken{}
 
 func Test_LengthToken_Apply(t *testing.T) {
 
-	type input struct {
-		obj interface{}
-	}
-
-	type expected struct {
-		length int
-		err    string
-	}
-
-	tests := []struct {
-		input    input
-		expected expected
-	}{
+	tests := []*tokenTest{
 		{
+			token: &lengthToken{},
 			input: input{
-				obj: nil,
+				current: nil,
 			},
 			expected: expected{
 				err: "cannot get elements from nil object",
 			},
 		},
 		{
+			token: &lengthToken{},
 			input: input{
-				obj: 1000,
+				current: 1000,
 			},
 			expected: expected{
 				err: "invalid object. expected array, map, or string",
 			},
 		},
 		{
+			token: &lengthToken{},
 			input: input{
-				obj: [3]string{"one", "two", "three"},
+				current: [3]string{"one", "two", "three"},
 			},
 			expected: expected{
-				length: 3,
+				value: 3,
 			},
 		},
 		{
+			token: &lengthToken{},
 			input: input{
-				obj: []interface{}{"one", "two", "three", 4, 5},
+				current: []interface{}{"one", "two", "three", 4, 5},
 			},
 			expected: expected{
-				length: 5,
+				value: 5,
 			},
 		},
 		{
+			token: &lengthToken{},
 			input: input{
-				obj: map[string]int{
+				current: map[string]int64{
 					"one":   1,
 					"two":   2,
 					"three": 3,
 				},
 			},
 			expected: expected{
-				length: 3,
+				value: 3,
 			},
 		},
 		{
+			token: &lengthToken{},
 			input: input{
-				obj: map[string]string{
+				current: map[string]string{
 					"one":   "1",
 					"two":   "2",
 					"three": "3",
 				},
 			},
 			expected: expected{
-				length: 3,
+				value: 3,
 			},
 		},
 		{
+			token: &lengthToken{},
 			input: input{
-				obj: "this is 26 characters long",
+				current: "this is 26 characters long",
 			},
 			expected: expected{
-				length: 26,
+				value: 26,
+			},
+		},
+		{
+			token: &lengthToken{},
+			input: input{
+				current: "this is 26 characters long",
+				tokens: []Token{
+					&currentToken{},
+				},
+			},
+			expected: expected{
+				value: 26,
+			},
+		},
+		{
+			token: &lengthToken{},
+			input: input{
+				current: map[string]string{
+					"length": "this would be the length",
+				},
+			},
+			expected: expected{
+				value: "this would be the length",
 			},
 		},
 	}
 
-	for idx, test := range tests {
-		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
-			token := &lengthToken{}
-			obj, err := token.Apply(nil, test.input.obj, nil)
-
-			if test.expected.err == "" {
-				assert.Nil(t, err)
-				assert.Equal(t, test.expected.length, obj)
-			} else {
-				assert.EqualError(t, err, test.expected.err)
-				assert.Nil(t, obj)
-			}
-		})
-	}
+	batchTokenTests(t, tests)
 
 }

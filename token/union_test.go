@@ -7,11 +7,28 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_getUnion(t *testing.T) {
+func Test_UnionToken_Apply(t *testing.T) {
+
+	tests := []*tokenTest{
+		{
+			token: &unionToken{},
+			input: input{
+				current: []interface{}{},
+			},
+			expected: expected{
+				err: "invalid parameter. expected arguments",
+			},
+		},
+	}
+
+	batchTokenTests(t, tests)
+}
+
+func Test_getUnionByIndex(t *testing.T) {
 
 	type input struct {
 		obj  interface{}
-		keys []interface{}
+		keys []int64
 	}
 
 	type expected struct {
@@ -33,85 +50,16 @@ func Test_getUnion(t *testing.T) {
 		},
 		{
 			input: input{
-				obj: "not a array or map",
+				obj: 123,
 			},
 			expected: expected{
-				err: "invalid object. expected array or map",
-			},
-		},
-		{
-			input: input{
-				obj:  map[string]interface{}{},
-				keys: []interface{}{"one", 2},
-			},
-			expected: expected{
-				err: "invalid parameter. expected string keys",
-			},
-		},
-		{
-			input: input{
-				obj:  map[string]interface{}{},
-				keys: []interface{}{"one", "two"},
-			},
-			expected: expected{
-				err: "'one,two' key not found in object",
-			},
-		},
-		{
-			input: input{
-				obj: map[string]interface{}{
-					"one":   1,
-					"two":   2,
-					"three": 3,
-					"four":  4,
-				},
-				keys: []interface{}{"one"},
-			},
-			expected: expected{
-				obj: []interface{}{1},
-			},
-		},
-		{
-			input: input{
-				obj: map[string]interface{}{
-					"one":   1,
-					"two":   2,
-					"three": 3,
-					"four":  4,
-				},
-				keys: []interface{}{"one", "two"},
-			},
-			expected: expected{
-				obj: []interface{}{1, 2},
-			},
-		},
-		{
-			input: input{
-				obj: map[string]interface{}{
-					"one":   1,
-					"two":   2,
-					"three": 3,
-					"four":  4,
-				},
-				keys: []interface{}{"one", "three"},
-			},
-			expected: expected{
-				obj: []interface{}{1, 3},
+				err: "invalid object. expected array, map, or string",
 			},
 		},
 		{
 			input: input{
 				obj:  []string{"one", "two", "three"},
-				keys: []interface{}{"one"},
-			},
-			expected: expected{
-				err: "invalid parameter. expected integer keys",
-			},
-		},
-		{
-			input: input{
-				obj:  []string{"one", "two", "three"},
-				keys: []interface{}{4},
+				keys: []int64{4},
 			},
 			expected: expected{
 				err: "index out of range",
@@ -120,7 +68,7 @@ func Test_getUnion(t *testing.T) {
 		{
 			input: input{
 				obj:  []string{"one", "two", "three"},
-				keys: []interface{}{-10},
+				keys: []int64{-10},
 			},
 			expected: expected{
 				err: "index out of range",
@@ -129,7 +77,7 @@ func Test_getUnion(t *testing.T) {
 		{
 			input: input{
 				obj:  []string{"one", "two", "three"},
-				keys: []interface{}{-1, -2},
+				keys: []int64{-1, -2},
 			},
 			expected: expected{
 				obj: []interface{}{"three", "two"},
@@ -138,7 +86,7 @@ func Test_getUnion(t *testing.T) {
 		{
 			input: input{
 				obj:  []string{"one", "two", "three"},
-				keys: []interface{}{0, 2},
+				keys: []int64{0, 2},
 			},
 			expected: expected{
 				obj: []interface{}{"three", "one"},
@@ -147,17 +95,163 @@ func Test_getUnion(t *testing.T) {
 		{
 			input: input{
 				obj:  []interface{}{"one", "two", 3},
-				keys: []interface{}{0, 2},
+				keys: []int64{0, 2},
 			},
 			expected: expected{
 				obj: []interface{}{"one", 3},
+			},
+		},
+		{
+			input: input{
+				obj:  [3]int64{1, 2, 3},
+				keys: []int64{0, 2},
+			},
+			expected: expected{
+				obj: []interface{}{
+					int64(1),
+					int64(3),
+				},
+			},
+		},
+		{
+			input: input{
+				obj:  "abcdefghijklmnopqrstuvwxyz",
+				keys: []int64{0, 2, 4},
+			},
+			expected: expected{
+				obj: "ace",
+			},
+		},
+		{
+			input: input{
+				obj: map[string]interface{}{
+					"a": "one",
+					"d": "four",
+					"e": "five",
+					"c": "three",
+					"b": "two",
+				},
+				keys: []int64{0, 1, 3},
+			},
+			expected: expected{
+				obj: []interface{}{
+					"one",
+					"two",
+					"four",
+				},
 			},
 		},
 	}
 
 	for idx, test := range tests {
 		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
-			obj, err := getUnion(test.input.obj, test.input.keys)
+			obj, err := getUnionByIndex(test.input.obj, test.input.keys)
+
+			if test.expected.obj == nil {
+				assert.Nil(t, obj)
+			} else {
+				assert.NotNil(t, obj)
+				if array, ok := obj.([]interface{}); ok {
+					assert.ElementsMatch(t, test.expected.obj, array)
+				} else {
+					assert.Equal(t, test.expected.obj, obj)
+				}
+			}
+
+			if test.expected.err == "" {
+				assert.Nil(t, err)
+			} else {
+				assert.EqualError(t, err, test.expected.err)
+			}
+		})
+	}
+
+}
+
+func Test_getUnionByKey(t *testing.T) {
+
+	type input struct {
+		obj  interface{}
+		keys []string
+	}
+
+	type expected struct {
+		obj []interface{}
+		err string
+	}
+
+	tests := []struct {
+		input    input
+		expected expected
+	}{
+		{
+			input: input{},
+			expected: expected{
+				err: "cannot get union from nil object",
+			},
+		},
+		{
+			input: input{
+				obj: "string",
+			},
+			expected: expected{
+				err: "invalid object. expected map",
+			},
+		},
+		{
+			input: input{
+				obj: map[string]interface{}{
+					"a": "one",
+					"b": "two",
+					"c": "three",
+					"d": "four",
+					"e": "five",
+				},
+				keys: []string{"a", "b", "c"},
+			},
+			expected: expected{
+				obj: []interface{}{
+					"one",
+					"two",
+					"three",
+				},
+			},
+		},
+		{
+			input: input{
+				obj: map[string]interface{}{
+					"a": "one",
+					"b": "two",
+					"c": "three",
+					"d": "four",
+					"e": "five",
+				},
+				keys: []string{"a", "b", "c", "f"},
+			},
+			expected: expected{
+				err: "'f' key not found in object",
+			},
+		},
+		{
+			input: input{
+				obj: map[string]interface{}{
+					"a": "one",
+					"b": "two",
+					"c": "three",
+					"d": "four",
+					"e": "five",
+				},
+				keys: []string{"a", "b", "c", "f", "one", "blah"},
+			},
+			expected: expected{
+				err: "'blah,f,one' key not found in object",
+			},
+		},
+	}
+
+	for idx, test := range tests {
+		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
+			obj, err := getUnionByKey(test.input.obj, test.input.keys)
 
 			if test.expected.obj == nil {
 				assert.Nil(t, obj)
@@ -175,5 +269,4 @@ func Test_getUnion(t *testing.T) {
 			}
 		})
 	}
-
 }
