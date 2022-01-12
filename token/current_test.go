@@ -2,10 +2,16 @@ package token
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // Test currentToken struct conforms to Token interface
 var _ Token = &currentToken{}
+
+func Test_CurrentToken_Type(t *testing.T) {
+	assert.Equal(t, "current", (&currentToken{}).Type())
+}
 
 func Test_CurrentToken_Apply(t *testing.T) {
 
@@ -29,9 +35,11 @@ func Test_CurrentToken_Apply(t *testing.T) {
 				current: map[string]interface{}{
 					"name": "first",
 				},
-				tokens: []Token{&keyToken{
-					key: "name",
-				}},
+				tokens: []Token{
+					&keyToken{
+						key: "name",
+					},
+				},
 			},
 			expected: expected{
 				value: "first",

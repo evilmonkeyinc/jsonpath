@@ -7,6 +7,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// Test unionToken struct conforms to Token interface
+var _ Token = &unionToken{}
+
+func Test_UnionToken_Type(t *testing.T) {
+	assert.Equal(t, "union", (&unionToken{}).Type())
+}
+
 func Test_UnionToken_Apply(t *testing.T) {
 
 	tests := []*tokenTest{
@@ -16,7 +23,20 @@ func Test_UnionToken_Apply(t *testing.T) {
 				current: []interface{}{},
 			},
 			expected: expected{
-				err: "invalid parameter. expected arguments",
+				err: "union: invalid token argument. expected [array slice] got [nil]",
+			},
+		},
+		{
+			token: &unionToken{
+				arguments: []interface{}{
+					&expressionToken{expression: "nil"},
+				},
+			},
+			input: input{
+				current: []interface{}{},
+			},
+			expected: expected{
+				err: "union: invalid token argument. expected [int string] got [nil]",
 			},
 		},
 		{
@@ -27,7 +47,7 @@ func Test_UnionToken_Apply(t *testing.T) {
 				current: []interface{}{},
 			},
 			expected: expected{
-				err: "invalid parameter. expected string keys",
+				err: "union: invalid token argument. expected [string] got [int]",
 			},
 		},
 		{
@@ -38,7 +58,7 @@ func Test_UnionToken_Apply(t *testing.T) {
 				current: []interface{}{},
 			},
 			expected: expected{
-				err: "invalid parameter. expected integer keys",
+				err: "union: invalid token argument. expected [int] got [string]",
 			},
 		},
 		{
@@ -49,7 +69,7 @@ func Test_UnionToken_Apply(t *testing.T) {
 				current: []interface{}{},
 			},
 			expected: expected{
-				err: "invalid parameter. expected integer or string keys",
+				err: "union: invalid token argument. expected [int string] got [float64]",
 			},
 		},
 		{
@@ -65,7 +85,7 @@ func Test_UnionToken_Apply(t *testing.T) {
 				current: []interface{}{},
 			},
 			expected: expected{
-				err: "invalid parameter. expression is empty",
+				err: "union: invalid token invalid expression. is empty",
 			},
 		},
 		{
@@ -81,7 +101,7 @@ func Test_UnionToken_Apply(t *testing.T) {
 				current: []interface{}{},
 			},
 			expected: expected{
-				err: "invalid parameter. expected integer keys",
+				err: "union: invalid token argument. expected [int] got [string]",
 			},
 		},
 		{
@@ -125,7 +145,7 @@ func Test_UnionToken_Apply(t *testing.T) {
 				},
 			},
 			expected: expected{
-				err: "index out of range",
+				err: "union: invalid token out of range",
 			},
 		},
 		{
@@ -189,7 +209,7 @@ func Test_UnionToken_Apply(t *testing.T) {
 				},
 			},
 			expected: expected{
-				err: "'e' key not found in object",
+				err: "union: invalid token key 'e' not found",
 			},
 		},
 		{
@@ -294,7 +314,7 @@ func Test_getUnionByIndex(t *testing.T) {
 				obj: nil,
 			},
 			expected: expected{
-				err: "cannot get union from nil object",
+				err: "union: invalid token target. expected [array map slice string] got [nil]",
 			},
 		},
 		{
@@ -302,7 +322,7 @@ func Test_getUnionByIndex(t *testing.T) {
 				obj: 123,
 			},
 			expected: expected{
-				err: "invalid object. expected array, map, or string",
+				err: "union: invalid token target. expected [array map slice string] got [int]",
 			},
 		},
 		{
@@ -311,7 +331,7 @@ func Test_getUnionByIndex(t *testing.T) {
 				keys: []int64{4},
 			},
 			expected: expected{
-				err: "index out of range",
+				err: "union: invalid token out of range",
 			},
 		},
 		{
@@ -320,7 +340,7 @@ func Test_getUnionByIndex(t *testing.T) {
 				keys: []int64{-10},
 			},
 			expected: expected{
-				err: "index out of range",
+				err: "union: invalid token out of range",
 			},
 		},
 		{
@@ -394,7 +414,7 @@ func Test_getUnionByIndex(t *testing.T) {
 
 	for idx, test := range tests {
 		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
-			obj, err := getUnionByIndex(test.input.obj, test.input.keys)
+			obj, err := getUnionByIndex(&unionToken{}, test.input.obj, test.input.keys)
 
 			if test.expected.obj == nil {
 				assert.Nil(t, obj)
@@ -436,7 +456,7 @@ func Test_getUnionByKey(t *testing.T) {
 		{
 			input: input{},
 			expected: expected{
-				err: "cannot get union from nil object",
+				err: "union: invalid token target. expected [map] got [nil]",
 			},
 		},
 		{
@@ -444,7 +464,7 @@ func Test_getUnionByKey(t *testing.T) {
 				obj: "string",
 			},
 			expected: expected{
-				err: "invalid object. expected map",
+				err: "union: invalid token target. expected [map] got [string]",
 			},
 		},
 		{
@@ -478,7 +498,7 @@ func Test_getUnionByKey(t *testing.T) {
 				keys: []string{"a", "b", "c", "f"},
 			},
 			expected: expected{
-				err: "'f' key not found in object",
+				err: "union: invalid token key 'f' not found",
 			},
 		},
 		{
@@ -493,14 +513,14 @@ func Test_getUnionByKey(t *testing.T) {
 				keys: []string{"a", "b", "c", "f", "one", "blah"},
 			},
 			expected: expected{
-				err: "'blah,f,one' key not found in object",
+				err: "union: invalid token key 'blah,f,one' not found",
 			},
 		},
 	}
 
 	for idx, test := range tests {
 		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
-			obj, err := getUnionByKey(test.input.obj, test.input.keys)
+			obj, err := getUnionByKey(&unionToken{}, test.input.obj, test.input.keys)
 
 			if test.expected.obj == nil {
 				assert.Nil(t, obj)

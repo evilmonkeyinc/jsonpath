@@ -4,35 +4,41 @@ import (
 	"fmt"
 	"reflect"
 	"sort"
-
-	"github.com/evilmokeyinc/jsonpath/errors"
 )
 
-type firstNToken struct {
+type sliceToken struct {
 	number interface{}
 }
 
-// TODO : get rid of range errors
+func (token *sliceToken) Type() string {
+	return "slice"
+}
 
-func (token *firstNToken) Apply(root, current interface{}, next []Token) (interface{}, error) {
+func (token *sliceToken) Apply(root, current interface{}, next []Token) (interface{}, error) {
 	to := int64(0)
+
+	if token.number == nil {
+		return nil, getInvalidTokenArgumentNilError(token.Type(), reflect.Int)
+	}
 
 	if intValue, ok := isInteger(token.number); ok {
 		to = intValue
-	} else if token, ok := token.number.(*expressionToken); ok {
-		evaluate, err := token.Apply(root, current, nil)
+	} else if expression, ok := token.number.(*expressionToken); ok {
+		evaluate, err := expression.Apply(root, current, nil)
 		if err != nil {
-			// TODO : wrap error?
-			return nil, err
+			return nil, getInvalidTokenError(token.Type(), err)
 		}
 
 		if intValue, ok := isInteger(evaluate); ok {
 			to = intValue
 		} else {
-			return nil, errors.ErrInvalidParameterInteger
+			kind := reflect.TypeOf(evaluate).Kind()
+			err := getUnexpectedExpressionResultError(kind, reflect.Int)
+			return nil, getInvalidTokenError(token.Type(), err)
 		}
 	} else {
-		return nil, errors.ErrInvalidParameterInteger
+		kind := reflect.TypeOf(token.number).Kind()
+		return nil, getInvalidTokenArgumentError(token.Type(), kind, reflect.Int)
 	}
 
 	var objValue reflect.Value
@@ -42,7 +48,10 @@ func (token *firstNToken) Apply(root, current interface{}, next []Token) (interf
 
 	objType := reflect.TypeOf(current)
 	if objType == nil {
-		return nil, errors.ErrGetRangeFromNilArray
+		return nil, getInvalidTokenTargetNilError(
+			token.Type(),
+			reflect.Array, reflect.Map, reflect.Slice, reflect.String,
+		)
 	}
 
 	switch objType.Kind() {
@@ -69,7 +78,11 @@ func (token *firstNToken) Apply(root, current interface{}, next []Token) (interf
 		mapKeys = nil
 		break
 	default:
-		return nil, errors.ErrInvalidObjectArrayMapOrString
+		return nil, getInvalidTokenTargetError(
+			token.Type(),
+			objType.Kind(),
+			reflect.Array, reflect.Map, reflect.Slice, reflect.String,
+		)
 	}
 
 	if to < 0 {
@@ -77,7 +90,7 @@ func (token *firstNToken) Apply(root, current interface{}, next []Token) (interf
 	}
 
 	if to < 0 || to >= length {
-		return nil, errors.ErrIndexOutOfRange
+		return nil, getInvalidTokenOutOfRangeError(token.Type())
 	}
 
 	elements := make([]interface{}, 0)

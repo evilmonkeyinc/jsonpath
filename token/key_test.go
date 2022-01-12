@@ -2,10 +2,16 @@ package token
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // Test keyToken struct conforms to Token interface
 var _ Token = &keyToken{}
+
+func Test_KeyToken_Type(t *testing.T) {
+	assert.Equal(t, "key", (&keyToken{}).Type())
+}
 
 func Test_KeyToken_Apply(t *testing.T) {
 
@@ -17,7 +23,7 @@ func Test_KeyToken_Apply(t *testing.T) {
 			},
 			expected: expected{
 				value: nil,
-				err:   "cannot get key from nil map",
+				err:   "key: invalid token target. expected [map] got [nil]",
 			},
 		},
 		{
@@ -27,7 +33,7 @@ func Test_KeyToken_Apply(t *testing.T) {
 			},
 			expected: expected{
 				value: nil,
-				err:   "invalid object. expected map",
+				err:   "key: invalid token target. expected [map] got [string]",
 			},
 		},
 		{
@@ -51,7 +57,7 @@ func Test_KeyToken_Apply(t *testing.T) {
 			},
 			expected: expected{
 				value: nil,
-				err:   "'missing' key not found in object",
+				err:   "key: invalid token key 'missing' not found",
 			},
 		},
 		{

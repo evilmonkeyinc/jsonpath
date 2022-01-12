@@ -1,53 +1,73 @@
 package token
 
-import "testing"
+import (
+	"testing"
 
-func Test_FirstNToken_Apply(t *testing.T) {
+	"github.com/stretchr/testify/assert"
+)
+
+// Test sliceToken struct conforms to Token interface
+var _ Token = &sliceToken{}
+
+func Test_SliceToken_Type(t *testing.T) {
+	assert.Equal(t, "slice", (&sliceToken{}).Type())
+}
+
+func Test_SliceToken_Apply(t *testing.T) {
 
 	tests := []*tokenTest{
 		{
-			token: &firstNToken{},
+			token: &sliceToken{},
 			input: input{},
 			expected: expected{
-				err: "invalid parameter. expected integer",
+				err: "slice: invalid token argument. expected [int] got [nil]",
 			},
 		},
 		{
-			token: &firstNToken{number: 2},
+			token: &sliceToken{
+				number: "1",
+			},
 			input: input{},
 			expected: expected{
-				err: "cannot get range from nil array",
+				err: "slice: invalid token argument. expected [int] got [string]",
 			},
 		},
 		{
-			token: &firstNToken{number: 2},
+			token: &sliceToken{number: 2},
+			input: input{},
+			expected: expected{
+				err: "slice: invalid token target. expected [array map slice string] got [nil]",
+			},
+		},
+		{
+			token: &sliceToken{number: 2},
 			input: input{
 				current: 123,
 			},
 			expected: expected{
-				err: "invalid object. expected array, map, or string",
+				err: "slice: invalid token target. expected [array map slice string] got [int]",
 			},
 		},
 		{
-			token: &firstNToken{
+			token: &sliceToken{
 				number: &expressionToken{expression: ""},
 			},
 			input: input{},
 			expected: expected{
-				err: "invalid parameter. expression is empty",
+				err: "slice: invalid token invalid expression. is empty",
 			},
 		},
 		{
-			token: &firstNToken{
+			token: &sliceToken{
 				number: &expressionToken{expression: "\"key\""},
 			},
 			input: input{},
 			expected: expected{
-				err: "invalid parameter. expected integer",
+				err: "slice: invalid token unexpected expression result. expected [int] got [string]",
 			},
 		},
 		{
-			token: &firstNToken{
+			token: &sliceToken{
 				number: &expressionToken{expression: "2"},
 			},
 			input: input{
@@ -65,7 +85,7 @@ func Test_FirstNToken_Apply(t *testing.T) {
 			},
 		},
 		{
-			token: &firstNToken{
+			token: &sliceToken{
 				number: -2,
 			},
 			input: input{
@@ -86,7 +106,7 @@ func Test_FirstNToken_Apply(t *testing.T) {
 			},
 		},
 		{
-			token: &firstNToken{
+			token: &sliceToken{
 				number: &expressionToken{expression: "-2"},
 			},
 			input: input{
@@ -107,7 +127,7 @@ func Test_FirstNToken_Apply(t *testing.T) {
 			},
 		},
 		{
-			token: &firstNToken{
+			token: &sliceToken{
 				number: 5,
 			},
 			input: input{
@@ -120,11 +140,11 @@ func Test_FirstNToken_Apply(t *testing.T) {
 				},
 			},
 			expected: expected{
-				err: "index out of range",
+				err: "slice: invalid token out of range",
 			},
 		},
 		{
-			token: &firstNToken{
+			token: &sliceToken{
 				number: 2,
 			},
 			input: input{
@@ -142,7 +162,7 @@ func Test_FirstNToken_Apply(t *testing.T) {
 			},
 		},
 		{
-			token: &firstNToken{
+			token: &sliceToken{
 				number: 3,
 			},
 			input: input{
@@ -153,7 +173,7 @@ func Test_FirstNToken_Apply(t *testing.T) {
 			},
 		},
 		{
-			token: &firstNToken{
+			token: &sliceToken{
 				number: 3,
 			},
 			input: input{
@@ -174,7 +194,7 @@ func Test_FirstNToken_Apply(t *testing.T) {
 			},
 		},
 		{
-			token: &firstNToken{
+			token: &sliceToken{
 				number: 3,
 			},
 			input: input{
@@ -188,7 +208,7 @@ func Test_FirstNToken_Apply(t *testing.T) {
 			},
 		},
 		{
-			token: &firstNToken{
+			token: &sliceToken{
 				number: 2,
 			},
 			input: input{
@@ -206,7 +226,7 @@ func Test_FirstNToken_Apply(t *testing.T) {
 			},
 		},
 		{
-			token: &firstNToken{
+			token: &sliceToken{
 				number: 2,
 			},
 			input: input{

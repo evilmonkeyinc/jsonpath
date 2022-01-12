@@ -1,21 +1,29 @@
 package token
 
 import (
-	"github.com/evilmokeyinc/jsonpath/errors"
+	"reflect"
 )
 
 type scriptToken struct {
 	expression string
 }
 
+func (token *scriptToken) Type() string {
+	return "script"
+}
+
 func (token *scriptToken) Apply(root, current interface{}, next []Token) (interface{}, error) {
 	if token.expression == "" {
-		return nil, errors.ErrInvalidParameterExpressionEmpty
+		return nil, getInvalidExpressionEmptyError()
 	}
 
 	value, err := evaluateExpression(root, current, token.expression)
 	if err != nil {
-		return nil, errors.GetInvalidExpressionError(err)
+		return nil, getInvalidExpressionError(err)
+	}
+
+	if value == nil {
+		return nil, getUnexpectedExpressionResultNilError(reflect.Int, reflect.String)
 	}
 
 	if strValue, ok := value.(string); ok {
@@ -25,5 +33,7 @@ func (token *scriptToken) Apply(root, current interface{}, next []Token) (interf
 		nextToken := &indexToken{index: int64(intValue)}
 		return nextToken.Apply(root, current, next)
 	}
-	return nil, errors.ErrUnexpectedScriptResultIntegerOrString
+
+	valueType := reflect.TypeOf(value)
+	return nil, getUnexpectedExpressionResultError(valueType.Kind(), reflect.Int, reflect.String)
 }

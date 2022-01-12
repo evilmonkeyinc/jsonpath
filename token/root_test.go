@@ -2,10 +2,16 @@ package token
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // Test rootToken struct conforms to Token interface
 var _ Token = &rootToken{}
+
+func Test_RootToken_Type(t *testing.T) {
+	assert.Equal(t, "root", (&rootToken{}).Type())
+}
 
 func Test_RootToken_Apply(t *testing.T) {
 

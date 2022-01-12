@@ -2,18 +2,23 @@ package token
 
 import (
 	"reflect"
-
-	"github.com/evilmokeyinc/jsonpath/errors"
 )
 
 type keyToken struct {
 	key string
 }
 
+func (token *keyToken) Type() string {
+	return "key"
+}
+
 func (token *keyToken) Apply(root, current interface{}, next []Token) (interface{}, error) {
 	objType := reflect.TypeOf(current)
 	if objType == nil {
-		return nil, errors.ErrGetKeyFromNilMap
+		return nil, getInvalidTokenTargetNilError(
+			token.Type(),
+			reflect.Map,
+		)
 	}
 	switch objType.Kind() {
 	case reflect.Map:
@@ -30,8 +35,11 @@ func (token *keyToken) Apply(root, current interface{}, next []Token) (interface
 				return value, nil
 			}
 		}
-		return nil, errors.GetKeyNotFoundError(token.key)
+		return nil, getInvalidTokenKeyNotFoundError(token.Type(), token.key)
 	default:
-		return nil, errors.ErrInvalidObjectMap
+		return nil, getInvalidTokenTargetError(
+			token.Type(),
+			objType.Kind(),
+			reflect.Map)
 	}
 }

@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"reflect"
 	"sort"
-
-	"github.com/evilmokeyinc/jsonpath/errors"
 )
 
 type indexToken struct {
 	index int64
+}
+
+func (token *indexToken) Type() string {
+	return "index"
 }
 
 func (token *indexToken) Apply(root, current interface{}, next []Token) (interface{}, error) {
@@ -17,7 +19,13 @@ func (token *indexToken) Apply(root, current interface{}, next []Token) (interfa
 
 	objType := reflect.TypeOf(current)
 	if objType == nil {
-		return nil, errors.ErrGetIndexFromNilArray
+		return nil, getInvalidTokenTargetNilError(
+			token.Type(),
+			reflect.Array,
+			reflect.Map,
+			reflect.Slice,
+			reflect.String,
+		)
 	}
 
 	var objValue reflect.Value
@@ -45,7 +53,11 @@ func (token *indexToken) Apply(root, current interface{}, next []Token) (interfa
 		length = int64(objValue.Len())
 		mapKeys = nil
 	default:
-		return nil, errors.ErrInvalidObjectArrayMapOrString
+		return nil, getInvalidTokenTargetError(
+			token.Type(),
+			objType.Kind(),
+			reflect.Array, reflect.Map, reflect.Slice, reflect.String,
+		)
 	}
 
 	if idx < 0 {
@@ -53,7 +65,7 @@ func (token *indexToken) Apply(root, current interface{}, next []Token) (interfa
 	}
 
 	if idx < 0 || idx >= length {
-		return nil, errors.ErrIndexOutOfRange
+		return nil, getInvalidTokenOutOfRangeError(token.Type())
 	}
 
 	var value interface{}

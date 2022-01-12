@@ -2,7 +2,16 @@ package token
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
+
+// Test scriptToken struct conforms to Token interface
+var _ Token = &scriptToken{}
+
+func Test_ScriptToken_Type(t *testing.T) {
+	assert.Equal(t, "script", (&scriptToken{}).Type())
+}
 
 func Test_ScriptToken_Apply(t *testing.T) {
 
@@ -11,7 +20,7 @@ func Test_ScriptToken_Apply(t *testing.T) {
 			token: &scriptToken{},
 			input: input{},
 			expected: expected{
-				err: "invalid parameter. expression is empty",
+				err: "invalid expression. is empty",
 			},
 		},
 		{
@@ -20,7 +29,16 @@ func Test_ScriptToken_Apply(t *testing.T) {
 			},
 			input: input{},
 			expected: expected{
-				err: "invalid expression. failed to parse expression. eval:1:1: undeclared name: length",
+				err: "invalid expression. eval:1:1: undeclared name: length",
+			},
+		},
+		{
+			token: &scriptToken{
+				expression: "nil",
+			},
+			input: input{},
+			expected: expected{
+				err: "unexpected expression result. expected [int string] got [nil]",
 			},
 		},
 		{
@@ -32,7 +50,7 @@ func Test_ScriptToken_Apply(t *testing.T) {
 				current: nil,
 			},
 			expected: expected{
-				err: "cannot get index from nil array",
+				err: "index: invalid token target. expected [array map slice string] got [nil]",
 			},
 		},
 		{
@@ -44,7 +62,7 @@ func Test_ScriptToken_Apply(t *testing.T) {
 				current: nil,
 			},
 			expected: expected{
-				err: "cannot get key from nil map",
+				err: "key: invalid token target. expected [map] got [nil]",
 			},
 		},
 		{
@@ -56,7 +74,7 @@ func Test_ScriptToken_Apply(t *testing.T) {
 				current: nil,
 			},
 			expected: expected{
-				err: "unexpected script result. expected integer or string",
+				err: "unexpected expression result. expected [int string] got [bool]",
 			},
 		},
 		{

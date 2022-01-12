@@ -2,11 +2,13 @@ package token
 
 import (
 	"reflect"
-
-	"github.com/evilmokeyinc/jsonpath/errors"
 )
 
 type wildcardToken struct {
+}
+
+func (token *wildcardToken) Type() string {
+	return "wildcard"
 }
 
 func (token *wildcardToken) Apply(root, current interface{}, next []Token) (interface{}, error) {
@@ -15,7 +17,10 @@ func (token *wildcardToken) Apply(root, current interface{}, next []Token) (inte
 
 	objType := reflect.TypeOf(current)
 	if objType == nil {
-		return nil, errors.ErrGetElementsFromNilObject
+		return nil, getInvalidTokenTargetNilError(
+			token.Type(),
+			reflect.Array, reflect.Map, reflect.Slice,
+		)
 	}
 	switch objType.Kind() {
 	case reflect.Map:
@@ -33,7 +38,11 @@ func (token *wildcardToken) Apply(root, current interface{}, next []Token) (inte
 			elements = append(elements, value)
 		}
 	default:
-		return nil, errors.ErrInvalidObjectArrayOrMap
+		return nil, getInvalidTokenTargetError(
+			token.Type(),
+			objType.Kind(),
+			reflect.Array, reflect.Map, reflect.Slice,
+		)
 	}
 
 	if len(next) > 0 {

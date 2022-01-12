@@ -1,4 +1,4 @@
-module github.com/evilmokeyinc/jsonpath
+module github.com/evilmonkeyinc/jsonpath
 
 go 1.17
 

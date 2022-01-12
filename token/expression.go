@@ -7,22 +7,24 @@ import (
 	"go/types"
 	"strconv"
 	"strings"
-
-	"github.com/evilmokeyinc/jsonpath/errors"
 )
 
 type expressionToken struct {
 	expression string
 }
 
+func (token *expressionToken) Type() string {
+	return "expression"
+}
+
 func (token *expressionToken) Apply(root, current interface{}, next []Token) (interface{}, error) {
 	if token.expression == "" {
-		return nil, errors.ErrInvalidParameterExpressionEmpty
+		return nil, getInvalidExpressionEmptyError()
 	}
 
 	value, err := evaluateExpression(root, current, token.expression)
 	if err != nil {
-		return nil, errors.GetInvalidExpressionError(err)
+		return nil, getInvalidExpressionError(err)
 	}
 
 	if len(next) > 0 {
@@ -39,13 +41,14 @@ func (token *expressionToken) Apply(root, current interface{}, next []Token) (in
 
 func evaluateExpression(root, current interface{}, expression string) (interface{}, error) {
 	if expression == "" {
-		return nil, errors.ErrInvalidParameterExpressionEmpty
+		return nil, getInvalidExpressionEmptyError()
 	}
 
 	rootIndex := strings.Index(expression, "$")
 	currentIndex := strings.Index(expression, "@")
 
 	for rootIndex > -1 || currentIndex > -1 {
+		praseOptions := &ParseOptions{IsStrict: false}
 
 		query := ""
 		if rootIndex > -1 {
@@ -56,7 +59,7 @@ func evaluateExpression(root, current interface{}, expression string) (interface
 
 		tokenStrings, remainder, err := Tokenize(query)
 		if err != nil {
-			return nil, errors.GetInvalidExpressionError(err)
+			return nil, getInvalidExpressionError(err)
 		}
 		if remainder != "" {
 			// shorten query to only what is being replaced
@@ -65,16 +68,16 @@ func evaluateExpression(root, current interface{}, expression string) (interface
 		if len(tokenStrings) > 0 {
 			tokens := make([]Token, 0)
 			for _, tokenString := range tokenStrings {
-				token, err := Parse(tokenString)
+				token, err := Parse(tokenString, praseOptions)
 				if err != nil {
-					return nil, errors.GetInvalidExpressionError(err)
+					return nil, getInvalidExpressionError(err)
 				}
 				tokens = append(tokens, token)
 			}
 
 			value, err := tokens[0].Apply(root, current, tokens[1:])
 			if err != nil {
-				return nil, errors.GetInvalidExpressionError(err)
+				return nil, getInvalidExpressionError(err)
 			}
 
 			new := fmt.Sprintf("%v", value)
@@ -104,7 +107,7 @@ func evaluateExpression(root, current interface{}, expression string) (interface
 	fs := token.NewFileSet()
 	tv, err := types.Eval(fs, nil, token.NoPos, expression)
 	if err != nil {
-		return nil, errors.GetFailedToParseExpressionError(err)
+		return nil, getInvalidExpressionError(err)
 	}
 	if tv.Value == nil {
 		return nil, nil

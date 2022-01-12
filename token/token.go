@@ -3,21 +3,18 @@ package token
 import (
 	"strconv"
 	"strings"
-
-	"github.com/evilmokeyinc/jsonpath/errors"
 )
 
 // Token represents a component of a JSON Path query
 type Token interface {
 	Apply(root, current interface{}, next []Token) (interface{}, error)
+	Type() string
 }
-
-// TODO : need fix and unit tests for just giving $ or @
 
 // Tokenize converts a JSON Path query to a collection of parsable tokens
 func Tokenize(query string) ([]string, string, error) {
 	if query == "" {
-		return nil, query, errors.ErrQueryNotSpecified
+		return nil, query, getUnexpectedTokenError("", 0)
 	}
 
 	tokens := []string{}
@@ -31,12 +28,12 @@ tokenize:
 
 		if idx == 0 {
 			if tokenString != "$" && tokenString != "@" {
-				return nil, "", errors.ErrInvalidInitialToken
+				return nil, "", getUnexpectedTokenError(string(rne), idx)
 			}
 
 			if len(query) > 1 {
 				if next := query[1]; next != '.' && next != '[' {
-					return nil, "", errors.ErrInvalidInitialToken
+					return nil, "", getUnexpectedTokenError(string(next), idx+1)
 				}
 			}
 
@@ -142,8 +139,21 @@ tokenize:
 	return tokens, remainder, nil
 }
 
+// ParseOptions represents the options for the parse function
+type ParseOptions struct {
+	// IsString if true will allow Parse() to error
+	// if there is additional whitespace in tokens
+	// or other minor format issues that could be ignored
+	IsStrict bool
+}
+
 // Parse will parse a single token string and return an actionable token
-func Parse(tokenString string) (Token, error) {
+func Parse(tokenString string, options *ParseOptions) (Token, error) {
+	if options == nil {
+		options = &ParseOptions{
+			IsStrict: true,
+		}
+	}
 
 	isScript := func(token string) bool {
 		return len(token) > 2 && strings.HasPrefix(token, "(") && strings.HasSuffix(token, ")")
@@ -155,7 +165,7 @@ func Parse(tokenString string) (Token, error) {
 
 	tokenString = strings.TrimSpace(tokenString)
 	if tokenString == "" {
-		return nil, errors.ErrInvalidTokenEmpty
+		return nil, getInvalidTokenEmpty()
 	}
 
 	if tokenString == "$" {
@@ -174,7 +184,7 @@ func Parse(tokenString string) (Token, error) {
 	if !strings.HasPrefix(tokenString, "[") {
 
 		if _, err := strconv.ParseInt(tokenString, 10, 64); err == nil {
-			return nil, errors.ErrInvalidTokenUnexpectedIndex
+			return nil, getInvalidTokenFormatError(tokenString)
 		}
 
 		if tokenString == "length" {
@@ -186,13 +196,13 @@ func Parse(tokenString string) (Token, error) {
 	}
 
 	if !strings.HasSuffix(tokenString, "]") {
-		return nil, errors.ErrInvalidTokenMissingSubscriptClose
+		return nil, getInvalidTokenFormatError(tokenString)
 	}
 	// subscript, or child operator
 
 	subscript := strings.TrimSpace(tokenString[1 : len(tokenString)-1])
 	if subscript == "" {
-		return nil, errors.ErrInvalidTokenEmptySubscript
+		return nil, getInvalidTokenFormatError(tokenString)
 	}
 
 	if subscript == "*" {
@@ -201,7 +211,7 @@ func Parse(tokenString string) (Token, error) {
 	} else if strings.HasPrefix(subscript, "?") {
 		// filter
 		if !strings.HasPrefix(subscript, "?(") || !strings.HasSuffix(subscript, ")") {
-			return nil, errors.ErrInvalidTokenInvalidFilterFormat
+			return nil, getInvalidTokenFormatError(tokenString)
 		}
 		return &filterToken{
 			expression: strings.TrimSpace(subscript[2 : len(subscript)-1]),
@@ -216,14 +226,20 @@ func Parse(tokenString string) (Token, error) {
 
 	args := []interface{}{}
 
-	remainder := ""
+	bufferString := ""
 	for idx, rne := range subscript {
-		remainder += string(rne)
+		bufferString += string(rne)
 		switch rne {
 		case ' ':
+
 			if !openQuote && openBracketCount == closeBracketCount {
-				// do not allow spaces outside of quotes keys or scripts
-				return nil, errors.ErrInvalidTokenUnexpectedSpace
+				if options.IsStrict {
+					// do not allow spaces outside of quotes keys or scripts
+					return nil, getInvalidTokenFormatError(tokenString)
+				}
+
+				// remove whitespace
+				bufferString = strings.TrimSpace(bufferString)
 			}
 			break
 		case '(':
@@ -237,12 +253,12 @@ func Parse(tokenString string) (Token, error) {
 
 			if openBracketCount == closeBracketCount {
 				// if we are closing bracket, add script to args
-				script := remainder[:]
+				script := bufferString[:]
 				if !isScript(script) {
-					return nil, errors.ErrInvalidTokenInvalidScriptFormat
+					return nil, getInvalidExpressionFormatError(script)
 				}
 				args = append(args, script)
-				remainder = ""
+				bufferString = ""
 			}
 			break
 		case '\'':
@@ -253,27 +269,27 @@ func Parse(tokenString string) (Token, error) {
 
 			if openQuote {
 				// open quote
-				if remainder != "'" {
-					return nil, errors.ErrInvalidTokenUnexpectedQuote
+				if bufferString != "'" {
+					return nil, getInvalidTokenFormatError(tokenString)
 				}
 			} else {
 				// close quote
-				if !isKey(remainder) {
-					return nil, errors.ErrInvalidTokenInvalidKeyFormat
+				if !isKey(bufferString) {
+					return nil, getInvalidTokenFormatError(tokenString)
 				}
-				args = append(args, remainder[:])
-				remainder = ""
+				args = append(args, bufferString[:])
+				bufferString = ""
 			}
 			break
 		case ':':
 			if openQuote || (openBracketCount != closeBracketCount) {
 				continue
 			}
-			if arg := remainder[:len(remainder)-1]; arg != "" {
+			if arg := bufferString[:len(bufferString)-1]; arg != "" {
 				if num, err := strconv.ParseInt(arg, 10, 64); err == nil {
 					args = append(args, num)
 				} else {
-					return nil, errors.ErrInvalidTokenInvalidRangeArguments
+					return nil, getInvalidTokenFormatError(tokenString)
 				}
 			} else if idx == 0 {
 				// if the token starts with :
@@ -281,14 +297,14 @@ func Parse(tokenString string) (Token, error) {
 			}
 			args = append(args, ":")
 
-			remainder = ""
+			bufferString = ""
 			break
 		case ',':
 			if openQuote || (openBracketCount != closeBracketCount) {
 				continue
 			}
 
-			if arg := remainder[:len(remainder)-1]; arg != "" {
+			if arg := bufferString[:len(bufferString)-1]; arg != "" {
 				if num, err := strconv.ParseInt(arg, 10, 64); err == nil {
 					args = append(args, num)
 				} else {
@@ -297,16 +313,16 @@ func Parse(tokenString string) (Token, error) {
 			}
 			args = append(args, ",")
 
-			remainder = ""
+			bufferString = ""
 			break
 		}
 	}
 
-	if remainder != "" {
-		if num, err := strconv.ParseInt(remainder, 10, 64); err == nil {
+	if bufferString != "" {
+		if num, err := strconv.ParseInt(bufferString, 10, 64); err == nil {
 			args = append(args, num)
 		} else {
-			args = append(args, remainder[:])
+			args = append(args, bufferString[:])
 		}
 	}
 
@@ -323,11 +339,11 @@ func Parse(tokenString string) (Token, error) {
 					expression: strArg[1 : len(strArg)-1],
 				}, nil
 			}
-			return nil, errors.ErrInvalidTokenUnexpectedString
+			return nil, getInvalidTokenFormatError(tokenString)
 		} else if intArg, ok := isInteger(arg); ok {
 			return &indexToken{index: intArg}, nil
 		}
-		return nil, errors.ErrInvalidTokenInvalidIndex
+		return nil, getInvalidTokenFormatError(tokenString)
 	}
 
 	// range or union
@@ -344,7 +360,7 @@ func Parse(tokenString string) (Token, error) {
 			colonCount++
 			if lastWasColon {
 				// cannot have two colons in a row
-				return nil, errors.ErrInvalidTokenIncorrectNumberOfRangeArguments
+				return nil, getInvalidTokenFormatError(tokenString)
 			}
 			lastWasColon = true
 			continue
@@ -361,13 +377,13 @@ func Parse(tokenString string) (Token, error) {
 	args = justArgs
 
 	if colonCount > 0 && commaCount > 0 {
-		return nil, errors.ErrInvalidTokenNoRangeInUnion
+		return nil, getInvalidTokenFormatError(tokenString)
 	} else if commaCount > 0 {
 		// Union
 
 		// we should always have one more comma than arg
 		if commaCount >= len(args) {
-			return nil, errors.ErrInvalidTokenEmptyUnionArguments
+			return nil, getInvalidTokenFormatError(tokenString)
 		}
 		for idx, arg := range args {
 			if strArg, ok := arg.(string); ok {
@@ -379,10 +395,10 @@ func Parse(tokenString string) (Token, error) {
 				} else if isKey(strArg) {
 					args[idx] = strArg[1 : len(strArg)-1]
 				} else {
-					return nil, errors.ErrInvalidTokenUnexpectedUnionArguments
+					return nil, getInvalidTokenFormatError(tokenString)
 				}
 			} else if _, ok := isInteger(arg); !ok {
-				return nil, errors.ErrInvalidTokenUnexpectedUnionArguments
+				return nil, getInvalidTokenFormatError(tokenString)
 			}
 		}
 
@@ -390,7 +406,7 @@ func Parse(tokenString string) (Token, error) {
 	} else if colonCount > 0 {
 		// Range
 		if colonCount > 2 {
-			return nil, errors.ErrInvalidTokenIncorrectNumberOfRangeArguments
+			return nil, getInvalidTokenFormatError(tokenString)
 		}
 		if colonCount == 1 && len(args) == 1 {
 			// to help support [x:] tokens
@@ -403,31 +419,30 @@ func Parse(tokenString string) (Token, error) {
 		}
 
 		if from == nil {
-			// This could be a firstN token if step is not set
+			// This could be a slice token if step is not set
 			if len(args) == 2 && args[1] != nil {
 
 				number := args[1]
 				if strValue, ok := number.(string); ok {
 					if !isScript(strValue) {
-						return nil, errors.ErrInvalidTokenInvalidRangeArguments
+						return nil, getInvalidExpressionFormatError(strValue)
 					}
 					number = &expressionToken{
 						expression: strValue[1 : len(strValue)-1],
 					}
 				}
 
-				return &firstNToken{
+				return &sliceToken{
 					number: number,
 				}, nil
-
 			}
-			// TODO: from cannot be nil error?
-			return nil, errors.ErrInvalidTokenInvalidRangeArguments
+
+			return nil, getInvalidTokenFormatError(tokenString)
 		}
 
 		if strFrom, ok := from.(string); ok {
 			if !isScript(strFrom) {
-				return nil, errors.ErrInvalidTokenInvalidRangeArguments
+				return nil, getInvalidExpressionFormatError(strFrom)
 			}
 			from = &expressionToken{
 				expression: strFrom[1 : len(strFrom)-1],
@@ -435,7 +450,7 @@ func Parse(tokenString string) (Token, error) {
 		}
 		if strTo, ok := to.(string); ok {
 			if !isScript(strTo) {
-				return nil, errors.ErrInvalidTokenInvalidRangeArguments
+				return nil, getInvalidExpressionFormatError(strTo)
 			}
 			to = &expressionToken{
 				expression: strTo[1 : len(strTo)-1],
@@ -443,7 +458,7 @@ func Parse(tokenString string) (Token, error) {
 		}
 		if strStep, ok := step.(string); ok {
 			if !isScript(strStep) {
-				return nil, errors.ErrInvalidTokenInvalidRangeArguments
+				return nil, getInvalidExpressionFormatError(strStep)
 			}
 			step = &expressionToken{
 				expression: strStep[1 : len(strStep)-1],
@@ -457,5 +472,5 @@ func Parse(tokenString string) (Token, error) {
 		}, nil
 	}
 
-	return nil, errors.ErrInvalidQueryUnexpectedTokens
+	return nil, getInvalidTokenFormatError(tokenString)
 }

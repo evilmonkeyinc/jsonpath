@@ -5,44 +5,51 @@ import (
 	"reflect"
 	"sort"
 	"strings"
-
-	"github.com/evilmokeyinc/jsonpath/errors"
 )
 
 type unionToken struct {
 	arguments []interface{}
 }
 
+func (token *unionToken) Type() string {
+	return "union"
+}
+
 func (token *unionToken) Apply(root, current interface{}, next []Token) (interface{}, error) {
 	arguments := token.arguments
 	if len(arguments) == 0 {
-		return nil, errors.ErrInvalidParameterUnionExpectedArguments
+		return nil, getInvalidTokenArgumentNilError(token.Type(), reflect.Array, reflect.Slice)
 	}
 
 	keys := make([]string, 0)
 	indices := make([]int64, 0)
 
 	for _, arg := range arguments {
-		if token, ok := arg.(Token); ok {
-			result, err := token.Apply(root, current, nil)
+		if argToken, ok := arg.(Token); ok {
+			result, err := argToken.Apply(root, current, nil)
 			if err != nil {
-				return nil, err
+				return nil, getInvalidTokenError(token.Type(), err)
 			}
 			arg = result
+		}
+
+		if arg == nil {
+			return nil, getInvalidTokenArgumentNilError(token.Type(), reflect.Int, reflect.String)
 		}
 
 		if strArg, ok := arg.(string); ok {
 			keys = append(keys, strArg)
 			if len(indices) > 0 {
-				return nil, errors.ErrInvalidParameterUnionExpectedInteger
+				return nil, getInvalidTokenArgumentError(token.Type(), reflect.String, reflect.Int)
 			}
 		} else if intArg, ok := isInteger(arg); ok {
 			indices = append(indices, intArg)
 			if len(keys) > 0 {
-				return nil, errors.ErrInvalidParameterUnionExpectedString
+				return nil, getInvalidTokenArgumentError(token.Type(), reflect.Int, reflect.String)
 			}
 		} else {
-			return nil, errors.ErrInvalidParameterUnionExpectedIntegerOrString
+			argType := reflect.TypeOf(arg)
+			return nil, getInvalidTokenArgumentError(token.Type(), argType.Kind(), reflect.Int, reflect.String)
 		}
 	}
 
@@ -50,15 +57,21 @@ func (token *unionToken) Apply(root, current interface{}, next []Token) (interfa
 
 	if len(keys) > 0 {
 		var err error
-		unionValue, err = getUnionByKey(current, keys)
+		unionValue, err = getUnionByKey(token, current, keys)
 		if err != nil {
-			return nil, err
+			if isInvalidTokenError(err) {
+				return nil, err
+			}
+			return nil, getInvalidTokenError(token.Type(), err)
 		}
 	} else if len(indices) > 0 {
 		var err error
-		unionValue, err = getUnionByIndex(current, indices)
+		unionValue, err = getUnionByIndex(token, current, indices)
 		if err != nil {
-			return nil, err
+			if isInvalidTokenError(err) {
+				return nil, err
+			}
+			return nil, getInvalidTokenError(token.Type(), err)
 		}
 	}
 
@@ -95,10 +108,10 @@ func (token *unionToken) Apply(root, current interface{}, next []Token) (interfa
 	return elements, nil
 }
 
-func getUnionByKey(obj interface{}, keys []string) ([]interface{}, error) {
+func getUnionByKey(token Token, obj interface{}, keys []string) ([]interface{}, error) {
 	objType := reflect.TypeOf(obj)
 	if objType == nil {
-		return nil, errors.ErrGetUnionFromNilObject
+		return nil, getInvalidTokenTargetNilError(token.Type(), reflect.Map)
 	}
 
 	keyMap := make(map[string]bool)
@@ -126,19 +139,26 @@ func getUnionByKey(obj interface{}, keys []string) ([]interface{}, error) {
 				remaining = append(remaining, key)
 			}
 			sort.Strings(remaining)
-			return nil, errors.GetKeyNotFoundError(strings.Join(remaining, ","))
+			return nil, getInvalidTokenKeyNotFoundError(token.Type(), strings.Join(remaining, ","))
 		}
 
 		return elements, nil
 	default:
-		return nil, errors.ErrInvalidObjectMap
+		return nil, getInvalidTokenTargetError(
+			token.Type(),
+			objType.Kind(),
+			reflect.Map,
+		)
 	}
 }
 
-func getUnionByIndex(obj interface{}, indices []int64) (interface{}, error) {
+func getUnionByIndex(token Token, obj interface{}, indices []int64) (interface{}, error) {
 	objType := reflect.TypeOf(obj)
 	if objType == nil {
-		return nil, errors.ErrGetUnionFromNilObject
+		return nil, getInvalidTokenTargetNilError(
+			token.Type(),
+			reflect.Array, reflect.Map, reflect.Slice, reflect.String,
+		)
 	}
 
 	var objValue reflect.Value
@@ -170,23 +190,24 @@ func getUnionByIndex(obj interface{}, indices []int64) (interface{}, error) {
 		mapKeys = nil
 		break
 	default:
-		return nil, errors.ErrInvalidObjectArrayMapOrString
+		return nil, getInvalidTokenTargetError(
+			token.Type(),
+			objType.Kind(),
+			reflect.Array, reflect.Map, reflect.Slice, reflect.String,
+		)
 	}
 
 	values := make([]interface{}, 0)
 	substring := ""
 
 	for _, idx := range indices {
-		if idx >= 0 {
-			if idx >= length {
-				return nil, errors.ErrIndexOutOfRange
-			}
-		} else {
+		if idx < 0 {
 			idx = length + idx
-			if idx < 0 {
-				return nil, errors.ErrIndexOutOfRange
-			}
 		}
+		if idx < 0 || idx >= length {
+			return nil, getInvalidTokenOutOfRangeError(token.Type())
+		}
+
 		if mapKeys != nil {
 			key := mapKeys[idx]
 			values = append(values, objValue.MapIndex(key).Interface())

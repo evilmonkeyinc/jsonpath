@@ -10,6 +10,10 @@ import (
 // Test rangeToken struct conforms to Token interface
 var _ Token = &rangeToken{}
 
+func Test_RangeToken_Type(t *testing.T) {
+	assert.Equal(t, "range", (&rangeToken{}).Type())
+}
+
 func Test_RangeToken_Apply(t *testing.T) {
 
 	tests := []*tokenTest{
@@ -25,7 +29,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 				},
 			},
 			expected: expected{
-				err: "invalid parameter",
+				err: "range: invalid token argument. expected [int] got [nil]",
 			},
 		},
 		{
@@ -187,7 +191,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 				current: []interface{}{},
 			},
 			expected: expected{
-				err: "index out of range",
+				err: "range: invalid token range: invalid token out of range",
 			},
 		},
 		{
@@ -204,7 +208,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 				},
 			},
 			expected: expected{
-				err: "invalid parameter. expected integer",
+				err: "range: invalid token argument. expected [int] got [string]",
 			},
 		},
 		{
@@ -221,7 +225,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 				},
 			},
 			expected: expected{
-				err: "invalid parameter. expected integer",
+				err: "range: invalid token argument. expected [int] got [string]",
 			},
 		},
 		{
@@ -238,7 +242,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 				},
 			},
 			expected: expected{
-				err: "invalid parameter. expected integer",
+				err: "range: invalid token argument. expected [int] got [string]",
 			},
 		},
 		{
@@ -253,7 +257,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 				},
 			},
 			expected: expected{
-				err: "invalid parameter. expression is empty",
+				err: "range: invalid token invalid expression. is empty",
 			},
 		},
 		{
@@ -268,7 +272,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 				},
 			},
 			expected: expected{
-				err: "unexpected script result. expected integer",
+				err: "range: invalid token unexpected expression result. expected [int] got [string]",
 			},
 		},
 		{
@@ -283,7 +287,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 				},
 			},
 			expected: expected{
-				err: "unexpected script result. expected integer",
+				err: "range: invalid token unexpected expression result. expected [int] got [string]",
 			},
 		},
 		{
@@ -316,7 +320,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 				},
 			},
 			expected: expected{
-				err: "invalid parameter. expression is empty",
+				err: "range: invalid token invalid expression. is empty",
 			},
 		},
 		{
@@ -332,7 +336,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 				},
 			},
 			expected: expected{
-				err: "unexpected script result. expected integer",
+				err: "range: invalid token unexpected expression result. expected [int] got [string]",
 			},
 		},
 		{
@@ -348,7 +352,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 				},
 			},
 			expected: expected{
-				err: "unexpected script result. expected integer",
+				err: "range: invalid token unexpected expression result. expected [int] got [string]",
 			},
 		},
 		{
@@ -383,7 +387,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 				},
 			},
 			expected: expected{
-				err: "invalid parameter. expression is empty",
+				err: "range: invalid token invalid expression. is empty",
 			},
 		},
 		{
@@ -399,7 +403,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 				},
 			},
 			expected: expected{
-				err: "unexpected script result. expected integer",
+				err: "range: invalid token unexpected expression result. expected [int] got [string]",
 			},
 		},
 		{
@@ -415,7 +419,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 				},
 			},
 			expected: expected{
-				err: "unexpected script result. expected integer",
+				err: "range: invalid token unexpected expression result. expected [int] got [string]",
 			},
 		},
 		{
@@ -546,6 +550,69 @@ func Test_RangeToken_Apply(t *testing.T) {
 				value: "two",
 			},
 		},
+		{
+			token: &rangeToken{
+				from: &expressionToken{expression: "nil"},
+			},
+			input: input{
+				current: []interface{}{
+					"one",
+					"two",
+					"three",
+					"four",
+				},
+			},
+			expected: expected{
+				err: "range: invalid token unexpected expression result. expected [int] got [nil]",
+			},
+		},
+		{
+			token: &rangeToken{
+				from: 0,
+				to:   &expressionToken{expression: "nil"},
+			},
+			input: input{
+				current: []interface{}{
+					"one",
+					"two",
+					"three",
+					"four",
+				},
+			},
+			expected: expected{
+				err: "range: invalid token unexpected expression result. expected [int] got [nil]",
+			},
+		},
+		{
+			token: &rangeToken{
+				from: 0,
+				to:   1,
+				step: &expressionToken{expression: "nil"},
+			},
+			input: input{
+				current: []interface{}{
+					"one",
+					"two",
+					"three",
+					"four",
+				},
+			},
+			expected: expected{
+				err: "range: invalid token unexpected expression result. expected [int] got [nil]",
+			},
+		},
+		{
+			token: &rangeToken{
+				from: 0,
+				to:   1,
+			},
+			input: input{
+				current: 123,
+			},
+			expected: expected{
+				err: "range: invalid token target. expected [array map slice string] got [int]",
+			},
+		},
 	}
 
 	batchTokenTests(t, tests)
@@ -578,7 +645,7 @@ func Test_getRange(t *testing.T) {
 				obj: nil,
 			},
 			expected: expected{
-				err: "cannot get range from nil array",
+				err: "range: invalid token target. expected [array map slice string] got [nil]",
 			},
 		},
 		{
@@ -586,7 +653,7 @@ func Test_getRange(t *testing.T) {
 				obj: 123,
 			},
 			expected: expected{
-				err: "invalid object. expected array, map, or string",
+				err: "range: invalid token target. expected [array map slice string] got [int]",
 			},
 		},
 		{
@@ -604,7 +671,7 @@ func Test_getRange(t *testing.T) {
 				start: 15,
 			},
 			expected: expected{
-				err: "index out of range",
+				err: "range: invalid token out of range",
 			},
 		},
 		{
@@ -613,7 +680,7 @@ func Test_getRange(t *testing.T) {
 				end: intPtr(15),
 			},
 			expected: expected{
-				err: "index out of range",
+				err: "range: invalid token out of range",
 			},
 		},
 		{
@@ -622,7 +689,7 @@ func Test_getRange(t *testing.T) {
 				step: intPtr(0),
 			},
 			expected: expected{
-				err: "invalid parameter. step should be greater than or equal to 1",
+				err: "range: invalid token out of range",
 			},
 		},
 		{
@@ -764,7 +831,7 @@ func Test_getRange(t *testing.T) {
 
 	for idx, test := range tests {
 		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
-			obj, err := getRange(test.input.obj, test.input.start, test.input.end, test.input.step)
+			obj, err := getRange(&rangeToken{}, test.input.obj, test.input.start, test.input.end, test.input.step)
 
 			if test.expected.obj == nil {
 				assert.Nil(t, obj)

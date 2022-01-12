@@ -2,10 +2,16 @@ package token
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // Test filterToken struct conforms to Token interface
 var _ Token = &filterToken{}
+
+func Test_FilterToken_Type(t *testing.T) {
+	assert.Equal(t, "filter", (&filterToken{}).Type())
+}
 
 func Test_FilterToken_Apply(t *testing.T) {
 
@@ -16,7 +22,7 @@ func Test_FilterToken_Apply(t *testing.T) {
 				current: []interface{}{"one"},
 			},
 			expected: expected{
-				err: "invalid parameter. expression is empty",
+				err: "invalid expression. is empty",
 			},
 		},
 		{
@@ -27,7 +33,7 @@ func Test_FilterToken_Apply(t *testing.T) {
 				current: nil,
 			},
 			expected: expected{
-				err: "cannot get elements from nil object",
+				err: "filter: invalid token target. expected [array map slice] got [nil]",
 			},
 		},
 		{
@@ -38,7 +44,7 @@ func Test_FilterToken_Apply(t *testing.T) {
 				current: "this is a string",
 			},
 			expected: expected{
-				err: "invalid object. expected array or map",
+				err: "filter: invalid token target. expected [array map slice] got [string]",
 			},
 		},
 		{

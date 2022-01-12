@@ -7,6 +7,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// Test expressionToken struct conforms to Token interface
+var _ Token = &expressionToken{}
+
+func Test_ExpressionToken_Type(t *testing.T) {
+	assert.Equal(t, "expression", (&expressionToken{}).Type())
+}
+
 func Test_ExpressionToken_Apply(t *testing.T) {
 
 	tests := []*tokenTest{
@@ -14,7 +21,7 @@ func Test_ExpressionToken_Apply(t *testing.T) {
 			token: &expressionToken{},
 			input: input{},
 			expected: expected{
-				err: "invalid parameter. expression is empty",
+				err: "invalid expression. is empty",
 			},
 		},
 		{
@@ -23,7 +30,7 @@ func Test_ExpressionToken_Apply(t *testing.T) {
 			},
 			input: input{},
 			expected: expected{
-				err: "invalid expression. failed to parse expression. eval:1:1: undeclared name: length",
+				err: "invalid expression. eval:1:1: undeclared name: length",
 			},
 		},
 		{
@@ -82,8 +89,6 @@ func Test_ExpressionToken_Apply(t *testing.T) {
 	batchTokenTests(t, tests)
 }
 
-// TODO : this still needs expanded
-
 func Test_evaluateExpression(t *testing.T) {
 
 	type input struct {
@@ -105,7 +110,7 @@ func Test_evaluateExpression(t *testing.T) {
 				expression: "",
 			},
 			expected: expected{
-				err: "invalid parameter. expression is empty",
+				err: "invalid expression. is empty",
 			},
 		},
 		{
@@ -113,7 +118,7 @@ func Test_evaluateExpression(t *testing.T) {
 				expression: "@]",
 			},
 			expected: expected{
-				err: "invalid expression. query must start with '$'",
+				err: "invalid expression. unexpected token ']' at index 1",
 			},
 		},
 		{
@@ -121,7 +126,7 @@ func Test_evaluateExpression(t *testing.T) {
 				expression: "@[]",
 			},
 			expected: expected{
-				err: "invalid expression. invalid token. empty subscript",
+				err: "invalid expression. invalid token.'[]' does not match any token format",
 			},
 		},
 		{
@@ -137,7 +142,7 @@ func Test_evaluateExpression(t *testing.T) {
 				expression: "1--1",
 			},
 			expected: expected{
-				err: "failed to parse expression. eval:1:2: expected 'EOF', found '--'",
+				err: "invalid expression. eval:1:2: expected 'EOF', found '--'",
 			},
 		},
 		{
@@ -325,7 +330,7 @@ func Test_evaluateExpression(t *testing.T) {
 				expression: "$.missing < @.price",
 			},
 			expected: expected{
-				err: "invalid expression. 'missing' key not found in object",
+				err: "invalid expression. key: invalid token key 'missing' not found",
 			},
 		},
 		{

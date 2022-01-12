@@ -2,10 +2,16 @@ package token
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // Test lengthToken struct conforms to Token interface
 var _ Token = &lengthToken{}
+
+func Test_LengthToken_Type(t *testing.T) {
+	assert.Equal(t, "length", (&lengthToken{}).Type())
+}
 
 func Test_LengthToken_Apply(t *testing.T) {
 
@@ -16,7 +22,7 @@ func Test_LengthToken_Apply(t *testing.T) {
 				current: nil,
 			},
 			expected: expected{
-				err: "cannot get elements from nil object",
+				err: "length: invalid token target. expected [array map slice string] got [nil]",
 			},
 		},
 		{
@@ -25,7 +31,7 @@ func Test_LengthToken_Apply(t *testing.T) {
 				current: 1000,
 			},
 			expected: expected{
-				err: "invalid object. expected array, map, or string",
+				err: "length: invalid token target. expected [array map slice string] got [int]",
 			},
 		},
 		{

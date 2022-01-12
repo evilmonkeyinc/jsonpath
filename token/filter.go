@@ -3,17 +3,19 @@ package token
 import (
 	"reflect"
 	"strings"
-
-	"github.com/evilmokeyinc/jsonpath/errors"
 )
 
 type filterToken struct {
 	expression string
 }
 
+func (token *filterToken) Type() string {
+	return "filter"
+}
+
 func (token *filterToken) Apply(root, current interface{}, next []Token) (interface{}, error) {
 	if token.expression == "" {
-		return nil, errors.ErrInvalidParameterExpressionEmpty
+		return nil, getInvalidExpressionEmptyError()
 	}
 
 	shouldInclude := func(evaluation interface{}) bool {
@@ -35,7 +37,7 @@ func (token *filterToken) Apply(root, current interface{}, next []Token) (interf
 
 	objType := reflect.TypeOf(current)
 	if objType == nil {
-		return nil, errors.ErrGetElementsFromNilObject
+		return nil, getInvalidTokenTargetNilError(token.Type(), reflect.Array, reflect.Map, reflect.Slice)
 	}
 	switch objType.Kind() {
 	case reflect.Map:
@@ -72,7 +74,11 @@ func (token *filterToken) Apply(root, current interface{}, next []Token) (interf
 			}
 		}
 	default:
-		return nil, errors.ErrInvalidObjectArrayOrMap
+		return nil, getInvalidTokenTargetError(
+			token.Type(),
+			objType.Kind(),
+			reflect.Array, reflect.Map, reflect.Slice,
+		)
 	}
 
 	if len(next) > 0 {

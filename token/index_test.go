@@ -2,10 +2,16 @@ package token
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // Test indexToken struct conforms to Token interface
 var _ Token = &indexToken{}
+
+func Test_IndexToken_Type(t *testing.T) {
+	assert.Equal(t, "index", (&indexToken{}).Type())
+}
 
 func Test_IndexToken_Apply(t *testing.T) {
 
@@ -16,7 +22,7 @@ func Test_IndexToken_Apply(t *testing.T) {
 				current: nil,
 			},
 			expected: expected{
-				err: "cannot get index from nil array",
+				err: "index: invalid token target. expected [array map slice string] got [nil]",
 			},
 		},
 		{
@@ -25,7 +31,7 @@ func Test_IndexToken_Apply(t *testing.T) {
 				current: 123,
 			},
 			expected: expected{
-				err: "invalid object. expected array, map, or string",
+				err: "index: invalid token target. expected [array map slice string] got [int]",
 			},
 		},
 		{
@@ -70,7 +76,7 @@ func Test_IndexToken_Apply(t *testing.T) {
 				current: []string{"one", "two", "three"},
 			},
 			expected: expected{
-				err: "index out of range",
+				err: "index: invalid token out of range",
 			},
 		},
 		{
@@ -115,7 +121,7 @@ func Test_IndexToken_Apply(t *testing.T) {
 				current: []interface{}{"one", 2, "three"},
 			},
 			expected: expected{
-				err: "index out of range",
+				err: "index: invalid token out of range",
 			},
 		},
 		{

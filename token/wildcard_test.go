@@ -2,7 +2,16 @@ package token
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
+
+// Test wildcardToken struct conforms to Token interface
+var _ Token = &wildcardToken{}
+
+func Test_WildcardToken_Type(t *testing.T) {
+	assert.Equal(t, "wildcard", (&wildcardToken{}).Type())
+}
 
 func Test_WildcardToken_Apply(t *testing.T) {
 
@@ -14,7 +23,7 @@ func Test_WildcardToken_Apply(t *testing.T) {
 			},
 			expected: expected{
 				value: nil,
-				err:   "cannot get elements from nil object",
+				err:   "wildcard: invalid token target. expected [array map slice] got [nil]",
 			},
 		},
 		{
@@ -24,7 +33,7 @@ func Test_WildcardToken_Apply(t *testing.T) {
 			},
 			expected: expected{
 				value: nil,
-				err:   "invalid object. expected array or map",
+				err:   "wildcard: invalid token target. expected [array map slice] got [string]",
 			},
 		},
 		{

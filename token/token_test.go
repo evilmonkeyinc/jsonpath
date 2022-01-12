@@ -4,9 +4,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/evilmokeyinc/jsonpath/errors"
 	"github.com/stretchr/testify/assert"
 )
+
+// TODO : parse tests should include testing the
+// default value for all options if options is not set
+// or individual values are not set
 
 func Test_Parse(t *testing.T) {
 
@@ -22,43 +25,43 @@ func Test_Parse(t *testing.T) {
 		{
 			input: "",
 			expected: expected{
-				err: "invalid token. token can not be empty",
+				err: "invalid token. token string is empty",
 			},
 		},
 		{
 			input: "['fail'",
 			expected: expected{
-				err: "invalid token. missing subscript close",
+				err: "invalid token.'['fail'' does not match any token format",
 			},
 		},
 		{
 			input: "[ ]",
 			expected: expected{
-				err: "invalid token. empty subscript",
+				err: "invalid token.'[ ]' does not match any token format",
 			},
 		},
 		{
 			input: "[?]",
 			expected: expected{
-				err: "invalid token. invalid filter format",
+				err: "invalid token.'[?]' does not match any token format",
 			},
 		},
 		{
 			input: "[why though]",
 			expected: expected{
-				err: "invalid token. unexpected space",
+				err: "invalid token.'[why though]' does not match any token format",
 			},
 		},
 		{
 			input: "[1'2']",
 			expected: expected{
-				err: "invalid token. unexpected single quote",
+				err: "invalid token.'[1'2']' does not match any token format",
 			},
 		},
 		{
 			input: "[1(@.length)]",
 			expected: expected{
-				err: "invalid token. invalid script format",
+				err: "invalid expression. invalid format '1(@.length)'",
 			},
 		},
 		{
@@ -78,7 +81,7 @@ func Test_Parse(t *testing.T) {
 		{
 			input: "1",
 			expected: expected{
-				err: "invalid token. index specified as key",
+				err: "invalid token.'1' does not match any token format",
 			},
 		},
 		{
@@ -186,25 +189,25 @@ func Test_Parse(t *testing.T) {
 		{
 			input: "[0,]",
 			expected: expected{
-				err: "invalid token. empty argument in union",
+				err: "invalid token.'[0,]' does not match any token format",
 			},
 		},
 		{
 			input: "[,1]",
 			expected: expected{
-				err: "invalid token. empty argument in union",
+				err: "invalid token.'[,1]' does not match any token format",
 			},
 		},
 		{
 			input: "[(0),]",
 			expected: expected{
-				err: "invalid token. empty argument in union",
+				err: "invalid token.'[(0),]' does not match any token format",
 			},
 		},
 		{
 			input: "[0,'1',]",
 			expected: expected{
-				err: "invalid token. empty argument in union",
+				err: "invalid token.'[0,'1',]' does not match any token format",
 			},
 		},
 		{
@@ -255,7 +258,7 @@ func Test_Parse(t *testing.T) {
 		{
 			input: "[:2]",
 			expected: expected{
-				token: &firstNToken{
+				token: &sliceToken{
 					number: int64(2),
 				},
 			},
@@ -263,7 +266,7 @@ func Test_Parse(t *testing.T) {
 		{
 			input: "[:(@.length-1)]",
 			expected: expected{
-				token: &firstNToken{
+				token: &sliceToken{
 					number: &expressionToken{
 						expression: "@.length-1",
 					},
@@ -273,7 +276,7 @@ func Test_Parse(t *testing.T) {
 		{
 			input: "[:'key']",
 			expected: expected{
-				err: "invalid token. only integer or scripts allowed in range arguments",
+				err: "invalid expression. invalid format ''key''",
 			},
 		},
 		{
@@ -311,13 +314,13 @@ func Test_Parse(t *testing.T) {
 		{
 			input: "[store]",
 			expected: expected{
-				err: "invalid token. unexpected string",
+				err: "invalid token.'[store]' does not match any token format",
 			},
 		},
 		{
 			input: "[store,book]",
 			expected: expected{
-				err: "invalid token. unexpected union argument",
+				err: "invalid token.'[store,book]' does not match any token format",
 			},
 		},
 		{
@@ -339,37 +342,37 @@ func Test_Parse(t *testing.T) {
 		{
 			input: "[1,2:4]",
 			expected: expected{
-				err: "invalid token. cannot specify a range in a union",
+				err: "invalid token.'[1,2:4]' does not match any token format",
 			},
 		},
 		{
 			input: "[1:2:3:]",
 			expected: expected{
-				err: "invalid token. incorrect number of arguments in range",
+				err: "invalid token.'[1:2:3:]' does not match any token format",
 			},
 		},
 		{
 			input: "[1:2:3:4]",
 			expected: expected{
-				err: "invalid token. incorrect number of arguments in range",
+				err: "invalid token.'[1:2:3:4]' does not match any token format",
 			},
 		},
 		{
 			input: "['key':'end]",
 			expected: expected{
-				err: "invalid token. only integer or scripts allowed in range arguments",
+				err: "invalid expression. invalid format ''key''",
 			},
 		},
 		{
 			input: "[::2]",
 			expected: expected{
-				err: "invalid token. incorrect number of arguments in range",
+				err: "invalid token.'[::2]' does not match any token format",
 			},
 		},
 		{
 			input: "[:end:2]",
 			expected: expected{
-				err: "invalid token. only integer or scripts allowed in range arguments",
+				err: "invalid token.'[:end:2]' does not match any token format",
 			},
 		},
 		{
@@ -381,7 +384,7 @@ func Test_Parse(t *testing.T) {
 		{
 			input: "[length]",
 			expected: expected{
-				err: "invalid token. unexpected string",
+				err: "invalid token.'[length]' does not match any token format",
 			},
 		},
 		{
@@ -395,25 +398,25 @@ func Test_Parse(t *testing.T) {
 		{
 			input: "['']",
 			expected: expected{
-				err: "invalid token. invalid key format",
+				err: "invalid token.'['']' does not match any token format",
 			},
 		},
 		{
 			input: "['1':(@.length)]",
 			expected: expected{
-				err: "invalid token. only integer or scripts allowed in range arguments",
+				err: "invalid expression. invalid format ''1''",
 			},
 		},
 		{
 			input: "[0:'1']",
 			expected: expected{
-				err: "invalid token. only integer or scripts allowed in range arguments",
+				err: "invalid expression. invalid format ''1''",
 			},
 		},
 		{
 			input: "[0:1:'1']",
 			expected: expected{
-				err: "invalid token. only integer or scripts allowed in range arguments",
+				err: "invalid expression. invalid format ''1''",
 			},
 		},
 		{
@@ -431,14 +434,14 @@ func Test_Parse(t *testing.T) {
 		{
 			input: "[:10:1]",
 			expected: expected{
-				err: "invalid token. only integer or scripts allowed in range arguments",
+				err: "invalid token.'[:10:1]' does not match any token format",
 			},
 		},
 	}
 
 	for idx, test := range tests {
 		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
-			token, err := Parse(test.input)
+			token, err := Parse(test.input, nil)
 
 			if test.expected.err == "" {
 				assert.Nil(t, err, fmt.Sprintf("input '%s' err check failed. expected 'nil' actual '%v'", test.input, err))
@@ -456,13 +459,35 @@ func Test_Tokenize(t *testing.T) {
 	type expected struct {
 		tokens    []string
 		remainder string
-		err       error
+		err       string
 	}
 
 	tests := []struct {
 		input    string
 		expected expected
 	}{
+		{
+			input: "$",
+			expected: expected{
+				tokens: []string{
+					"$",
+				},
+			},
+		},
+		{
+			input: "@",
+			expected: expected{
+				tokens: []string{
+					"@",
+				},
+			},
+		},
+		{
+			input: "%",
+			expected: expected{
+				err: "unexpected token '%' at index 0",
+			},
+		},
 		{
 			input: "$.store.book[*].author",
 			expected: expected{
@@ -607,7 +632,7 @@ func Test_Tokenize(t *testing.T) {
 			input: "user.email",
 			expected: expected{
 				tokens: nil,
-				err:    errors.ErrInvalidInitialToken,
+				err:    "unexpected token 'u' at index 0",
 			},
 		},
 		{
@@ -637,7 +662,7 @@ func Test_Tokenize(t *testing.T) {
 		{
 			input: "$*",
 			expected: expected{
-				err: errors.ErrInvalidInitialToken,
+				err: "unexpected token '*' at index 1",
 			},
 		},
 		{
@@ -654,7 +679,7 @@ func Test_Tokenize(t *testing.T) {
 		{
 			input: "",
 			expected: expected{
-				err: errors.ErrQueryNotSpecified,
+				err: "unexpected token '' at index 0",
 			},
 		},
 		{
@@ -712,7 +737,12 @@ func Test_Tokenize(t *testing.T) {
 	for idx, test := range tests {
 		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
 			tokens, remainder, err := Tokenize(test.input)
-			assert.Equal(t, test.expected.err, err, "unexpected error for %s", test.input)
+
+			if test.expected.err != "" {
+				assert.EqualError(t, err, test.expected.err, "unexpected error for %s", test.input)
+			} else {
+				assert.Nil(t, err)
+			}
 
 			for i, actual := range tokens {
 				expected := test.expected.tokens[i]

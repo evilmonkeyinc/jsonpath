@@ -7,6 +7,10 @@ import (
 type recursiveToken struct {
 }
 
+func (token *recursiveToken) Type() string {
+	return "recursive"
+}
+
 func (token *recursiveToken) Apply(root, current interface{}, next []Token) (interface{}, error) {
 
 	elements := flatten(current)
