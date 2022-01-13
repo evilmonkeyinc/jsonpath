@@ -31,31 +31,31 @@ func Test_Parse(t *testing.T) {
 		{
 			input: "['fail'",
 			expected: expected{
-				err: "invalid token.'['fail'' does not match any token format",
+				err: "invalid token. '['fail'' does not match any token format",
 			},
 		},
 		{
 			input: "[ ]",
 			expected: expected{
-				err: "invalid token.'[ ]' does not match any token format",
+				err: "invalid token. '[ ]' does not match any token format",
 			},
 		},
 		{
 			input: "[?]",
 			expected: expected{
-				err: "invalid token.'[?]' does not match any token format",
+				err: "invalid token. '[?]' does not match any token format",
 			},
 		},
 		{
 			input: "[why though]",
 			expected: expected{
-				err: "invalid token.'[why though]' does not match any token format",
+				err: "invalid token. '[why though]' does not match any token format",
 			},
 		},
 		{
 			input: "[1'2']",
 			expected: expected{
-				err: "invalid token.'[1'2']' does not match any token format",
+				err: "invalid token. '[1'2']' does not match any token format",
 			},
 		},
 		{
@@ -81,7 +81,7 @@ func Test_Parse(t *testing.T) {
 		{
 			input: "1",
 			expected: expected{
-				err: "invalid token.'1' does not match any token format",
+				err: "invalid token. '1' does not match any token format",
 			},
 		},
 		{
@@ -189,25 +189,25 @@ func Test_Parse(t *testing.T) {
 		{
 			input: "[0,]",
 			expected: expected{
-				err: "invalid token.'[0,]' does not match any token format",
+				err: "invalid token. '[0,]' does not match any token format",
 			},
 		},
 		{
 			input: "[,1]",
 			expected: expected{
-				err: "invalid token.'[,1]' does not match any token format",
+				err: "invalid token. '[,1]' does not match any token format",
 			},
 		},
 		{
 			input: "[(0),]",
 			expected: expected{
-				err: "invalid token.'[(0),]' does not match any token format",
+				err: "invalid token. '[(0),]' does not match any token format",
 			},
 		},
 		{
 			input: "[0,'1',]",
 			expected: expected{
-				err: "invalid token.'[0,'1',]' does not match any token format",
+				err: "invalid token. '[0,'1',]' does not match any token format",
 			},
 		},
 		{
@@ -314,13 +314,13 @@ func Test_Parse(t *testing.T) {
 		{
 			input: "[store]",
 			expected: expected{
-				err: "invalid token.'[store]' does not match any token format",
+				err: "invalid token. '[store]' does not match any token format",
 			},
 		},
 		{
 			input: "[store,book]",
 			expected: expected{
-				err: "invalid token.'[store,book]' does not match any token format",
+				err: "invalid token. '[store,book]' does not match any token format",
 			},
 		},
 		{
@@ -342,19 +342,19 @@ func Test_Parse(t *testing.T) {
 		{
 			input: "[1,2:4]",
 			expected: expected{
-				err: "invalid token.'[1,2:4]' does not match any token format",
+				err: "invalid token. '[1,2:4]' does not match any token format",
 			},
 		},
 		{
 			input: "[1:2:3:]",
 			expected: expected{
-				err: "invalid token.'[1:2:3:]' does not match any token format",
+				err: "invalid token. '[1:2:3:]' does not match any token format",
 			},
 		},
 		{
 			input: "[1:2:3:4]",
 			expected: expected{
-				err: "invalid token.'[1:2:3:4]' does not match any token format",
+				err: "invalid token. '[1:2:3:4]' does not match any token format",
 			},
 		},
 		{
@@ -366,13 +366,13 @@ func Test_Parse(t *testing.T) {
 		{
 			input: "[::2]",
 			expected: expected{
-				err: "invalid token.'[::2]' does not match any token format",
+				err: "invalid token. '[::2]' does not match any token format",
 			},
 		},
 		{
 			input: "[:end:2]",
 			expected: expected{
-				err: "invalid token.'[:end:2]' does not match any token format",
+				err: "invalid token. '[:end:2]' does not match any token format",
 			},
 		},
 		{
@@ -384,7 +384,7 @@ func Test_Parse(t *testing.T) {
 		{
 			input: "[length]",
 			expected: expected{
-				err: "invalid token.'[length]' does not match any token format",
+				err: "invalid token. '[length]' does not match any token format",
 			},
 		},
 		{
@@ -398,7 +398,7 @@ func Test_Parse(t *testing.T) {
 		{
 			input: "['']",
 			expected: expected{
-				err: "invalid token.'['']' does not match any token format",
+				err: "invalid token. '['']' does not match any token format",
 			},
 		},
 		{
@@ -434,7 +434,7 @@ func Test_Parse(t *testing.T) {
 		{
 			input: "[:10:1]",
 			expected: expected{
-				err: "invalid token.'[:10:1]' does not match any token format",
+				err: "invalid token. '[:10:1]' does not match any token format",
 			},
 		},
 	}

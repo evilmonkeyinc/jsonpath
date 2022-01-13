@@ -126,7 +126,7 @@ func Test_evaluateExpression(t *testing.T) {
 				expression: "@[]",
 			},
 			expected: expected{
-				err: "invalid expression. invalid token.'[]' does not match any token format",
+				err: "invalid expression. invalid token. '[]' does not match any token format",
 			},
 		},
 		{
