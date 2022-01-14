@@ -7,6 +7,10 @@ import (
 type lengthToken struct {
 }
 
+func (token *lengthToken) String() string {
+	return ".length"
+}
+
 func (token *lengthToken) Type() string {
 	return "length"
 }

@@ -1,11 +1,16 @@
 package token
 
 import (
+	"fmt"
 	"reflect"
 )
 
 type scriptToken struct {
 	expression string
+}
+
+func (token *scriptToken) String() string {
+	return fmt.Sprintf("[(%s)]", token.expression)
 }
 
 func (token *scriptToken) Type() string {

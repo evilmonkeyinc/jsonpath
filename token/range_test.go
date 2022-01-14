@@ -10,6 +10,37 @@ import (
 // Test rangeToken struct conforms to Token interface
 var _ Token = &rangeToken{}
 
+func Test_RangeToken_String(t *testing.T) {
+	tests := []*tokenStringTest{
+		{
+			input:    &rangeToken{},
+			expected: "[:]",
+		},
+		{
+			input:    &rangeToken{from: 1},
+			expected: "[1:]",
+		},
+		{
+			input:    &rangeToken{from: 1, to: 2},
+			expected: "[1:2]",
+		},
+		{
+			input:    &rangeToken{from: 1, to: &expressionToken{expression: "@.length-1"}},
+			expected: "[1:(@.length-1)]",
+		},
+		{
+			input:    &rangeToken{from: 1, to: &expressionToken{expression: "@.length-1"}, step: 2},
+			expected: "[1:(@.length-1):2]",
+		},
+		{
+			input:    &rangeToken{from: 1, to: 2, step: 3},
+			expected: "[1:2:3]",
+		},
+	}
+
+	batchTokenStringTests(t, tests)
+}
+
 func Test_RangeToken_Type(t *testing.T) {
 	assert.Equal(t, "range", (&rangeToken{}).Type())
 }

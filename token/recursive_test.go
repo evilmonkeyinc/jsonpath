@@ -10,6 +10,10 @@ import (
 // Test recursiveToken struct conforms to Token interface
 var _ Token = &recursiveToken{}
 
+func Test_RecursiveToken_String(t *testing.T) {
+	assert.Equal(t, "..", (&recursiveToken{}).String())
+}
+
 func Test_RecursiveToken_Type(t *testing.T) {
 	assert.Equal(t, "recursive", (&recursiveToken{}).Type())
 }

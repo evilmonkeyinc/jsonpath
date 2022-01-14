@@ -9,6 +9,10 @@ import (
 // Test lengthToken struct conforms to Token interface
 var _ Token = &lengthToken{}
 
+func Test_LengthToken_String(t *testing.T) {
+	assert.Equal(t, ".length", (&lengthToken{}).String())
+}
+
 func Test_LengthToken_Type(t *testing.T) {
 	assert.Equal(t, "length", (&lengthToken{}).Type())
 }

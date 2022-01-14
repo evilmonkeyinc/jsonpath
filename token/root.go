@@ -3,6 +3,10 @@ package token
 type rootToken struct {
 }
 
+func (token *rootToken) String() string {
+	return "$"
+}
+
 func (token *rootToken) Type() string {
 	return "root"
 }

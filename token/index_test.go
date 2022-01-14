@@ -9,6 +9,25 @@ import (
 // Test indexToken struct conforms to Token interface
 var _ Token = &indexToken{}
 
+func Test_IndexToken_String(t *testing.T) {
+	tests := []*tokenStringTest{
+		{
+			input:    &indexToken{},
+			expected: "[0]",
+		},
+		{
+			input:    &indexToken{index: -1},
+			expected: "[-1]",
+		},
+		{
+			input:    &indexToken{index: 10},
+			expected: "[10]",
+		},
+	}
+
+	batchTokenStringTests(t, tests)
+}
+
 func Test_IndexToken_Type(t *testing.T) {
 	assert.Equal(t, "index", (&indexToken{}).Type())
 }

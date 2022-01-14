@@ -1,12 +1,17 @@
 package token
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 )
 
 type filterToken struct {
 	expression string
+}
+
+func (token *filterToken) String() string {
+	return fmt.Sprintf("[?(%s)]", token.expression)
 }
 
 func (token *filterToken) Type() string {

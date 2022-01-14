@@ -9,6 +9,25 @@ import (
 // Test filterToken struct conforms to Token interface
 var _ Token = &filterToken{}
 
+func Test_FilterToken_String(t *testing.T) {
+	tests := []*tokenStringTest{
+		{
+			input:    &filterToken{},
+			expected: "[?()]",
+		},
+		{
+			input:    &filterToken{expression: "true"},
+			expected: "[?(true)]",
+		},
+		{
+			input:    &filterToken{expression: "@.length<0"},
+			expected: "[?(@.length<0)]",
+		},
+	}
+
+	batchTokenStringTests(t, tests)
+}
+
 func Test_FilterToken_Type(t *testing.T) {
 	assert.Equal(t, "filter", (&filterToken{}).Type())
 }

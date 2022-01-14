@@ -9,6 +9,25 @@ import (
 // Test keyToken struct conforms to Token interface
 var _ Token = &keyToken{}
 
+func Test_KeyToken_String(t *testing.T) {
+	tests := []*tokenStringTest{
+		{
+			input:    &keyToken{},
+			expected: "['']",
+		},
+		{
+			input:    &keyToken{key: "with space"},
+			expected: "['with space']",
+		},
+		{
+			input:    &keyToken{key: "nospace"},
+			expected: "['nospace']",
+		},
+	}
+
+	batchTokenStringTests(t, tests)
+}
+
 func Test_KeyToken_Type(t *testing.T) {
 	assert.Equal(t, "key", (&keyToken{}).Type())
 }

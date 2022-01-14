@@ -1,11 +1,16 @@
 package token
 
 import (
+	"fmt"
 	"reflect"
 )
 
 type keyToken struct {
 	key string
+}
+
+func (token *keyToken) String() string {
+	return fmt.Sprintf("['%s']", token.key)
 }
 
 func (token *keyToken) Type() string {

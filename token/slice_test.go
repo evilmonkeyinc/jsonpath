@@ -9,6 +9,29 @@ import (
 // Test sliceToken struct conforms to Token interface
 var _ Token = &sliceToken{}
 
+func Test_SliceToken_String(t *testing.T) {
+	tests := []*tokenStringTest{
+		{
+			input:    &sliceToken{number: 0},
+			expected: "[:0]",
+		},
+		{
+			input:    &sliceToken{number: 10},
+			expected: "[:10]",
+		},
+		{
+			input:    &sliceToken{number: -1},
+			expected: "[:-1]",
+		},
+		{
+			input:    &sliceToken{number: &expressionToken{expression: "@.length"}},
+			expected: "[:(@.length)]",
+		},
+	}
+
+	batchTokenStringTests(t, tests)
+}
+
 func Test_SliceToken_Type(t *testing.T) {
 	assert.Equal(t, "slice", (&sliceToken{}).Type())
 }

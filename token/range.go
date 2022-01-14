@@ -10,6 +10,27 @@ type rangeToken struct {
 	from, to, step interface{}
 }
 
+func (token *rangeToken) String() string {
+	fString := ""
+	if token.from != nil {
+		fString = fmt.Sprint(token.from)
+	}
+	tString := ""
+	if token.to != nil {
+		tString = fmt.Sprint(token.to)
+	} else {
+		return fmt.Sprintf("[%s:]", fString)
+	}
+	sString := ""
+	if token.step != nil {
+		sString = fmt.Sprint(token.step)
+	} else {
+		return fmt.Sprintf("[%s:%s]", fString, tString)
+	}
+
+	return fmt.Sprintf("[%s:%s:%s]", fString, tString, sString)
+}
+
 func (token *rangeToken) Type() string {
 	return "range"
 }

@@ -10,6 +10,26 @@ import (
 // Test expressionToken struct conforms to Token interface
 var _ Token = &expressionToken{}
 
+func Test_ExpressionToken_String(t *testing.T) {
+
+	tests := []*tokenStringTest{
+		{
+			input:    &expressionToken{expression: ""},
+			expected: "()",
+		},
+		{
+			input:    &expressionToken{expression: "1+1"},
+			expected: "(1+1)",
+		},
+		{
+			input:    &expressionToken{expression: "true"},
+			expected: "(true)",
+		},
+	}
+
+	batchTokenStringTests(t, tests)
+}
+
 func Test_ExpressionToken_Type(t *testing.T) {
 	assert.Equal(t, "expression", (&expressionToken{}).Type())
 }

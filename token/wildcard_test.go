@@ -9,6 +9,10 @@ import (
 // Test wildcardToken struct conforms to Token interface
 var _ Token = &wildcardToken{}
 
+func Test_WildcardToken_String(t *testing.T) {
+	assert.Equal(t, "[*]", (&wildcardToken{}).String())
+}
+
 func Test_WildcardToken_Type(t *testing.T) {
 	assert.Equal(t, "wildcard", (&wildcardToken{}).Type())
 }

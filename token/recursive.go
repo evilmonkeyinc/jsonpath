@@ -7,6 +7,10 @@ import (
 type recursiveToken struct {
 }
 
+func (token *recursiveToken) String() string {
+	return ".."
+}
+
 func (token *recursiveToken) Type() string {
 	return "recursive"
 }

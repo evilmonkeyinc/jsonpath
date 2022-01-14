@@ -9,6 +9,26 @@ import (
 // Test scriptToken struct conforms to Token interface
 var _ Token = &scriptToken{}
 
+func Test_ScriptToken_String(t *testing.T) {
+
+	tests := []*tokenStringTest{
+		{
+			input:    &scriptToken{expression: ""},
+			expected: "[()]",
+		},
+		{
+			input:    &scriptToken{expression: "1+1"},
+			expected: "[(1+1)]",
+		},
+		{
+			input:    &scriptToken{expression: "true"},
+			expected: "[(true)]",
+		},
+	}
+
+	batchTokenStringTests(t, tests)
+}
+
 func Test_ScriptToken_Type(t *testing.T) {
 	assert.Equal(t, "script", (&scriptToken{}).Type())
 }

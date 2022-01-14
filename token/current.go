@@ -3,6 +3,10 @@ package token
 type currentToken struct {
 }
 
+func (token *currentToken) String() string {
+	return "@"
+}
+
 func (token *currentToken) Type() string {
 	return "current"
 }

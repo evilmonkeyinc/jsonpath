@@ -9,6 +9,7 @@ import (
 type Token interface {
 	Apply(root, current interface{}, next []Token) (interface{}, error)
 	Type() string
+	String() string
 }
 
 // Tokenize converts a JSON Path query to a collection of parsable tokens

@@ -10,6 +10,10 @@ type sliceToken struct {
 	number interface{}
 }
 
+func (token *sliceToken) String() string {
+	return fmt.Sprintf("[:%v]", token.number)
+}
+
 func (token *sliceToken) Type() string {
 	return "slice"
 }

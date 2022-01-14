@@ -7,6 +7,10 @@ import (
 type wildcardToken struct {
 }
 
+func (token *wildcardToken) String() string {
+	return "[*]"
+}
+
 func (token *wildcardToken) Type() string {
 	return "wildcard"
 }

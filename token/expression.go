@@ -13,6 +13,10 @@ type expressionToken struct {
 	expression string
 }
 
+func (token *expressionToken) String() string {
+	return fmt.Sprintf("(%s)", token.expression)
+}
+
 func (token *expressionToken) Type() string {
 	return "expression"
 }

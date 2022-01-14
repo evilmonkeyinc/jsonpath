@@ -755,6 +755,20 @@ func Test_Tokenize(t *testing.T) {
 
 }
 
+type tokenStringTest struct {
+	input    Token
+	expected string
+}
+
+func batchTokenStringTests(t *testing.T, tests []*tokenStringTest) {
+	for idx, test := range tests {
+		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
+			actual := test.input.String()
+			assert.Equal(t, test.expected, actual)
+		})
+	}
+}
+
 type input struct {
 	root, current interface{}
 	tokens        []Token

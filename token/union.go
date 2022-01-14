@@ -11,6 +11,21 @@ type unionToken struct {
 	arguments []interface{}
 }
 
+func (token *unionToken) String() string {
+	args := ""
+	for _, arg := range token.arguments {
+		if strArg, ok := arg.(string); ok {
+			args += fmt.Sprintf("'%s',", strArg)
+		} else if intArg, ok := isInteger(arg); ok {
+			args += fmt.Sprintf("%d,", intArg)
+		} else {
+			args += fmt.Sprintf("%s,", arg)
+		}
+	}
+	args = strings.Trim(args, ",")
+	return fmt.Sprintf("[%s]", args)
+}
+
 func (token *unionToken) Type() string {
 	return "union"
 }

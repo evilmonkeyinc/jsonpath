@@ -10,6 +10,29 @@ import (
 // Test unionToken struct conforms to Token interface
 var _ Token = &unionToken{}
 
+func Test_UnionToken_String(t *testing.T) {
+	tests := []*tokenStringTest{
+		{
+			input:    &unionToken{},
+			expected: "[]",
+		},
+		{
+			input:    &unionToken{arguments: []interface{}{"one"}},
+			expected: "['one']",
+		},
+		{
+			input:    &unionToken{arguments: []interface{}{1, 3, 4}},
+			expected: "[1,3,4]",
+		},
+		{
+			input:    &unionToken{arguments: []interface{}{1, &expressionToken{expression: "4%2"}, "last"}},
+			expected: "[1,(4%2),'last']",
+		},
+	}
+
+	batchTokenStringTests(t, tests)
+}
+
 func Test_UnionToken_Type(t *testing.T) {
 	assert.Equal(t, "union", (&unionToken{}).Type())
 }

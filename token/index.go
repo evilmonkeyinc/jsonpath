@@ -10,6 +10,10 @@ type indexToken struct {
 	index int64
 }
 
+func (token *indexToken) String() string {
+	return fmt.Sprintf("[%d]", token.index)
+}
+
 func (token *indexToken) Type() string {
 	return "index"
 }
