@@ -226,7 +226,7 @@ func getRange(token Token, obj interface{}, start int64, end, step *int64) (inte
 	var stp int64 = 1
 	if step != nil {
 		stp = *step
-		if stp < 1 {
+		if stp == 0 {
 			return nil, getInvalidTokenOutOfRangeError(token.Type())
 		}
 	}
@@ -234,20 +234,40 @@ func getRange(token Token, obj interface{}, start int64, end, step *int64) (inte
 	array := make([]interface{}, 0)
 
 	if mapKeys != nil {
-		for i := from; i < to; i += stp {
-			key := mapKeys[i]
-			array = append(array, objValue.MapIndex(key).Interface())
+		if stp < 0 {
+			for i := to - 1; i >= from; i += stp {
+				key := mapKeys[i]
+				array = append(array, objValue.MapIndex(key).Interface())
+			}
+		} else {
+			for i := from; i < to; i += stp {
+				key := mapKeys[i]
+				array = append(array, objValue.MapIndex(key).Interface())
+			}
 		}
 	} else if isString {
 		substring := ""
-		for i := from; i < to; i += stp {
-			value := objValue.Index(int(i)).Uint()
-			substring += fmt.Sprintf("%c", value)
+		if stp < 0 {
+			for i := to - 1; i >= from; i += stp {
+				value := objValue.Index(int(i)).Uint()
+				substring += fmt.Sprintf("%c", value)
+			}
+		} else {
+			for i := from; i < to; i += stp {
+				value := objValue.Index(int(i)).Uint()
+				substring += fmt.Sprintf("%c", value)
+			}
 		}
 		return substring, nil
 	} else {
-		for i := from; i < to; i += stp {
-			array = append(array, objValue.Index(int(i)).Interface())
+		if stp < 0 {
+			for i := to - 1; i >= from; i += stp {
+				array = append(array, objValue.Index(int(i)).Interface())
+			}
+		} else {
+			for i := from; i < to; i += stp {
+				array = append(array, objValue.Index(int(i)).Interface())
+			}
 		}
 	}
 	return array, nil

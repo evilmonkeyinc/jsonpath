@@ -179,6 +179,14 @@ func Test_evaluateExpression(t *testing.T) {
 		},
 		{
 			input: input{
+				expression: "10/4",
+			},
+			expected: expected{
+				value: int64(2),
+			},
+		},
+		{
+			input: input{
 				expression: "10.0/4",
 			},
 			expected: expected{
@@ -203,7 +211,7 @@ func Test_evaluateExpression(t *testing.T) {
 		},
 		{
 			input: input{
-				expression: "1 >2",
+				expression: "2 > 2",
 			},
 			expected: expected{
 				value: false,
@@ -211,7 +219,31 @@ func Test_evaluateExpression(t *testing.T) {
 		},
 		{
 			input: input{
-				expression: "1< 2",
+				expression: "2 >= 2",
+			},
+			expected: expected{
+				value: true,
+			},
+		},
+		{
+			input: input{
+				expression: "1 < 2",
+			},
+			expected: expected{
+				value: true,
+			},
+		},
+		{
+			input: input{
+				expression: "2 < 2",
+			},
+			expected: expected{
+				value: false,
+			},
+		},
+		{
+			input: input{
+				expression: "2 <= 2",
 			},
 			expected: expected{
 				value: true,
@@ -338,6 +370,17 @@ func Test_evaluateExpression(t *testing.T) {
 				root: map[string]interface{}{
 					"expensive": 9.99,
 				},
+				expression: "$.expensive == 9.99",
+			},
+			expected: expected{
+				value: true,
+			},
+		},
+		{
+			input: input{
+				root: map[string]interface{}{
+					"expensive": 9.99,
+				},
 				expression: "$.expensive == float64(9.99)",
 			},
 			expected: expected{
@@ -420,6 +463,22 @@ func Test_evaluateExpression(t *testing.T) {
 			},
 			expected: expected{
 				value: true,
+			},
+		},
+		{
+			input: input{
+				expression: "1 + 2 * 3",
+			},
+			expected: expected{
+				value: int64(7),
+			},
+		},
+		{
+			input: input{
+				expression: "(1 + 2) * 3",
+			},
+			expected: expected{
+				value: int64(9),
 			},
 		},
 	}

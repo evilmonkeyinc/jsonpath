@@ -827,6 +827,117 @@ func Test_getRange(t *testing.T) {
 				},
 			},
 		},
+		{
+			input: input{
+				obj:  []string{"one", "two", "three", "four", "five"},
+				step: intPtr(-1),
+			},
+			expected: expected{
+				obj: []interface{}{"five", "four", "three", "two", "one"},
+			},
+		},
+		{
+			input: input{
+				obj:  "abcdef",
+				step: intPtr(-1),
+			},
+			expected: expected{
+				obj: "fedcba",
+			},
+		},
+		{
+			input: input{
+				obj: map[string]interface{}{
+					"b": "bee",
+					"a": "ae",
+					"c": "see",
+					"e": "ee",
+					"d": "dee",
+				},
+				step: intPtr(-1),
+			},
+			expected: expected{
+				obj: []interface{}{"ee", "dee", "see", "bee", "ae"},
+			},
+		},
+		{
+			input: input{
+				obj:   []string{"one", "two", "three", "four", "five"},
+				start: 1,
+				end:   intPtr(1),
+				step:  intPtr(-1),
+			},
+			expected: expected{
+				obj: []interface{}{"two"},
+			},
+		},
+		{
+			input: input{
+				obj:   "abcdef",
+				step:  intPtr(-1),
+				start: 1,
+				end:   intPtr(1),
+			},
+			expected: expected{
+				obj: "b",
+			},
+		},
+		{
+			input: input{
+				obj: map[string]interface{}{
+					"b": "bee",
+					"a": "ae",
+					"c": "see",
+					"e": "ee",
+					"d": "dee",
+				},
+				start: 1,
+				end:   intPtr(1),
+				step:  intPtr(-1),
+			},
+			expected: expected{
+				obj: []interface{}{"bee"},
+			},
+		},
+		{
+			input: input{
+				obj:   []string{"one", "two", "three", "four", "five"},
+				step:  intPtr(-1),
+				start: 1,
+				end:   intPtr(4),
+			},
+			expected: expected{
+				obj: []interface{}{"five", "four", "three", "two"},
+			},
+		},
+		{
+			input: input{
+				obj:   "abcdef",
+				step:  intPtr(-1),
+				start: 1,
+				end:   intPtr(4),
+			},
+			expected: expected{
+				obj: "edcb",
+			},
+		},
+		{
+			input: input{
+				obj: map[string]interface{}{
+					"b": "bee",
+					"a": "ae",
+					"c": "see",
+					"e": "ee",
+					"d": "dee",
+				},
+				step:  intPtr(-1),
+				start: 1,
+				end:   intPtr(4),
+			},
+			expected: expected{
+				obj: []interface{}{"ee", "dee", "see", "bee"},
+			},
+		},
 	}
 
 	for idx, test := range tests {
