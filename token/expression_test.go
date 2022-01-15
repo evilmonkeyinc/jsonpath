@@ -91,7 +91,7 @@ func Test_ExpressionToken_Apply(t *testing.T) {
 		},
 		{
 			token: &expressionToken{
-				expression: "\"abcdefg\"",
+				expression: "'abcdefg'",
 			},
 			input: input{
 				tokens: []Token{
@@ -151,10 +151,10 @@ func Test_evaluateExpression(t *testing.T) {
 		},
 		{
 			input: input{
-				expression: "\"key\"",
+				expression: "'key'",
 			},
 			expected: expected{
-				value: "\"key\"",
+				value: "'key'",
 			},
 		},
 		{
@@ -412,7 +412,7 @@ func Test_evaluateExpression(t *testing.T) {
 				root: map[string]interface{}{
 					"name": "target",
 				},
-				expression: "$.name == \"target\"",
+				expression: "$.name == 'target'",
 			},
 			expected: expected{
 				value: true,
@@ -499,6 +499,22 @@ func Test_evaluateExpression(t *testing.T) {
 			},
 			expected: expected{
 				value: int64(9),
+			},
+		},
+		{
+			input: input{
+				expression: "nil",
+			},
+			expected: expected{
+				value: nil,
+			},
+		},
+		{
+			input: input{
+				expression: "'key' + '\\'s'",
+			},
+			expected: expected{
+				value: "'key\\'s'",
 			},
 		},
 	}

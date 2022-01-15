@@ -474,6 +474,20 @@ func Test_Parse(t *testing.T) {
 				token: &rangeToken{from: int64(1), to: int64(2)},
 			},
 		},
+		{
+			input: input{query: "['key\\'s']"},
+			expected: expected{
+				token: &keyToken{
+					key: "key's",
+				},
+			},
+		},
+		{
+			input: input{query: "[\\'key\\'s']"},
+			expected: expected{
+				err: "invalid token. '[\\'key\\'s']' does not match any token format",
+			},
+		},
 	}
 
 	for idx, test := range tests {

@@ -31,7 +31,7 @@ func (token *filterToken) Apply(root, current interface{}, next []Token) (interf
 		if matches, ok := evaluation.(bool); ok {
 			return matches
 		} else if strValue, ok := evaluation.(string); ok {
-			strValue = strings.Trim(strValue, "\"")
+			strValue = strings.Trim(strValue, "'")
 			return strValue != ""
 		}
 

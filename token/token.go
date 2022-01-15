@@ -266,6 +266,13 @@ func Parse(tokenString string, options *ParseOptions) (Token, error) {
 			if openBracketCount != closeBracketCount {
 				continue
 			}
+
+			// if last token is escape character, then this is not an open or close
+			if len(bufferString) > 1 && bufferString[len(bufferString)-2] == '\\' {
+				bufferString = bufferString[0:len(bufferString)-2] + "'"
+				break
+			}
+
 			openQuote = !openQuote
 
 			if openQuote {

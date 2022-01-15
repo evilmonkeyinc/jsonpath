@@ -75,7 +75,7 @@ func Test_ScriptToken_Apply(t *testing.T) {
 		},
 		{
 			token: &scriptToken{
-				expression: "\"key\"",
+				expression: "'key'",
 			},
 			input: input{
 				root:    nil,

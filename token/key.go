@@ -3,6 +3,7 @@ package token
 import (
 	"fmt"
 	"reflect"
+	"strings"
 )
 
 type keyToken struct {
@@ -10,7 +11,9 @@ type keyToken struct {
 }
 
 func (token *keyToken) String() string {
-	return fmt.Sprintf("['%s']", token.key)
+	key := token.key
+	key = strings.ReplaceAll(key, "'", "\\'")
+	return fmt.Sprintf("['%s']", key)
 }
 
 func (token *keyToken) Type() string {

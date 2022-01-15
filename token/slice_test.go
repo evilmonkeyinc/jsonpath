@@ -82,7 +82,7 @@ func Test_SliceToken_Apply(t *testing.T) {
 		},
 		{
 			token: &sliceToken{
-				number: &expressionToken{expression: "\"key\""},
+				number: &expressionToken{expression: "'key'"},
 			},
 			input: input{},
 			expected: expected{

@@ -23,6 +23,10 @@ func Test_KeyToken_String(t *testing.T) {
 			input:    &keyToken{key: "nospace"},
 			expected: "['nospace']",
 		},
+		{
+			input:    &keyToken{key: "key's"},
+			expected: "['key\\'s']",
+		},
 	}
 
 	batchTokenStringTests(t, tests)
@@ -96,6 +100,22 @@ func Test_KeyToken_Apply(t *testing.T) {
 			expected: expected{
 				value: "nested target",
 				err:   "",
+			},
+		},
+		{
+			token: &keyToken{key: "key's"},
+			input: input{
+				current: map[string]interface{}{
+					"key's": []interface{}{
+						1, 2, 3,
+					},
+				},
+			},
+			expected: expected{
+				value: []interface{}{
+					1, 2, 3,
+				},
+				err: "",
 			},
 		},
 	}

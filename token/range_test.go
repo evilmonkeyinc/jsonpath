@@ -293,7 +293,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 		},
 		{
 			token: &rangeToken{
-				from: &expressionToken{expression: "\"key\""},
+				from: &expressionToken{expression: "'key'"},
 			},
 			input: input{
 				current: []interface{}{
@@ -357,7 +357,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 		{
 			token: &rangeToken{
 				from: 0,
-				to:   &expressionToken{expression: "\"key\""},
+				to:   &expressionToken{expression: "'key'"},
 			},
 			input: input{
 				current: []interface{}{
@@ -424,7 +424,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 		{
 			token: &rangeToken{
 				from: 0,
-				step: &expressionToken{expression: "\"key\""},
+				step: &expressionToken{expression: "'key'"},
 			},
 			input: input{
 				current: []interface{}{

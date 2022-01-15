@@ -5,6 +5,7 @@ import (
 	"go/constant"
 	"go/token"
 	"go/types"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -86,7 +87,7 @@ func evaluateExpression(root, current interface{}, expression string) (interface
 
 			new := fmt.Sprintf("%v", value)
 			if strValue, ok := value.(string); ok {
-				new = fmt.Sprintf("\"%s\"", strValue)
+				new = fmt.Sprintf("'%s'", strValue)
 			} else if intValue, ok := isInteger(value); ok {
 				new = fmt.Sprintf("%d", intValue)
 			} else if boolValue, ok := value.(bool); ok {
@@ -103,6 +104,10 @@ func evaluateExpression(root, current interface{}, expression string) (interface
 	}
 
 	expression = strings.TrimSpace(expression)
+
+	// convert ' to " unless the ' is escaped \'
+	regexp := regexp.MustCompile("(?:\\')+|(')")
+	expression = regexp.ReplaceAllString(expression, "\"")
 
 	fs := token.NewFileSet()
 	tv, err := types.Eval(fs, nil, token.NoPos, expression)
@@ -128,6 +133,8 @@ func evaluateExpression(root, current interface{}, expression string) (interface
 	case constant.String, constant.Complex, constant.Unknown:
 		fallthrough
 	default:
-		return tv.Value.String(), nil
+		value := tv.Value.String()
+		value = strings.ReplaceAll(value, "\"", "'")
+		return value, nil
 	}
 }
