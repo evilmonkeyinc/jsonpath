@@ -1,6 +1,7 @@
 package jsonpath
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
 
@@ -419,15 +420,16 @@ func Test_SpecificationTests(t *testing.T) {
 	}
 }
 
-func Test_JSONPath_Find(t *testing.T) {
+func Test_Compile(t *testing.T) {
 
 	type input struct {
-		query string
+		queryPath string
+		isStrict  bool
 	}
 
 	type expected struct {
-		obj interface{}
-		err string
+		err    string
+		tokens int
 	}
 
 	tests := []struct {
@@ -436,84 +438,128 @@ func Test_JSONPath_Find(t *testing.T) {
 	}{
 		{
 			input: input{
-				query: "$.expensive",
+				queryPath: "",
+				isStrict:  false,
 			},
 			expected: expected{
-				obj: float64(10),
+				err: "invalid JSONPath query '' unexpected token '' at index 0",
 			},
 		},
 		{
 			input: input{
-				query: "$.store.book[0].title",
+				queryPath: "@.[1, 2]",
+				isStrict:  true,
 			},
 			expected: expected{
-				obj: "Sayings of the Century",
+				err: "invalid JSONPath query '@.[1, 2]' invalid token. '[1, 2]' does not match any token format",
 			},
 		},
 		{
 			input: input{
-				query: "$.store.book[*].author",
+				queryPath: "@.[1, 2]",
+				isStrict:  false,
 			},
 			expected: expected{
-				obj: []interface{}{
+				tokens: 2,
+			},
+		},
+		{
+			input: input{
+				queryPath: "@.length<1",
+			},
+			expected: expected{
+				tokens: 2,
+			},
+		},
+	}
+
+	for idx, test := range tests {
+		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
+			jsonPath, err := Compile(test.input.queryPath, test.input.isStrict)
+			if test.expected.err != "" {
+				assert.Nil(t, jsonPath)
+				assert.EqualError(t, err, test.expected.err)
+				return
+			}
+
+			assert.Nil(t, err)
+			assert.NotNil(t, jsonPath)
+
+			assert.NotNil(t, jsonPath.options)
+			assert.Equal(t, test.input.isStrict, jsonPath.options.IsStrict)
+			assert.Equal(t, test.input.queryPath, jsonPath.queryString)
+			assert.Len(t, jsonPath.tokens, test.expected.tokens)
+		})
+	}
+
+}
+
+func Test_Query(t *testing.T) {
+
+	jsonData := make(map[string]interface{})
+	json.Unmarshal([]byte(sampleData), &jsonData)
+
+	type input struct {
+		queryString string
+		jsonData    map[string]interface{}
+	}
+
+	type expected struct {
+		value interface{}
+		err   string
+	}
+
+	tests := []struct {
+		input    input
+		expected expected
+	}{
+		{
+			input: input{
+				queryString: "invalid",
+			},
+			expected: expected{
+				err: "invalid JSONPath query 'invalid' unexpected token 'i' at index 0",
+			},
+		},
+		{
+			input: input{
+				queryString: "$.expensive",
+			},
+			expected: expected{
+				err: "key: invalid token key 'expensive' not found",
+			},
+		},
+		{
+			input: input{
+				queryString: "$.expensive",
+				jsonData: map[string]interface{}{
+					"expensive": "test",
+				},
+			},
+			expected: expected{
+				value: "test",
+			},
+		},
+		{
+			input: input{
+				queryString: "$.expensive",
+				jsonData:    jsonData,
+			},
+			expected: expected{
+				value: int64(10),
+			},
+		},
+		{
+			input: input{
+				queryString: "$..author",
+				jsonData:    jsonData,
+			},
+			expected: expected{
+				value: []interface{}{
 					"Nigel Rees",
 					"Evelyn Waugh",
 					"Herman Melville",
 					"J. R. R. Tolkien",
-				},
-			},
-		},
-		{
-			input: input{
-				query: "$..author",
-			},
-			expected: expected{
-				obj: []interface{}{
-					"Nigel Rees",
-					"Evelyn Waugh",
-					"Herman Melville",
-					"J. R. R. Tolkien",
-				},
-			},
-		},
-		{
-			input: input{
-				query: "$.store.*",
-			},
-			expected: expected{
-				obj: []interface{}{
-					[]interface{}{
-						map[string]interface{}{
-							"category": "reference",
-							"author":   "Nigel Rees",
-							"title":    "Sayings of the Century",
-							"price":    8.95,
-						},
-						map[string]interface{}{
-							"category": "fiction",
-							"author":   "Evelyn Waugh",
-							"title":    "Sword of Honour",
-							"price":    12.99,
-						},
-						map[string]interface{}{
-							"category": "fiction",
-							"author":   "Herman Melville",
-							"title":    "Moby Dick",
-							"isbn":     "0-553-21311-3",
-							"price":    8.99,
-						},
-						map[string]interface{}{
-							"category": "fiction",
-							"author":   "J. R. R. Tolkien",
-							"title":    "The Lord of the Rings",
-							"isbn":     "0-395-19395-8",
-							"price":    22.99,
-						},
-					},
-					map[string]interface{}{
-						"color": "red",
-						"price": 19.95,
-					},
 				},
 			},
 		},
@@ -521,22 +567,355 @@ func Test_JSONPath_Find(t *testing.T) {
 
 	for idx, test := range tests {
 		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
-			jsonPath := &JSONPath{}
-			err := jsonPath.compile(test.input.query)
+			value, err := Query(test.input.queryString, test.input.jsonData)
 
-			assert.Nil(t, err)
-
-			obj, err := jsonPath.QueryString(sampleData)
 			if test.expected.err != "" {
 				assert.EqualError(t, err, test.expected.err)
 			} else {
 				assert.Nil(t, err)
 			}
 
-			if expectArray, ok := test.expected.obj.([]interface{}); ok {
-				assert.ElementsMatch(t, expectArray, obj)
+			if expectArray, ok := test.expected.value.([]interface{}); ok {
+				assert.ElementsMatch(t, expectArray, value)
 			} else {
-				assert.EqualValues(t, test.expected.obj, obj)
+				assert.EqualValues(t, test.expected.value, value)
+			}
+		})
+	}
+}
+
+func Test_QueryString(t *testing.T) {
+
+	type input struct {
+		queryString string
+		jsonData    string
+	}
+
+	type expected struct {
+		value interface{}
+		err   string
+	}
+
+	tests := []struct {
+		input    input
+		expected expected
+	}{
+		{
+			input: input{
+				queryString: "$.expensive",
+			},
+			expected: expected{
+				err: "invalid data. unexpected end of JSON input",
+			},
+		},
+		{
+			input: input{
+				queryString: "invalid",
+				jsonData:    "{}",
+			},
+			expected: expected{
+				err: "invalid JSONPath query 'invalid' unexpected token 'i' at index 0",
+			},
+		},
+		{
+			input: input{
+
+				queryString: "$.expensive",
+				jsonData:    "{}",
+			},
+			expected: expected{
+				err: "key: invalid token key 'expensive' not found",
+			},
+		},
+		{
+			input: input{
+				queryString: "$.expensive",
+				jsonData:    `{"expensive": "test"}`,
+			},
+			expected: expected{
+				value: "test",
+			},
+		},
+		{
+			input: input{
+				queryString: "$.expensive",
+				jsonData:    sampleData,
+			},
+			expected: expected{
+				value: int64(10),
+			},
+		},
+		{
+			input: input{
+				queryString: "$..author",
+				jsonData:    sampleData,
+			},
+			expected: expected{
+				value: []interface{}{
+					"Nigel Rees",
+					"Evelyn Waugh",
+					"Herman Melville",
+					"J. R. R. Tolkien",
+				},
+			},
+		},
+	}
+
+	for idx, test := range tests {
+		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
+			value, err := QueryString(test.input.queryString, test.input.jsonData)
+
+			if test.expected.err != "" {
+				assert.EqualError(t, err, test.expected.err)
+			} else {
+				assert.Nil(t, err)
+			}
+
+			if expectArray, ok := test.expected.value.([]interface{}); ok {
+				assert.ElementsMatch(t, expectArray, value)
+			} else {
+				assert.EqualValues(t, test.expected.value, value)
+			}
+		})
+	}
+}
+
+func Test_JSONPath_compile(t *testing.T) {
+
+	type expected struct {
+		err    string
+		tokens int
+	}
+
+	tests := []struct {
+		input    string
+		expected expected
+	}{
+		{
+			input: "",
+			expected: expected{
+				err: "unexpected token '' at index 0",
+			},
+		},
+		{
+			input: "@.[1, 2]",
+			expected: expected{
+				err: "invalid token. '[1, 2]' does not match any token format",
+			},
+		},
+		{
+			input: "@.length<1",
+			expected: expected{
+				tokens: 2,
+			},
+		},
+	}
+
+	for idx, test := range tests {
+		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
+			jsonPath := &JSONPath{}
+			actual := jsonPath.compile(test.input)
+			if test.expected.err == "" {
+				assert.Nil(t, actual)
+			} else {
+				assert.EqualError(t, actual, test.expected.err)
+			}
+
+			assert.Len(t, jsonPath.tokens, test.expected.tokens)
+		})
+	}
+}
+
+func Test_JSONPath_Query(t *testing.T) {
+
+	sampleQuery, _ := Compile("$.expensive", false)
+	altSampleQuery, _ := Compile("$..author", false)
+
+	jsonData := make(map[string]interface{})
+	json.Unmarshal([]byte(sampleData), &jsonData)
+
+	type input struct {
+		jsonPath *JSONPath
+		jsonData map[string]interface{}
+	}
+
+	type expected struct {
+		value interface{}
+		err   string
+	}
+
+	tests := []struct {
+		input    input
+		expected expected
+	}{
+		{
+			input: input{
+				jsonPath: &JSONPath{
+					queryString: "invalid",
+				},
+			},
+			expected: expected{
+				err: "invalid JSONPath query 'invalid'",
+			},
+		},
+		{
+			input: input{
+				jsonPath: sampleQuery,
+			},
+			expected: expected{
+				err: "key: invalid token key 'expensive' not found",
+			},
+		},
+		{
+			input: input{
+				jsonPath: sampleQuery,
+				jsonData: map[string]interface{}{
+					"expensive": "test",
+				},
+			},
+			expected: expected{
+				value: "test",
+			},
+		},
+		{
+			input: input{
+				jsonPath: sampleQuery,
+				jsonData: jsonData,
+			},
+			expected: expected{
+				value: int64(10),
+			},
+		},
+		{
+			input: input{
+				jsonPath: altSampleQuery,
+				jsonData: jsonData,
+			},
+			expected: expected{
+				value: []interface{}{
+					"Nigel Rees",
+					"Evelyn Waugh",
+					"Herman Melville",
+					"J. R. R. Tolkien",
+				},
+			},
+		},
+	}
+
+	for idx, test := range tests {
+		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
+			value, err := test.input.jsonPath.Query(test.input.jsonData)
+
+			if test.expected.err != "" {
+				assert.EqualError(t, err, test.expected.err)
+			} else {
+				assert.Nil(t, err)
+			}
+
+			if expectArray, ok := test.expected.value.([]interface{}); ok {
+				assert.ElementsMatch(t, expectArray, value)
+			} else {
+				assert.EqualValues(t, test.expected.value, value)
+			}
+		})
+	}
+}
+
+func Test_JSONPath_QueryString(t *testing.T) {
+
+	sampleQuery, _ := Compile("$.expensive", false)
+	altSampleQuery, _ := Compile("$..author", false)
+
+	type input struct {
+		jsonPath *JSONPath
+		jsonData string
+	}
+
+	type expected struct {
+		value interface{}
+		err   string
+	}
+
+	tests := []struct {
+		input    input
+		expected expected
+	}{
+		{
+			input: input{
+				jsonPath: sampleQuery,
+			},
+			expected: expected{
+				err: "invalid data. unexpected end of JSON input",
+			},
+		},
+		{
+			input: input{
+				jsonPath: &JSONPath{
+					queryString: "invalid",
+				},
+				jsonData: "{}",
+			},
+			expected: expected{
+				err: "invalid JSONPath query 'invalid'",
+			},
+		},
+		{
+			input: input{
+				jsonPath: sampleQuery,
+				jsonData: "{}",
+			},
+			expected: expected{
+				err: "key: invalid token key 'expensive' not found",
+			},
+		},
+		{
+			input: input{
+				jsonPath: sampleQuery,
+				jsonData: `{"expensive": "test"}`,
+			},
+			expected: expected{
+				value: "test",
+			},
+		},
+		{
+			input: input{
+				jsonPath: sampleQuery,
+				jsonData: sampleData,
+			},
+			expected: expected{
+				value: int64(10),
+			},
+		},
+		{
+			input: input{
+				jsonPath: altSampleQuery,
+				jsonData: sampleData,
+			},
+			expected: expected{
+				value: []interface{}{
+					"Nigel Rees",
+					"Evelyn Waugh",
+					"Herman Melville",
+					"J. R. R. Tolkien",
+				},
+			},
+		},
+	}
+
+	for idx, test := range tests {
+		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
+			value, err := test.input.jsonPath.QueryString(test.input.jsonData)
+
+			if test.expected.err != "" {
+				assert.EqualError(t, err, test.expected.err)
+			} else {
+				assert.Nil(t, err)
+			}
+
+			if expectArray, ok := test.expected.value.([]interface{}); ok {
+				assert.ElementsMatch(t, expectArray, value)
+			} else {
+				assert.EqualValues(t, test.expected.value, value)
 			}
 		})
 	}

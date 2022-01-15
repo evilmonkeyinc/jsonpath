@@ -340,7 +340,6 @@ func Parse(tokenString string, options *ParseOptions) (Token, error) {
 					expression: strArg[1 : len(strArg)-1],
 				}, nil
 			}
-			return nil, getInvalidTokenFormatError(tokenString)
 		} else if intArg, ok := isInteger(arg); ok {
 			return &indexToken{index: intArg}, nil
 		}
@@ -393,14 +392,16 @@ func Parse(tokenString string, options *ParseOptions) (Token, error) {
 						expression: strArg[1 : len(strArg)-1],
 					}
 					args[idx] = arg
+					continue
 				} else if isKey(strArg) {
 					args[idx] = strArg[1 : len(strArg)-1]
-				} else {
-					return nil, getInvalidTokenFormatError(tokenString)
+					continue
 				}
-			} else if _, ok := isInteger(arg); !ok {
-				return nil, getInvalidTokenFormatError(tokenString)
+			} else if intArg, ok := isInteger(arg); ok {
+				args[idx] = intArg
+				continue
 			}
+			return nil, getInvalidTokenFormatError(tokenString)
 		}
 
 		return &unionToken{arguments: args}, nil

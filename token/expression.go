@@ -103,10 +103,6 @@ func evaluateExpression(root, current interface{}, expression string) (interface
 	}
 
 	expression = strings.TrimSpace(expression)
-	if expression == "" {
-		// after replacing tokens, if empty, return false
-		return false, nil
-	}
 
 	fs := token.NewFileSet()
 	tv, err := types.Eval(fs, nil, token.NoPos, expression)

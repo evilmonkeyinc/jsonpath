@@ -222,7 +222,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 				current: []interface{}{},
 			},
 			expected: expected{
-				err: "range: invalid token range: invalid token out of range",
+				err: "range: invalid token out of range",
 			},
 		},
 		{

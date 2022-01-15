@@ -8,10 +8,6 @@ import (
 	"github.com/evilmonkeyinc/jsonpath/errors"
 )
 
-func isInvalidTokenError(err error) bool {
-	return goErr.Is(err, errors.ErrInvalidToken)
-}
-
 func isInvalidTokenTargetError(err error) bool {
 	return goErr.Is(err, errors.ErrInvalidTokenTarget)
 }
@@ -44,6 +40,9 @@ func getInvalidTokenEmpty() error {
 }
 
 func getInvalidTokenError(tokenType string, reason error) error {
+	if goErr.Is(reason, errors.ErrInvalidToken) {
+		return reason
+	}
 	return fmt.Errorf("%s: %w %s", tokenType, errors.ErrInvalidToken, reason.Error())
 }
 

@@ -25,33 +25,6 @@ func Test_error(t *testing.T) {
 	})
 }
 
-func Test_isInvalidTokenError(t *testing.T) {
-	tests := []struct {
-		input    error
-		expected bool
-	}{
-		{
-			input:    fmt.Errorf("invalid token"),
-			expected: false,
-		},
-		{
-			input:    fmt.Errorf("is %w", errors.ErrInvalidToken),
-			expected: true,
-		},
-		{
-			input:    fmt.Errorf("is not %v", errors.ErrInvalidToken),
-			expected: false,
-		},
-	}
-
-	for idx, test := range tests {
-		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
-			actual := isInvalidTokenError(test.input)
-			assert.Equal(t, test.expected, actual)
-		})
-	}
-}
-
 func Test_isInvalidTokenTargetError(t *testing.T) {
 	tests := []struct {
 		input    error
@@ -240,6 +213,13 @@ func Test_getInvalidTokenError(t *testing.T) {
 				reason:    fmt.Errorf("different error"),
 			},
 			expected: "other: invalid token different error",
+		},
+		{
+			input: input{
+				tokenType: "other",
+				reason:    getInvalidTokenError("test", fmt.Errorf("the reason")),
+			},
+			expected: "test: invalid token the reason",
 		},
 	}
 

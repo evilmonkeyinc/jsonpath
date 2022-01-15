@@ -63,3 +63,46 @@ func Test_getInvalidJSONPathQuery(t *testing.T) {
 		})
 	}
 }
+
+func Test_getInvalidJSONPathQueryWithReason(t *testing.T) {
+
+	type input struct {
+		query  string
+		reason error
+	}
+
+	tests := []struct {
+		input    input
+		expected string
+	}{
+		{
+			input: input{
+				query:  "",
+				reason: fmt.Errorf("the reason"),
+			},
+			expected: "invalid JSONPath query '' the reason",
+		},
+		{
+			input: input{
+				query:  "test",
+				reason: fmt.Errorf("other reason"),
+			},
+			expected: "invalid JSONPath query 'test' other reason",
+		},
+		{
+			input: input{
+				query:  "other",
+				reason: getInvalidJSONPathQuery("inside"),
+			},
+			expected: "invalid JSONPath query 'inside'",
+		},
+	}
+
+	for idx, test := range tests {
+		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
+			actual := getInvalidJSONPathQueryWithReason(test.input.query, test.input.reason)
+			assert.EqualError(t, actual, test.expected)
+			assert.True(t, goErr.Is(actual, errors.ErrInvalidJSONPathQuery))
+		})
+	}
+}

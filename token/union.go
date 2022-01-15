@@ -74,18 +74,12 @@ func (token *unionToken) Apply(root, current interface{}, next []Token) (interfa
 		var err error
 		unionValue, err = getUnionByKey(token, current, keys)
 		if err != nil {
-			if isInvalidTokenError(err) {
-				return nil, err
-			}
 			return nil, getInvalidTokenError(token.Type(), err)
 		}
 	} else if len(indices) > 0 {
 		var err error
 		unionValue, err = getUnionByIndex(token, current, indices)
 		if err != nil {
-			if isInvalidTokenError(err) {
-				return nil, err
-			}
 			return nil, getInvalidTokenError(token.Type(), err)
 		}
 	}
