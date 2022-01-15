@@ -21,16 +21,16 @@ func (token *keyToken) Type() string {
 }
 
 func (token *keyToken) Apply(root, current interface{}, next []Token) (interface{}, error) {
-	objType := reflect.TypeOf(current)
+	objType, objVal := getTypeAndValue(current)
 	if objType == nil {
 		return nil, getInvalidTokenTargetNilError(
 			token.Type(),
 			reflect.Map,
 		)
 	}
+
 	switch objType.Kind() {
 	case reflect.Map:
-		objVal := reflect.ValueOf(current)
 		keys := objVal.MapKeys()
 		for _, kv := range keys {
 			if kv.String() == token.key {
@@ -39,9 +39,19 @@ func (token *keyToken) Apply(root, current interface{}, next []Token) (interface
 				if len(next) > 0 {
 					return next[0].Apply(root, value, next[1:])
 				}
-
 				return value, nil
 			}
+		}
+		return nil, getInvalidTokenKeyNotFoundError(token.Type(), token.key)
+	case reflect.Struct:
+		fields := getStructFields(objVal)
+		if field, ok := fields[token.key]; ok {
+			value := objVal.FieldByName(field.Name).Interface()
+
+			if len(next) > 0 {
+				return next[0].Apply(root, value, next[1:])
+			}
+			return value, nil
 		}
 		return nil, getInvalidTokenKeyNotFoundError(token.Type(), token.key)
 	default:

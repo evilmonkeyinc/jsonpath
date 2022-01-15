@@ -49,21 +49,15 @@ Will parse a JSONPath query and return a JSONPath object that can be used to que
 
 ### Query
 
-Will compile a JSONPath query and will query the supplied JSON data in `map[string]interface{}` format.
+Will compile a JSONPath query and will query the supplied JSON data in any various formats.
 
-This function is supplied to help support custom JSON parsing other than the standard `encoding/json` package.
+The parser can support querying struct types, and will use the `json` tags for struct fields if they are present, if not it will use the names as they appear in the golang code.
 
 ### QueryString
 
-Will compile a JSONPath query and will query the supplied JSON data.
+Will compile a JSONPath query and will query the supplied JSON data. 
 
-The JSON data will be unmarshaled to a queryable format using the standard `encoding/json` package.
-
-### QueryObject
-
-Will compile a JSONPath query and will query the supplied JSON data in `interface{}` format.
-
-The JSON data will be marshaled/unmarshaled to a queryable format using the standard `encoding/json` package.
+QueryString can support a JSON array or object strings, and will unmarshal them to `[]interface{}` or `map[string]interface{}` using the standard `encoding/json` package unmarshal functions.
 
 ## Types
 
@@ -71,7 +65,7 @@ The JSON data will be marshaled/unmarshaled to a queryable format using the stan
 
 This object is returned by the `Compile` function.
 
-The JSONPath struct represents a reusable compiled JSONPath query which supports the `Query`, `QueryString`, and `QueryObject` functions as detailed above.
+The JSONPath struct represents a reusable compiled JSONPath query which supports the `Query`, and `QueryString` functions as detailed above.
 
 ## Supported Syntax
 
@@ -83,7 +77,7 @@ The JSONPath struct represents a reusable compiled JSONPath query which supports
 | * | any/all | a wildcard operator used to denote that you want all the child members | `$.store.book.*` returns all the members of the book array or map | can also be denoted with the subscript syntax `$.store.book[*]` |
 | [] | subscript | allows for additional operators to be applied to the current object | `$.store.book[1]` returns the second entry in the book array | it is possible to use indexes to reference elements in a map, the order is determined by the keys in alphabetical order |
 | [,] | union | allows for a comma separated list of indices or keys to denote the elements to return | `$.store.book[0,1]` returns the first two entries in the book array | it is possible to use script expressions to define the union keys i.e. `$.store.book[0,(@.length-1)]` returns the first and last elements of the book array |
-| [start:end:step] | range | allows to define a range of elements in an array to return. the step operand allows you to skip alternating elements | `$.store.book[0:3:1)]` returns elements `0`, `1`, `2`, and `3` from the book array where `$.store.book[0:3:2)]` would return elements `0`, and `2` | it is possible to use script expressions to define the range keys i.e. `$.store.book[1:(@.length-2)]:1` returns the elements of the book array excluding the first and last element |
+| [start:end:step] | range | allows to define a range of elements in an array to return. the step operand allows you to skip alternating elements | `$.store.book[0:3:1)]` returns elements `0`, `1`, and `2` from the book array where `$.store.book[0:3:2)]` would return elements `0`, and `2` | it is possible to use script expressions to define the range keys i.e. `$.store.book[1:(@.length-1)]:1` returns the elements of the book array excluding the first and last element |
 | [?()] | filter | evaluates the filters expression to return if the element should be returned | `$.store.book[?(@.price > 10)]` will return only the elements in the book array that have a `price` greater than 10 | a filter should return a boolean, but if a non-boolean value is returned  |
 | [()] | script | evaluates the scripts expression to return the key or index for the target element | `$.store.book[(@.length-1)]` returns the last element of the book array | a script must return either an integer index or, if the preceding object was a map, a string key |
 | @ | current | represents the current object | `(@.length-1)`| only used in scripts and filters, and will represent different things depending where it is used. in a script it will represent the object that preceded it (the array or object), in a filter it will represent the elements of the preceding object (the elements in the array or map) |
@@ -92,10 +86,10 @@ The JSONPath struct represents a reusable compiled JSONPath query which supports
 
 The range operation can be performed with various arguments.
 
-[start:end:step] - the standard range operation
+[start:end:step] - the standard range operation, start is inclusive, end is exclusive, and step must be non-zero
 [start:end] - range operation with step set to 1, this would be the same as `[start:end:1]`
-[start:] - range operation with step set to 1 and the end set to the end of the collection, this would be the same as `[start:(@.length-1)]`
-[:x] - special range operation that will return the first `x` number of elements in the array, this would be the same as `[0:(x-1)]`
+[start:] - range operation with step set to 1 and the end set to the end of the collection, this would be the same as `[start:(@.length)]`
+[:end] - range operation when start is treated as 0 and step is 1, this would be the same as `[0:end]`
 [start:end:-1] - special range operation. the required elements are identified as with the standard range but will be returned in the reverse order, for example if you requested `[0:2:-1]` it would return elements `0`, `1`, and `2` but in the order `2,1,0`. you can specify values lower than -1 to also step over elements, for example `[0:2:-2]` would return elements `2` and `0` of the array, skipping `1`.
 
 ### Special Syntax
@@ -128,7 +122,7 @@ The range operation can be performed with various arguments.
 
 ## History
 
-The [original specification for JSONPath]((https://goessner.net/articles/JsonPath/)
+The [original specification for JSONPath](https://goessner.net/articles/JsonPath/)
 ) was proposed in 2007, and was a programing challenge I had not attempted before while being a practical tool.
 
 There are many [implementations](https://cburgmer.github.io/json-path-comparison/) in multiple languages so I will not claim that this library is better in any way but I believe that it is true to the original specification and was an enjoyable challenge.

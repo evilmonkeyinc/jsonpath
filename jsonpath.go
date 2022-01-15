@@ -2,6 +2,7 @@ package jsonpath
 
 import (
 	"encoding/json"
+	"strings"
 
 	"github.com/evilmonkeyinc/jsonpath/token"
 )
@@ -19,7 +20,7 @@ func Compile(queryPath string, isStrict bool) (*JSONPath, error) {
 }
 
 // Query will return the result of the JSONPath query applied against the specified JSON data.
-func Query(queryPath string, jsonData map[string]interface{}) (interface{}, error) {
+func Query(queryPath string, jsonData interface{}) (interface{}, error) {
 	jsonPath, err := Compile(queryPath, false)
 	if err != nil {
 		return nil, getInvalidJSONPathQueryWithReason(queryPath, err)
@@ -34,15 +35,6 @@ func QueryString(queryPath string, jsonData string) (interface{}, error) {
 		return nil, getInvalidJSONPathQueryWithReason(queryPath, err)
 	}
 	return jsonPath.QueryString(jsonData)
-}
-
-// QueryObject will return the result of the JSONPath query applied against the specified JSON object.
-func QueryObject(queryPath string, jsonData interface{}) (interface{}, error) {
-	jsonPath, err := Compile(queryPath, false)
-	if err != nil {
-		return nil, getInvalidJSONPathQueryWithReason(queryPath, err)
-	}
-	return jsonPath.QueryObject(jsonData)
 }
 
 // JSONPath i need to expand this
@@ -74,41 +66,37 @@ func (query *JSONPath) compile(queryString string) error {
 }
 
 // Query will return the result of the JSONPath query applied against the specified JSON data.
-func (query *JSONPath) Query(jsonData map[string]interface{}) (interface{}, error) {
+func (query *JSONPath) Query(root interface{}) (interface{}, error) {
 	if len(query.tokens) == 0 {
 		return nil, getInvalidJSONPathQuery(query.queryString)
 	}
 
-	found, err := query.tokens[0].Apply(jsonData, jsonData, query.tokens[1:])
+	tokens := make([]token.Token, 0)
+	if len(query.tokens) > 1 {
+		tokens = query.tokens[1:]
+	}
+
+	found, err := query.tokens[0].Apply(root, root, tokens)
 	if err != nil {
 		return nil, err
-	}
-	if array, ok := found.([]interface{}); ok {
-		return array, nil
 	}
 	return found, nil
 }
 
 // QueryString will return the result of the JSONPath query applied against the specified JSON data.
 func (query *JSONPath) QueryString(jsonData string) (interface{}, error) {
-	root := make(map[string]interface{})
+	jsonData = strings.TrimSpace(jsonData)
+
+	var root interface{}
+	if strings.HasPrefix(jsonData, "{") && strings.HasSuffix(jsonData, "}") {
+		root = make(map[string]interface{})
+	} else if strings.HasPrefix(jsonData, "[") && strings.HasSuffix(jsonData, "]") {
+		root = make([]interface{}, 0)
+	} else {
+		return nil, getInvalidJSONData(errDataIsUnexpectedTypeOrNil)
+	}
+
 	if err := json.Unmarshal([]byte(jsonData), &root); err != nil {
-		return nil, getInvalidJSONData(err)
-	}
-
-	return query.Query(root)
-}
-
-// QueryObject will return the result of the JSONPath query applied against the specified JSON object.
-func (query *JSONPath) QueryObject(jsonData interface{}) (interface{}, error) {
-	root := make(map[string]interface{})
-
-	jsonBytes, err := json.Marshal(jsonData)
-	if err != nil {
-		return nil, getInvalidJSONData(err)
-	}
-
-	if err := json.Unmarshal(jsonBytes, &root); err != nil {
 		return nil, getInvalidJSONData(err)
 	}
 

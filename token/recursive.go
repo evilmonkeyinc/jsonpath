@@ -27,14 +27,13 @@ func (token *recursiveToken) Apply(root, current interface{}, next []Token) (int
 
 		for _, item := range elements {
 			result, _ := nextToken.Apply(root, item, futureTokens)
-			objType := reflect.TypeOf(result)
+			objType, objVal := getTypeAndValue(result)
 			if objType == nil {
 				continue
 			}
 
 			switch objType.Kind() {
 			case reflect.Array, reflect.Slice:
-				objVal := reflect.ValueOf(result)
 				length := objVal.Len()
 				for i := 0; i < length; i++ {
 					results = append(results, objVal.Index(i).Interface())
@@ -55,26 +54,31 @@ func (token *recursiveToken) Apply(root, current interface{}, next []Token) (int
 func flatten(obj interface{}) []interface{} {
 	slice := make([]interface{}, 0)
 
-	objType := reflect.TypeOf(obj)
+	objType, objVal := getTypeAndValue(obj)
 	if objType == nil {
 		return slice
 	}
+
 	slice = append(slice, obj)
 
 	elements := make([]interface{}, 0)
 	switch objType.Kind() {
 	case reflect.Map:
-		objVal := reflect.ValueOf(obj)
 		keys := objVal.MapKeys()
 		for _, kv := range keys {
 			value := objVal.MapIndex(kv).Interface()
 			elements = append(elements, value)
 		}
 	case reflect.Array, reflect.Slice:
-		objVal := reflect.ValueOf(obj)
 		length := objVal.Len()
 		for i := 0; i < length; i++ {
 			value := objVal.Index(i).Interface()
+			elements = append(elements, value)
+		}
+	case reflect.Struct:
+		length := objVal.NumField()
+		for i := 0; i < length; i++ {
+			value := objVal.Field(i).Interface()
 			elements = append(elements, value)
 		}
 	default:

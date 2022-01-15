@@ -45,12 +45,11 @@ func (token *sliceToken) Apply(root, current interface{}, next []Token) (interfa
 		return nil, getInvalidTokenArgumentError(token.Type(), kind, reflect.Int)
 	}
 
-	var objValue reflect.Value
 	var length int64
 	var mapKeys []reflect.Value
 	isString := false
 
-	objType := reflect.TypeOf(current)
+	objType, objVal := getTypeAndValue(current)
 	if objType == nil {
 		return nil, getInvalidTokenTargetNilError(
 			token.Type(),
@@ -60,9 +59,8 @@ func (token *sliceToken) Apply(root, current interface{}, next []Token) (interfa
 
 	switch objType.Kind() {
 	case reflect.Map:
-		objValue = reflect.ValueOf(current)
-		length = int64(objValue.Len())
-		mapKeys = objValue.MapKeys()
+		length = int64(objVal.Len())
+		mapKeys = objVal.MapKeys()
 
 		sort.SliceStable(mapKeys, func(i, j int) bool {
 			one := mapKeys[i]
@@ -77,8 +75,7 @@ func (token *sliceToken) Apply(root, current interface{}, next []Token) (interfa
 	case reflect.Array:
 		fallthrough
 	case reflect.Slice:
-		objValue = reflect.ValueOf(current)
-		length = int64(objValue.Len())
+		length = int64(objVal.Len())
 		mapKeys = nil
 		break
 	default:
@@ -103,16 +100,16 @@ func (token *sliceToken) Apply(root, current interface{}, next []Token) (interfa
 	if mapKeys != nil {
 		for i := int64(0); i < to; i++ {
 			key := mapKeys[i]
-			elements = append(elements, objValue.MapIndex(key).Interface())
+			elements = append(elements, objVal.MapIndex(key).Interface())
 		}
 	} else if isString {
 		for i := int64(0); i < to; i++ {
-			value := objValue.Index(int(i)).Uint()
+			value := objVal.Index(int(i)).Uint()
 			substring += fmt.Sprintf("%c", value)
 		}
 	} else {
 		for i := int64(0); i < to; i++ {
-			elements = append(elements, objValue.Index(int(i)).Interface())
+			elements = append(elements, objVal.Index(int(i)).Interface())
 		}
 	}
 

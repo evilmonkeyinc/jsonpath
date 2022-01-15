@@ -103,7 +103,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 		{
 			token: &rangeToken{
 				from: 1,
-				to:   1,
+				to:   2,
 			},
 			input: input{
 				current: []interface{}{
@@ -121,6 +121,25 @@ func Test_RangeToken_Apply(t *testing.T) {
 		{
 			token: &rangeToken{
 				from: 1,
+				step: 3,
+			},
+			input: input{
+				current: []interface{}{
+					"one",
+					"two",
+					"three",
+				},
+			},
+			expected: expected{
+				value: []interface{}{
+					"two",
+				},
+			},
+		},
+		{
+			token: &rangeToken{
+				from: 0,
+				to:   3,
 				step: 2,
 			},
 			input: input{
@@ -132,6 +151,26 @@ func Test_RangeToken_Apply(t *testing.T) {
 			},
 			expected: expected{
 				value: []interface{}{
+					"one",
+					"three",
+				},
+			},
+		},
+		{
+			token: &rangeToken{
+				from: 0,
+				to:   2,
+			},
+			input: input{
+				current: []interface{}{
+					"one",
+					"two",
+					"three",
+				},
+			},
+			expected: expected{
+				value: []interface{}{
+					"one",
 					"two",
 				},
 			},
@@ -140,45 +179,6 @@ func Test_RangeToken_Apply(t *testing.T) {
 			token: &rangeToken{
 				from: 0,
 				to:   2,
-				step: 2,
-			},
-			input: input{
-				current: []interface{}{
-					"one",
-					"two",
-					"three",
-				},
-			},
-			expected: expected{
-				value: []interface{}{
-					"one",
-					"three",
-				},
-			},
-		},
-		{
-			token: &rangeToken{
-				from: 0,
-				to:   1,
-			},
-			input: input{
-				current: []interface{}{
-					"one",
-					"two",
-					"three",
-				},
-			},
-			expected: expected{
-				value: []interface{}{
-					"one",
-					"two",
-				},
-			},
-		},
-		{
-			token: &rangeToken{
-				from: 0,
-				to:   1,
 				step: 2,
 			},
 			input: input{
@@ -401,7 +401,6 @@ func Test_RangeToken_Apply(t *testing.T) {
 			expected: expected{
 				value: []interface{}{
 					"one",
-					"two",
 				},
 			},
 		},
@@ -535,7 +534,6 @@ func Test_RangeToken_Apply(t *testing.T) {
 				value: []interface{}{
 					"two",
 					"three",
-					"four",
 				},
 			},
 		},
@@ -734,7 +732,7 @@ func Test_getRange(t *testing.T) {
 		{
 			input: input{
 				obj: testArray,
-				end: intPtr(-1),
+				end: nil,
 			},
 			expected: expected{
 				obj: testArray[0:14],
@@ -743,10 +741,19 @@ func Test_getRange(t *testing.T) {
 		{
 			input: input{
 				obj: testArray,
+				end: intPtr(-1),
+			},
+			expected: expected{
+				obj: testArray[0:13],
+			},
+		},
+		{
+			input: input{
+				obj: testArray,
 				end: intPtr(-3),
 			},
 			expected: expected{
-				obj: testArray[0:12],
+				obj: testArray[0:11],
 			},
 		},
 		{
@@ -756,7 +763,7 @@ func Test_getRange(t *testing.T) {
 				end:   intPtr(-1),
 			},
 			expected: expected{
-				obj: testArray[11:14],
+				obj: testArray[11:13],
 			},
 		},
 		{
@@ -783,6 +790,16 @@ func Test_getRange(t *testing.T) {
 				obj:   []string{"one", "two", "three", "four", "five"},
 				start: 1,
 				end:   intPtr(1),
+			},
+			expected: expected{
+				obj: []interface{}{},
+			},
+		},
+		{
+			input: input{
+				obj:   []string{"one", "two", "three", "four", "five"},
+				start: 1,
+				end:   intPtr(2),
 			},
 			expected: expected{
 				obj: []interface{}{"two"},
@@ -854,7 +871,6 @@ func Test_getRange(t *testing.T) {
 					"see",
 					"dee",
 					"ee",
-					"eff",
 				},
 			},
 		},
@@ -895,7 +911,7 @@ func Test_getRange(t *testing.T) {
 			input: input{
 				obj:   []string{"one", "two", "three", "four", "five"},
 				start: 1,
-				end:   intPtr(1),
+				end:   intPtr(2),
 				step:  intPtr(-1),
 			},
 			expected: expected{
@@ -907,7 +923,7 @@ func Test_getRange(t *testing.T) {
 				obj:   "abcdef",
 				step:  intPtr(-1),
 				start: 1,
-				end:   intPtr(1),
+				end:   intPtr(2),
 			},
 			expected: expected{
 				obj: "b",
@@ -923,7 +939,7 @@ func Test_getRange(t *testing.T) {
 					"d": "dee",
 				},
 				start: 1,
-				end:   intPtr(1),
+				end:   intPtr(2),
 				step:  intPtr(-1),
 			},
 			expected: expected{
@@ -935,7 +951,7 @@ func Test_getRange(t *testing.T) {
 				obj:   []string{"one", "two", "three", "four", "five"},
 				step:  intPtr(-1),
 				start: 1,
-				end:   intPtr(4),
+				end:   intPtr(5),
 			},
 			expected: expected{
 				obj: []interface{}{"five", "four", "three", "two"},
@@ -946,7 +962,7 @@ func Test_getRange(t *testing.T) {
 				obj:   "abcdef",
 				step:  intPtr(-1),
 				start: 1,
-				end:   intPtr(4),
+				end:   intPtr(5),
 			},
 			expected: expected{
 				obj: "edcb",
@@ -963,7 +979,7 @@ func Test_getRange(t *testing.T) {
 				},
 				step:  intPtr(-1),
 				start: 1,
-				end:   intPtr(4),
+				end:   intPtr(5),
 			},
 			expected: expected{
 				obj: []interface{}{"ee", "dee", "see", "bee"},

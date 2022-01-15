@@ -118,7 +118,7 @@ func (token *unionToken) Apply(root, current interface{}, next []Token) (interfa
 }
 
 func getUnionByKey(token Token, obj interface{}, keys []string) ([]interface{}, error) {
-	objType := reflect.TypeOf(obj)
+	objType, objVal := getTypeAndValue(obj)
 	if objType == nil {
 		return nil, getInvalidTokenTargetNilError(token.Type(), reflect.Map)
 	}
@@ -130,15 +130,36 @@ func getUnionByKey(token Token, obj interface{}, keys []string) ([]interface{}, 
 
 	switch objType.Kind() {
 	case reflect.Map:
-		objValue := reflect.ValueOf(obj)
-		mapKeys := objValue.MapKeys()
+		mapKeys := objVal.MapKeys()
 
 		elements := make([]interface{}, 0)
 
 		for _, key := range mapKeys {
 			if keyMap[key.String()] {
 				delete(keyMap, key.String())
-				elements = append(elements, objValue.MapIndex(key).Interface())
+				elements = append(elements, objVal.MapIndex(key).Interface())
+			}
+		}
+
+		if len(keyMap) > 0 {
+			remaining := make([]string, 0)
+			for key := range keyMap {
+				remaining = append(remaining, key)
+			}
+			sort.Strings(remaining)
+			return nil, getInvalidTokenKeyNotFoundError(token.Type(), strings.Join(remaining, ","))
+		}
+
+		return elements, nil
+	case reflect.Struct:
+		elements := make([]interface{}, 0)
+
+		mapKeys := getStructFields(objVal)
+
+		for key, field := range mapKeys {
+			if keyMap[key] {
+				delete(keyMap, key)
+				elements = append(elements, objVal.FieldByName(field.Name).Interface())
 			}
 		}
 
@@ -162,7 +183,7 @@ func getUnionByKey(token Token, obj interface{}, keys []string) ([]interface{}, 
 }
 
 func getUnionByIndex(token Token, obj interface{}, indices []int64) (interface{}, error) {
-	objType := reflect.TypeOf(obj)
+	objType, objVal := getTypeAndValue(obj)
 	if objType == nil {
 		return nil, getInvalidTokenTargetNilError(
 			token.Type(),
@@ -170,16 +191,14 @@ func getUnionByIndex(token Token, obj interface{}, indices []int64) (interface{}
 		)
 	}
 
-	var objValue reflect.Value
 	var length int64
 	var mapKeys []reflect.Value
 	isString := false
 
 	switch objType.Kind() {
 	case reflect.Map:
-		objValue = reflect.ValueOf(obj)
-		length = int64(objValue.Len())
-		mapKeys = objValue.MapKeys()
+		length = int64(objVal.Len())
+		mapKeys = objVal.MapKeys()
 
 		sort.SliceStable(mapKeys, func(i, j int) bool {
 			one := mapKeys[i]
@@ -194,8 +213,7 @@ func getUnionByIndex(token Token, obj interface{}, indices []int64) (interface{}
 	case reflect.Array:
 		fallthrough
 	case reflect.Slice:
-		objValue = reflect.ValueOf(obj)
-		length = int64(objValue.Len())
+		length = int64(objVal.Len())
 		mapKeys = nil
 		break
 	default:
@@ -219,14 +237,14 @@ func getUnionByIndex(token Token, obj interface{}, indices []int64) (interface{}
 
 		if mapKeys != nil {
 			key := mapKeys[idx]
-			values = append(values, objValue.MapIndex(key).Interface())
+			values = append(values, objVal.MapIndex(key).Interface())
 		} else if isString {
-			value := objValue.Index(int(idx)).Interface()
+			value := objVal.Index(int(idx)).Interface()
 			if u, ok := value.(uint8); ok {
 				substring += fmt.Sprintf("%c", u)
 			}
 		} else {
-			values = append(values, objValue.Index(int(idx)).Interface())
+			values = append(values, objVal.Index(int(idx)).Interface())
 		}
 	}
 

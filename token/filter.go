@@ -40,13 +40,12 @@ func (token *filterToken) Apply(root, current interface{}, next []Token) (interf
 
 	elements := make([]interface{}, 0)
 
-	objType := reflect.TypeOf(current)
+	objType, objVal := getTypeAndValue(current)
 	if objType == nil {
 		return nil, getInvalidTokenTargetNilError(token.Type(), reflect.Array, reflect.Map, reflect.Slice)
 	}
 	switch objType.Kind() {
 	case reflect.Map:
-		objVal := reflect.ValueOf(current)
 		keys := objVal.MapKeys()
 
 		for _, kv := range keys {
@@ -63,7 +62,6 @@ func (token *filterToken) Apply(root, current interface{}, next []Token) (interf
 			}
 		}
 	case reflect.Array, reflect.Slice:
-		objVal := reflect.ValueOf(current)
 		length := objVal.Len()
 
 		for i := 0; i < length; i++ {

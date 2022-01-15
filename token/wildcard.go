@@ -19,28 +19,35 @@ func (token *wildcardToken) Apply(root, current interface{}, next []Token) (inte
 
 	elements := make([]interface{}, 0)
 
-	objType := reflect.TypeOf(current)
+	objType, objVal := getTypeAndValue(current)
 	if objType == nil {
 		return nil, getInvalidTokenTargetNilError(
 			token.Type(),
 			reflect.Array, reflect.Map, reflect.Slice,
 		)
 	}
+
 	switch objType.Kind() {
 	case reflect.Map:
-		objVal := reflect.ValueOf(current)
 		keys := objVal.MapKeys()
 		for _, kv := range keys {
 			value := objVal.MapIndex(kv).Interface()
 			elements = append(elements, value)
 		}
+		break
 	case reflect.Array, reflect.Slice:
-		objVal := reflect.ValueOf(current)
 		length := objVal.Len()
 		for i := 0; i < length; i++ {
 			value := objVal.Index(i).Interface()
 			elements = append(elements, value)
 		}
+	case reflect.Struct:
+		length := objVal.NumField()
+		for i := 0; i < length; i++ {
+			value := objVal.Field(i).Interface()
+			elements = append(elements, value)
+		}
+		break
 	default:
 		return nil, getInvalidTokenTargetError(
 			token.Type(),

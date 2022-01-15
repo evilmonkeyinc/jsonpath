@@ -21,7 +21,7 @@ func (token *indexToken) Type() string {
 func (token *indexToken) Apply(root, current interface{}, next []Token) (interface{}, error) {
 	idx := token.index
 
-	objType := reflect.TypeOf(current)
+	objType, objVal := getTypeAndValue(current)
 	if objType == nil {
 		return nil, getInvalidTokenTargetNilError(
 			token.Type(),
@@ -32,16 +32,14 @@ func (token *indexToken) Apply(root, current interface{}, next []Token) (interfa
 		)
 	}
 
-	var objValue reflect.Value
 	var length int64
 	var mapKeys []reflect.Value
 	isString := false
 
 	switch objType.Kind() {
 	case reflect.Map:
-		objValue = reflect.ValueOf(current)
-		length = int64(objValue.Len())
-		mapKeys = objValue.MapKeys()
+		length = int64(objVal.Len())
+		mapKeys = objVal.MapKeys()
 
 		sort.SliceStable(mapKeys, func(i, j int) bool {
 			one := mapKeys[i]
@@ -53,8 +51,7 @@ func (token *indexToken) Apply(root, current interface{}, next []Token) (interfa
 		isString = true
 		fallthrough
 	case reflect.Array, reflect.Slice:
-		objValue = reflect.ValueOf(current)
-		length = int64(objValue.Len())
+		length = int64(objVal.Len())
 		mapKeys = nil
 	default:
 		return nil, getInvalidTokenTargetError(
@@ -76,16 +73,16 @@ func (token *indexToken) Apply(root, current interface{}, next []Token) (interfa
 
 	if mapKeys != nil {
 		key := mapKeys[idx]
-		value = objValue.MapIndex(key).Interface()
+		value = objVal.MapIndex(key).Interface()
 
 	} else if isString {
-		value = objValue.Index(int(idx)).Interface()
+		value = objVal.Index(int(idx)).Interface()
 
 		if u, ok := value.(uint8); ok {
 			value = fmt.Sprintf("%c", u)
 		}
 	} else {
-		value = objValue.Index(int(idx)).Interface()
+		value = objVal.Index(int(idx)).Interface()
 	}
 
 	if len(next) > 0 {

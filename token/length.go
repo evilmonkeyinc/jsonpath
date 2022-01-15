@@ -17,7 +17,7 @@ func (token *lengthToken) Type() string {
 
 func (token *lengthToken) Apply(root, current interface{}, next []Token) (interface{}, error) {
 
-	objType := reflect.TypeOf(current)
+	objType, objVal := getTypeAndValue(current)
 	if objType == nil {
 		return nil, getInvalidTokenTargetNilError(
 			token.Type(),
@@ -30,7 +30,6 @@ func (token *lengthToken) Apply(root, current interface{}, next []Token) (interf
 
 	switch objType.Kind() {
 	case reflect.Map:
-		objVal := reflect.ValueOf(current)
 		current = int64(objVal.Len())
 
 		keys := objVal.MapKeys()
@@ -41,7 +40,6 @@ func (token *lengthToken) Apply(root, current interface{}, next []Token) (interf
 		}
 		break
 	case reflect.Array, reflect.Slice, reflect.String:
-		objVal := reflect.ValueOf(current)
 		current = int64(objVal.Len())
 		break
 	default:

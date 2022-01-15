@@ -176,7 +176,7 @@ expected responses
 3. string, nil - if a string is processed correctly
 **/
 func getRange(token Token, obj interface{}, start int64, end, step *int64) (interface{}, error) {
-	objType := reflect.TypeOf(obj)
+	objType, objVal := getTypeAndValue(obj)
 	if objType == nil {
 		return nil, getInvalidTokenTargetNilError(
 			token.Type(),
@@ -184,16 +184,14 @@ func getRange(token Token, obj interface{}, start int64, end, step *int64) (inte
 		)
 	}
 
-	var objValue reflect.Value
 	var length int64
 	var mapKeys []reflect.Value
 	isString := false
 
 	switch objType.Kind() {
 	case reflect.Map:
-		objValue = reflect.ValueOf(obj)
-		length = int64(objValue.Len())
-		mapKeys = objValue.MapKeys()
+		length = int64(objVal.Len())
+		mapKeys = objVal.MapKeys()
 
 		sort.SliceStable(mapKeys, func(i, j int) bool {
 			one := mapKeys[i]
@@ -208,8 +206,7 @@ func getRange(token Token, obj interface{}, start int64, end, step *int64) (inte
 	case reflect.Array:
 		fallthrough
 	case reflect.Slice:
-		objValue = reflect.ValueOf(obj)
-		length = int64(objValue.Len())
+		length = int64(objVal.Len())
 		mapKeys = nil
 		break
 	default:
@@ -226,7 +223,7 @@ func getRange(token Token, obj interface{}, start int64, end, step *int64) (inte
 		from = length + from
 	}
 
-	if from < 0 || from >= length {
+	if from < 0 || from > length {
 		return nil, getInvalidTokenOutOfRangeError(token.Type())
 	}
 
@@ -237,11 +234,9 @@ func getRange(token Token, obj interface{}, start int64, end, step *int64) (inte
 			to = length + to
 		}
 
-		if to < 0 || to >= length {
+		if to < 0 || to > length {
 			return nil, getInvalidTokenOutOfRangeError(token.Type())
 		}
-		// +1 to 'to' so we can handle 'from' and 'to' being the same
-		to++
 	}
 
 	var stp int64 = 1
@@ -258,24 +253,24 @@ func getRange(token Token, obj interface{}, start int64, end, step *int64) (inte
 		if stp < 0 {
 			for i := to - 1; i >= from; i += stp {
 				key := mapKeys[i]
-				array = append(array, objValue.MapIndex(key).Interface())
+				array = append(array, objVal.MapIndex(key).Interface())
 			}
 		} else {
 			for i := from; i < to; i += stp {
 				key := mapKeys[i]
-				array = append(array, objValue.MapIndex(key).Interface())
+				array = append(array, objVal.MapIndex(key).Interface())
 			}
 		}
 	} else if isString {
 		substring := ""
 		if stp < 0 {
 			for i := to - 1; i >= from; i += stp {
-				value := objValue.Index(int(i)).Uint()
+				value := objVal.Index(int(i)).Uint()
 				substring += fmt.Sprintf("%c", value)
 			}
 		} else {
 			for i := from; i < to; i += stp {
-				value := objValue.Index(int(i)).Uint()
+				value := objVal.Index(int(i)).Uint()
 				substring += fmt.Sprintf("%c", value)
 			}
 		}
@@ -283,11 +278,11 @@ func getRange(token Token, obj interface{}, start int64, end, step *int64) (inte
 	} else {
 		if stp < 0 {
 			for i := to - 1; i >= from; i += stp {
-				array = append(array, objValue.Index(int(i)).Interface())
+				array = append(array, objVal.Index(int(i)).Interface())
 			}
 		} else {
 			for i := from; i < to; i += stp {
-				array = append(array, objValue.Index(int(i)).Interface())
+				array = append(array, objVal.Index(int(i)).Interface())
 			}
 		}
 	}

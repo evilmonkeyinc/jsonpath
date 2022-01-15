@@ -7,6 +7,10 @@ import (
 	"github.com/evilmonkeyinc/jsonpath/errors"
 )
 
+var (
+	errDataIsUnexpectedTypeOrNil error = fmt.Errorf("unexpected type or nil")
+)
+
 func getInvalidJSONData(reason error) error {
 	return fmt.Errorf("%w. %s", errors.ErrInvalidJSONData, reason.Error())
 }
