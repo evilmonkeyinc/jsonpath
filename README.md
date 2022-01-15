@@ -13,6 +13,32 @@ Golang JSONPath parser
 
 `go get github.com/evilmonkeyinc/jsonpath`
 
+## Usage
+
+```golang
+package main
+
+import (
+	"fmt"
+	"os"
+
+	"github.com/evilmonkeyinc/jsonpath"
+)
+
+func main() {
+	query := os.Args[1]
+	data := os.Args[2]
+
+	result, err := jsonpath.QueryString(query, data)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	fmt.Println(result)
+	os.Exit(0)
+}
+```
+
 ## Functions
 
 The following functions are exported to support the functionality
@@ -47,6 +73,40 @@ This object is returned by the `Compile` function.
 
 The JSONPath struct represents a reusable compiled JSONPath query which supports the `Query`, `QueryString`, and `QueryObject` functions as detailed above.
 
+## Supported Syntax
+
+| syntax | name | description | example | notes |
+| --- | --- | --- | --- | --- |
+| $ | root | represents the data object being queried  | `$` would return the root object | this should always be the first token in a query |
+| . | child | used as a separator in the query, signaling that the next token is child of the preceding token | `$.store` would return the object with the key `store` in the root object | the subscript operator can be used instead of the child operator to support child tokens with special characters in them i.e. `$['child key']` |
+| .. | recursive | recursive child token.  | `$..book` would return every entry that is defined by the key `book` regardless of where it is in the data structure |  |
+| * | any/all | a wildcard operator used to denote that you want all the child members | `$.store.book.*` returns all the members of the book array or map | can also be denoted with the subscript syntax `$.store.book[*]` |
+| [] | subscript | allows for additional operators to be applied to the current object | `$.store.book[1]` returns the second entry in the book array | it is possible to use indexes to reference elements in a map, the order is determined by the keys in alphabetical order |
+| [,] | union | allows for a comma separated list of indices or keys to denote the elements to return | `$.store.book[0,1]` returns the first two entries in the book array | it is possible to use script expressions to define the union keys i.e. `$.store.book[0,(@.length-1)]` returns the first and last elements of the book array |
+| [start:end:step] | range | allows to define a range of elements in an array to return. the step operand allows you to skip alternating elements | `$.store.book[0:3:1)]` returns elements `0`, `1`, `2`, and `3` from the book array where `$.store.book[0:3:2)]` would return elements `0`, and `2` | it is possible to use script expressions to define the range keys i.e. `$.store.book[1:(@.length-2)]:1` returns the elements of the book array excluding the first and last element |
+| [?()] | filter | evaluates the filters expression to return if the element should be returned | `$.store.book[?(@.price > 10)]` will return only the elements in the book array that have a `price` greater than 10 | a filter should return a boolean, but if a non-boolean value is returned  |
+| [()] | script | evaluates the scripts expression to return the key or index for the target element | `$.store.book[(@.length-1)]` returns the last element of the book array | a script must return either an integer index or, if the preceding object was a map, a string key |
+| @ | current | represents the current object | `(@.length-1)`| only used in scripts and filters, and will represent different things depending where it is used. in a script it will represent the object that preceded it (the array or object), in a filter it will represent the elements of the preceding object (the elements in the array or map) |
+
+### Range Variations
+
+The range operation can be performed with various arguments.
+
+[start:end:step] - the standard range operation
+[start:end] - range operation with step set to 1, this would be the same as `[start:end:1]`
+[start:] - range operation with step set to 1 and the end set to the end of the collection, this would be the same as `[start:(@.length-1)]`
+[:x] - special range operation that will return the first `x` number of elements in the array, this would be the same as `[0:(x-1)]`
+[start:end:-1] - special range operation. the required elements are identified as with the standard range but will be returned in the reverse order, for example if you requested `[0:2:-1]` it would return elements `0`, `1`, and `2` but in the order `2,1,0`. you can specify values lower than -1 to also step over elements, for example `[0:2:-2]` would return elements `2` and `0` of the array, skipping `1`.
+
+### Special Syntax
+
+`.length` this child operator will allow you to return the length of an array, map, slice, or string. if used with a map that has a key `length` it will return the corresponding value instead of the length of the map
+
+`[-1]` any time you can specify an index, either for a subscript, union, or range, you can also specify a negative value. this is used to retrieve the elements at the end of the collection instead of the start, `-1` would represent the last item in the array, `-2` the second last, and so on.
+
+`string[0]` it is possible to get a character or substring from a string value using the subscript index, union, or range operations on a string. whereas these operations would normally return an array, they will instead return the modified string. for example if you applied `[0:2]` to a string `string` it would return `str`
+
+
 ## Supported standard evaluation operations
 
 | symbol | name | supported types | example | notes |
@@ -58,13 +118,13 @@ The JSONPath struct represents a reusable compiled JSONPath query which supports
 | + | addition | int\|float | 2+2 returns 4 | |
 | - | subtraction | int\|float | 2-2 returns 0 | |
 | % | remainder | int\|float | 5 % 2 returns 1 | this operator will divide the numerator by the denominator and then return the remainder |
-| > | greater than | | | |
-| >= | greater than or equal to | | | |
-| < | less than | | | |
-| <= | less than or equal to  | | | |
-| && | combine and | expression\|bool | x | y |
-| \|\| | combine or | expression\|bool | x | y |
-| () | sub-expression | expression | x | y |
+| > | greater than | int\|float | 1 > 0 returns true | |
+| >= | greater than or equal to | int\|float | 1 >= 1 returns true | |
+| < | less than | int\|float | 1 < 2 returns true | |
+| <= | less than or equal to  | int\|float | 1 <= 1 returns true | |
+| && | combine and | expression\|bool | true&&false returns false | evaluate two expressions that return true or false, and return true if both are true |
+| \|\| | combine or | expression\|bool | true\|\|false returns true | evaluate two expressions that return true or false, and return true if either are true |
+| (...) | sub-expression | expression | (1+2)*3 returns 9 | allows you to isolate a sub-expression so it will be evaluated first separate from the rest of the expression |
 
 ## History
 
