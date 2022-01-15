@@ -6,31 +6,30 @@ import (
 	"github.com/evilmonkeyinc/jsonpath/token"
 )
 
-// Find will return the result of the JSONPath query applied against the specified JSON data.
-func Find(queryPath string, jsonData map[string]interface{}) (interface{}, error) {
-	jsonPath, err := Compile(queryPath)
+// Query will return the result of the JSONPath query applied against the specified JSON data.
+func Query(queryPath string, jsonData map[string]interface{}) (interface{}, error) {
+	jsonPath, err := Compile(queryPath, false)
 	if err != nil {
-		// TODO : wrap?
 		return nil, err
 	}
-	return jsonPath.Find(jsonData)
+	return jsonPath.Query(jsonData)
 }
 
-// FindFromJSONString will return the result of the JSONPath query applied against the specified JSON data.
-func FindFromJSONString(queryPath string, jsonData string) (interface{}, error) {
-	jsonPath, err := Compile(queryPath)
+// QueryString will return the result of the JSONPath query applied against the specified JSON data.
+func QueryString(queryPath string, jsonData string) (interface{}, error) {
+	jsonPath, err := Compile(queryPath, false)
 	if err != nil {
-		// TODO : wrap?
 		return nil, err
 	}
-	return jsonPath.FindFromJSONString(jsonData)
+	return jsonPath.QueryString(jsonData)
 }
 
 // Compile compile the JSON path query
-func Compile(queryPath string) (*JSONPath, error) {
-	jsonPath := &JSONPath{}
+func Compile(queryPath string, isStrict bool) (*JSONPath, error) {
+	jsonPath := &JSONPath{
+		options: &token.ParseOptions{IsStrict: isStrict},
+	}
 	if err := jsonPath.compile(queryPath); err != nil {
-		// TODO : wrap?
 		return nil, err
 	}
 
@@ -69,25 +68,24 @@ func (query *JSONPath) compile(queryString string) error {
 	return nil
 }
 
-// FindFromJSONString will return the result of the JSONPath query applied against the specified JSON data.
-func (query *JSONPath) FindFromJSONString(jsonData string) (interface{}, error) {
+// QueryString will return the result of the JSONPath query applied against the specified JSON data.
+func (query *JSONPath) QueryString(jsonData string) (interface{}, error) {
 	root := make(map[string]interface{})
 	if err := json.Unmarshal([]byte(jsonData), &root); err != nil {
 		return nil, getInvalidJSONData(err)
 	}
 
-	return query.Find(root)
+	return query.Query(root)
 }
 
-// Find will return the result of the JSONPath query applied against the specified JSON data.
-func (query *JSONPath) Find(jsonData map[string]interface{}) (interface{}, error) {
+// Query will return the result of the JSONPath query applied against the specified JSON data.
+func (query *JSONPath) Query(jsonData map[string]interface{}) (interface{}, error) {
 	if len(query.tokens) == 0 {
 		return nil, getInvalidJSONPathQuery(query.queryString)
 	}
 
 	found, err := query.tokens[0].Apply(jsonData, jsonData, query.tokens[1:])
 	if err != nil {
-		// TODO : wrap?
 		return nil, err
 	}
 	if array, ok := found.([]interface{}); ok {

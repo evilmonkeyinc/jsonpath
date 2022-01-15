@@ -382,7 +382,7 @@ func Parse(tokenString string, options *ParseOptions) (Token, error) {
 	} else if commaCount > 0 {
 		// Union
 
-		// we should always have one more comma than arg
+		// we should always have one less comma than args
 		if commaCount >= len(args) {
 			return nil, getInvalidTokenFormatError(tokenString)
 		}
@@ -414,7 +414,7 @@ func Parse(tokenString string, options *ParseOptions) (Token, error) {
 			args = append(args, nil)
 		}
 
-		var from, to, step interface{} = args[0], args[1], int64(1)
+		var from, to, step interface{} = args[0], args[1], nil
 		if len(args) > 2 {
 			step = args[2]
 		}

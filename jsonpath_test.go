@@ -412,7 +412,7 @@ func Test_SpecificationTests(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			actual, actualErr := FindFromJSONString(test.query, sampleData)
+			actual, actualErr := QueryString(test.query, sampleData)
 			assert.ElementsMatch(t, test.expected.target, actual, fmt.Sprintf("'%s' invalid result", test.query))
 			assert.Equal(t, test.expected.err, actualErr, fmt.Sprintf("'%s' invalid error", test.query))
 		})
@@ -526,7 +526,7 @@ func Test_JSONPath_Find(t *testing.T) {
 
 			assert.Nil(t, err)
 
-			obj, err := jsonPath.FindFromJSONString(sampleData)
+			obj, err := jsonPath.QueryString(sampleData)
 			if test.expected.err != "" {
 				assert.EqualError(t, err, test.expected.err)
 			} else {
