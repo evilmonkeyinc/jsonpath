@@ -36,6 +36,15 @@ func QueryString(queryPath string, jsonData string) (interface{}, error) {
 	return jsonPath.QueryString(jsonData)
 }
 
+// QueryObject will return the result of the JSONPath query applied against the specified JSON object.
+func QueryObject(queryPath string, jsonData interface{}) (interface{}, error) {
+	jsonPath, err := Compile(queryPath, false)
+	if err != nil {
+		return nil, getInvalidJSONPathQueryWithReason(queryPath, err)
+	}
+	return jsonPath.QueryObject(jsonData)
+}
+
 // JSONPath i need to expand this
 type JSONPath struct {
 	queryString string
@@ -84,6 +93,22 @@ func (query *JSONPath) Query(jsonData map[string]interface{}) (interface{}, erro
 func (query *JSONPath) QueryString(jsonData string) (interface{}, error) {
 	root := make(map[string]interface{})
 	if err := json.Unmarshal([]byte(jsonData), &root); err != nil {
+		return nil, getInvalidJSONData(err)
+	}
+
+	return query.Query(root)
+}
+
+// QueryObject will return the result of the JSONPath query applied against the specified JSON object.
+func (query *JSONPath) QueryObject(jsonData interface{}) (interface{}, error) {
+	root := make(map[string]interface{})
+
+	jsonBytes, err := json.Marshal(jsonData)
+	if err != nil {
+		return nil, getInvalidJSONData(err)
+	}
+
+	if err := json.Unmarshal(jsonBytes, &root); err != nil {
 		return nil, getInvalidJSONData(err)
 	}
 

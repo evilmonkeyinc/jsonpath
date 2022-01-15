@@ -44,7 +44,7 @@ func Test_LengthToken_Apply(t *testing.T) {
 				current: [3]string{"one", "two", "three"},
 			},
 			expected: expected{
-				value: 3,
+				value: int64(3),
 			},
 		},
 		{
@@ -53,7 +53,7 @@ func Test_LengthToken_Apply(t *testing.T) {
 				current: []interface{}{"one", "two", "three", 4, 5},
 			},
 			expected: expected{
-				value: 5,
+				value: int64(5),
 			},
 		},
 		{
@@ -66,7 +66,7 @@ func Test_LengthToken_Apply(t *testing.T) {
 				},
 			},
 			expected: expected{
-				value: 3,
+				value: int64(3),
 			},
 		},
 		{
@@ -79,7 +79,7 @@ func Test_LengthToken_Apply(t *testing.T) {
 				},
 			},
 			expected: expected{
-				value: 3,
+				value: int64(3),
 			},
 		},
 		{
@@ -88,7 +88,7 @@ func Test_LengthToken_Apply(t *testing.T) {
 				current: "this is 26 characters long",
 			},
 			expected: expected{
-				value: 26,
+				value: int64(26),
 			},
 		},
 		{
@@ -100,7 +100,7 @@ func Test_LengthToken_Apply(t *testing.T) {
 				},
 			},
 			expected: expected{
-				value: 26,
+				value: int64(26),
 			},
 		},
 		{

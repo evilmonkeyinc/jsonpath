@@ -31,7 +31,7 @@ func (token *lengthToken) Apply(root, current interface{}, next []Token) (interf
 	switch objType.Kind() {
 	case reflect.Map:
 		objVal := reflect.ValueOf(current)
-		current = objVal.Len()
+		current = int64(objVal.Len())
 
 		keys := objVal.MapKeys()
 		for _, kv := range keys {
@@ -42,7 +42,7 @@ func (token *lengthToken) Apply(root, current interface{}, next []Token) (interf
 		break
 	case reflect.Array, reflect.Slice, reflect.String:
 		objVal := reflect.ValueOf(current)
-		current = objVal.Len()
+		current = int64(objVal.Len())
 		break
 	default:
 		return nil, getInvalidTokenTargetError(

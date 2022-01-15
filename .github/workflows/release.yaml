@@ -7,12 +7,12 @@ on:
       - '**.go'
       - 'go.mod'
 jobs:
-  build:
-      runs-on: ubuntu-latest
-      steps:
-        - uses: actions/checkout@master
-        - uses: go-semantic-release/action@v1
-          with:
-            github-token: ${{ secrets.GITHUB_TOKEN }}
-            allow-initial-development-versions: true
-            force-bump-patch-version: true
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: go-semantic-release/action@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          allow-initial-development-versions: true
+          force-bump-patch-version: true
