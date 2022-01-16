@@ -69,37 +69,127 @@ The JSONPath struct represents a reusable compiled JSONPath query which supports
 
 ## Supported Syntax
 
-| syntax | name | description | example | notes |
-| --- | --- | --- | --- | --- |
-| `$` | root | represents the data object being queried  | `$` would return the root object | this should always be the first token in a query |
-| `.` | child | used as a separator in the query, signaling that the next token is child of the preceding token | `$.store` would return the object with the key `store` in the root object | the subscript operator can be used instead of the child operator to support child tokens with special characters in them i.e. `$['child key']` |
-| `..` | recursive | recursive child token.  | `$..book` would return every entry that is defined by the key `book` regardless of where it is in the data structure |  |
-| `*` | any/all | a wildcard operator used to denote that you want all the child members | `$.store.book.*` returns all the members of the book array or map | can also be denoted with the subscript syntax `$.store.book[*]` |
-| `[]` | subscript | allows for additional operators to be applied to the current object | `$.store.book[1]` returns the second entry in the book array | it is possible to use indexes to reference elements in a map, the order is determined by the keys in alphabetical order |
-| `[,]` | union | allows for a comma separated list of indices or keys to denote the elements to return | `$.store.book[0,1]` returns the first two entries in the book array | it is possible to use script expressions to define the union keys i.e. `$.store.book[0,(@.length-1)]` returns the first and last elements of the book array |
-| `[start:end:step]` | range | allows to define a range of elements in an array to return starting at `start` up to, but not including, `end`. the step operand allows you to skip alternating elements | `$.store.book[0:3:1)]` returns elements `0`, `1`, and `2` from the book array where `$.store.book[0:3:2)]` would return elements `0`, and `2` | it is possible to use script expressions to define the range keys i.e. `$.store.book[1:(@.length-1)]:1` returns the elements of the book array excluding the first and last element |
-| `[?()]` | filter | evaluates the filters expression to return if the element should be returned | `$.store.book[?(@.price > 10)]` will return only the elements in the book array that have a `price` greater than 10 | a filter should return a boolean, but if a non-boolean value is returned  |
-| `[()]` | script | evaluates the scripts expression to return the key or index for the target element | `$.store.book[(@.length-1)]` returns the last element of the book array | a script must return either an integer index or, if the preceding object was a map, a string key |
-| `@` | current | represents the current object | `(@.length-1)`| only used in scripts and filters, and will represent different things depending where it is used. in a script it will represent the object that preceded it (the array or object), in a filter it will represent the elements of the preceding object (the elements in the array or map) |
+| syntax | name  | example |
+| --- | ---  | --- |
+| `$` | root |  `$` | 
+| `.` | child |  `$.store`  |
+| `..` | recursive | `$..book`  |
+| `*` | wildcard | `$.store.book.*` |
+| `[]` | subscript |  `$.store.book[1]` | 
+| `[,]` | union | `$.store.book[0,1]` | 
+| `[start:end:step]` | range |  `$.store.book[0:3:1)]` | 
+| `[?()]` | filter |  `$.store.book[?(@.price > 10)]` |
+| `[()]` | script |  `$.store.book[(@.length-1)]` |
+| `@` | current |  `(@.length-1)`| 
 
-### Range Variations
+### Root
 
-The range operation can be performed with various arguments.
+`$`
 
-`[start:end:step]` - the standard range operation, start is inclusive, end is exclusive, and step must be non-zero
-`[start:end]` - range operation with step set to 1, this would be the same as `[start:end:1]`
-`[start:]` - range operation with step set to 1 and the end set to the end of the collection, this would be the same as `[start:(@.length)]`
-`[:end]` - range operation when start is treated as 0 and step is 1, this would be the same as `[0:end]`
-`[start:end:-1]` - special range operation. the required elements are identified as with the standard range but will be returned in the reverse order, for example if you requested `[0:2:-1]` it would return elements `0`, `1`, and `2` but in the order `2,1,0`. you can specify values lower than -1 to also step over elements, for example `[0:2:-2]` would return elements `2` and `0` of the array, skipping `1`.
+represents the data object being queried 
 
-### Special Syntax
+this should always be the first token in a query. It is also possible to use the root symbol in scripts and filters, for example `$.store.book[?(@.category == $.onSaleCategory)]` would allow you to filter the elements i the book array based on its `category` value compared to the `onSaleCategory` value on the root object.
 
-`.length` this child operator will allow you to return the length of an array, map, slice, or string. if used with a map that has a key `length` it will return the corresponding value instead of the length of the map
+### Child
 
-`[-1]` any time you can specify an index, either for a subscript, union, or range, you can also specify a negative value. this is used to retrieve the elements at the end of the collection instead of the start, `-1` would represent the last item in the array, `-2` the second last, and so on.
+`.key` or `['key']`
 
-`string[0]` it is possible to get a character or substring from a string value using the subscript index, union, or range operations on a string. whereas these operations would normally return an array, they will instead return the modified string. for example if you applied `[0:2]` to a string `string` it would return `str`
+The child operator allows you to specify that you want the child element of a map or struct based on the elements key/name.
 
+If the key, or field name, includes special characters including spaces then it is required to use the subscript with single quotes syntax. If the required key has a single quote in them then it can be escaped using `\`, for example `['key\'s']`.
+
+### Recursive
+
+`..key`
+
+A recursive check through the data structure for the specified child element.
+
+### Wildcard
+
+`*` or `[*]`
+
+a wildcard operator used to denote that you want all the child members of the previous object
+
+can also be used with the subscript syntax `$.store.book[*]`
+
+### Subscript
+
+`[0]` or `['key']`
+
+allows for additional operators to be applied to the current object to retrieve a child element.
+
+It is possible to use indexes to reference elements in a map, the order is determined by the keys in alphabetical order.
+
+A negative value for an index is supported, resulting in the elements being counted in reverse, `-1` would represent the last item in the collection, `-2` the second last, and so on.
+
+### Union
+
+`[0,1]` or `['first','second']`
+
+allows for a comma separated list of indices or keys to denote the elements to return
+
+It is possible to use script expressions to define the union keys i.e. `$.store.book[0,(@.length-1)]` returns the first and last elements of the book collection.
+
+It is possible to use indexes to reference elements in a map, the order is determined by the keys in alphabetical order.
+
+A negative value for an index is supported, resulting in the elements being counted in reverse, `-1` would represent the last item in the collection, `-2` the second last, and so on.
+
+### Range
+
+`[start:]` or `[:end]` or `[start:end]` or `[start:end:step]` 
+
+Allows to define a range of elements in an array to return. Starting the first keys `start` up to, but not including, the second keys `end`. the the third keys `step` allows you to skip alternating elements.
+
+It is possible to use script expressions to define the range keys i.e. `$.store.book[1:(@.length-1)]:1` returns the elements of the book array excluding the first and last element.
+
+An empty keys are treated as:
+1. `start` as `0`
+2. `end` as the collection length
+3. `step` as `1` 
+
+A negative value for `start` or `end` is supported, resulting in the elements being counted in reverse, `-1` would represent the last item in the collection, `-2` the second last, and so on.
+
+A negative value for `step` will return the results in the opposite order, but the range is still determined in the original order then it is reversed.
+
+### Filter
+
+`[?(expression)]`
+
+Evaluates the filters expression to return if the element should be returned as part of the new array.
+
+A filter expression should return a boolean, but if a non-nil value is returned it will also be treated as true, expect for an empty string which is considered false. This allows for filters such as `[?(@.isbn)]` where only the elements that have an `isbn` value would be included.
+
+### Script
+
+`[(expression)]`
+
+Evaluates the scripts expression to return the key or index for the target element.
+
+A script expression must return either an integer index or, if the preceding object was a map or struct, a string key or field name.
+
+### Current
+
+`@`
+
+Only usable in scripts and filters, and will represent different things depending where it is used. 
+
+In a script it will represent the object referenced by the previous token, allowing you to get the length of the array to determine an end index.
+
+In a filter it will represent the child elements of the object referenced by the previous token, allowing you to determine if it should be included in the filtered array by referring to the child elements values.
+
+### Length
+
+`.length`
+
+the length token will allow you to return the length of an array, map, slice, or string. 
+
+If used with a map that has a key `length` it will return the corresponding value instead of the length of the map.
+
+### Subscript, Union, and Range with strings
+
+It is possible to use a string in place of an array with the subscript `[1]` union `[1,2,3]` and range `[0:3]` operations, and instead of returning an array of characters instead will return a substring.
+
+For example if you applied `[0:3]` to the string `string` it would return `str`.
 
 ## Supported standard evaluation operations
 
@@ -125,3 +215,4 @@ The range operation can be performed with various arguments.
 The [original specification for JSONPath](https://goessner.net/articles/JsonPath/) was proposed in 2007, and was a programing challenge I had not attempted before while being a practical tool.
 
 There are many [implementations](https://cburgmer.github.io/json-path-comparison/) in multiple languages so I will not claim that this library is better in any way but I believe that it is true to the original specification and was an enjoyable challenge.
+
