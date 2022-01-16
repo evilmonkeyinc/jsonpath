@@ -50,7 +50,7 @@ func printConsensusMatrix(tests []testData) {
 		}
 
 		if test.consensus == consensusNone {
-			fmt.Printf("|`%s`|`%v`|`%s`|%v|%s|\n", test.query, test.data, "none", expected, ":question:")
+			fmt.Printf("|`%s`|`%v`|%s|`%v`|%s|\n", test.query, test.data, "none", expected, ":question:")
 			continue
 		}
 
