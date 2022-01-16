@@ -4,10 +4,16 @@ on:
     branches:
       - main
       - develop
+    paths:
+      - '**.go'
+      - 'go.mod'
   pull_request:
     branches:
       - main
       - develop
+    paths:
+      - '**.go'
+      - 'go.mod'
 jobs:
   test:
     strategy:

@@ -3,6 +3,9 @@ on:
   push:
     branches:
       - main
+    paths:
+      - '**.go'
+      - 'go.mod'
 jobs:
   coverage:
     runs-on: ubuntu-latest
