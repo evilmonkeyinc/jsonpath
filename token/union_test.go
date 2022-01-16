@@ -253,7 +253,7 @@ func Test_UnionToken_Apply(t *testing.T) {
 			input: input{
 				current: "abcdefghijkl",
 				tokens: []Token{
-					&indexToken{index: 1},
+					&indexToken{index: 1, allowString: true},
 				},
 			},
 			expected: expected{

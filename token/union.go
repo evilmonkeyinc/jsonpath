@@ -11,6 +11,8 @@ type unionToken struct {
 	arguments []interface{}
 }
 
+// TODO : only support strings and maps with index if option set
+
 func (token *unionToken) String() string {
 	args := ""
 	for _, arg := range token.arguments {

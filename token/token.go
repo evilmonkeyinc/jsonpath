@@ -5,6 +5,8 @@ import (
 	"strings"
 )
 
+// TODO : optional feature - support double quotes in subscript instead of single quote
+
 // Token represents a component of a JSON Path query
 type Token interface {
 	Apply(root, current interface{}, next []Token) (interface{}, error)
@@ -22,8 +24,38 @@ func Tokenize(query string) ([]string, string, error) {
 	tokenString := ""
 	remainder := query
 
+	quoteCount := 0
+	openScriptBracket := 0
+	closeScriptBracket := 0
+	openSubscriptBracket := 0
+	closeSubscriptBracket := 0
+
 tokenize:
 	for idx, rne := range query {
+
+		if tokenString == "" {
+			quoteCount = 0
+			openScriptBracket = 0
+			closeScriptBracket = 0
+		}
+		switch rne {
+		case '\'':
+			quoteCount++
+			break
+		case '(':
+			openScriptBracket++
+			break
+		case ')':
+			closeScriptBracket++
+			break
+		case '[':
+			openSubscriptBracket++
+			break
+		case ']':
+			closeSubscriptBracket++
+			break
+		}
+
 		tokenString += string(rne)
 		remainder = remainder[1:]
 
@@ -59,6 +91,7 @@ tokenize:
 				// open bracket and at start of token
 				continue
 			}
+
 			// open bracket in middle of token, new subscript
 			if strings.Count(tokenString, "[") > 1 {
 				// this is not the only opening bracket, subscript in subscript
@@ -79,10 +112,12 @@ tokenize:
 		}
 
 		if strings.Contains(tokenString, "[") {
-			startCount := strings.Count(tokenString, "[")
-			endCount := strings.Count(tokenString, "]")
+			if quoteCount%2 == 1 || openScriptBracket != closeScriptBracket {
+				// inside expression or quotes
+				continue
+			}
 
-			if rne == ']' && startCount == endCount {
+			if rne == ']' && openSubscriptBracket == closeSubscriptBracket {
 				if tokenString[0] == '.' {
 					tokenString = tokenString[1:]
 				} else {
@@ -147,7 +182,7 @@ func Parse(tokenString string) (Token, error) {
 	}
 
 	isKey := func(token string) bool {
-		return len(token) > 2 && strings.HasPrefix(token, "'") && strings.HasSuffix(token, "'")
+		return len(token) > 1 && strings.HasPrefix(token, "'") && strings.HasSuffix(token, "'")
 	}
 
 	tokenString = strings.TrimSpace(tokenString)

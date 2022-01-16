@@ -41,7 +41,7 @@ func Test_IndexToken_Apply(t *testing.T) {
 				current: nil,
 			},
 			expected: expected{
-				err: "index: invalid token target. expected [array map slice string] got [nil]",
+				err: "index: invalid token target. expected [array slice] got [nil]",
 			},
 		},
 		{
@@ -50,11 +50,47 @@ func Test_IndexToken_Apply(t *testing.T) {
 				current: 123,
 			},
 			expected: expected{
-				err: "index: invalid token target. expected [array map slice string] got [int]",
+				err: "index: invalid token target. expected [array slice] got [int]",
+			},
+		},
+		{
+			token: &indexToken{index: 0, allowMap: true},
+			input: input{
+				current: 123,
+			},
+			expected: expected{
+				err: "index: invalid token target. expected [array slice map] got [int]",
+			},
+		},
+		{
+			token: &indexToken{index: 0, allowString: true},
+			input: input{
+				current: 123,
+			},
+			expected: expected{
+				err: "index: invalid token target. expected [array slice string] got [int]",
+			},
+		},
+		{
+			token: &indexToken{index: 0, allowMap: true, allowString: true},
+			input: input{
+				current: 123,
+			},
+			expected: expected{
+				err: "index: invalid token target. expected [array slice map string] got [int]",
 			},
 		},
 		{
 			token: &indexToken{index: 5},
+			input: input{
+				current: "Find(X)",
+			},
+			expected: expected{
+				err: "index: invalid token target. expected [array slice] got [string]",
+			},
+		},
+		{
+			token: &indexToken{index: 5, allowString: true},
 			input: input{
 				current: "Find(X)",
 			},
@@ -169,7 +205,7 @@ func Test_IndexToken_Apply(t *testing.T) {
 			},
 		},
 		{
-			token: &indexToken{index: 1},
+			token: &indexToken{index: 1, allowMap: true},
 			input: input{
 				current: map[string]interface{}{
 					"a": map[string]interface{}{

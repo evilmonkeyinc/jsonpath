@@ -70,7 +70,7 @@ func Test_ScriptToken_Apply(t *testing.T) {
 				current: nil,
 			},
 			expected: expected{
-				err: "index: invalid token target. expected [array map slice string] got [nil]",
+				err: "index: invalid token target. expected [array slice] got [nil]",
 			},
 		},
 		{

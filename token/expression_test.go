@@ -95,9 +95,7 @@ func Test_ExpressionToken_Apply(t *testing.T) {
 			},
 			input: input{
 				tokens: []Token{
-					&indexToken{
-						index: 1,
-					},
+					&indexToken{index: 1, allowString: true},
 				},
 			},
 			expected: expected{

@@ -398,7 +398,7 @@ func Test_Parse(t *testing.T) {
 		{
 			input: input{query: "['']"},
 			expected: expected{
-				err: "invalid token. '['']' does not match any token format",
+				token: &keyToken{key: ""},
 			},
 		},
 		{

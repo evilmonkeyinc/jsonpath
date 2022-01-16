@@ -6,8 +6,13 @@ import (
 	"sort"
 )
 
+// TODO : support optional settings
+// TODO : need to be able to set these inside script/expression as well
+
 type indexToken struct {
-	index int64
+	index       int64
+	allowMap    bool
+	allowString bool
 }
 
 func (token *indexToken) String() string {
@@ -21,14 +26,22 @@ func (token *indexToken) Type() string {
 func (token *indexToken) Apply(root, current interface{}, next []Token) (interface{}, error) {
 	idx := token.index
 
+	allowedType := []reflect.Kind{
+		reflect.Array,
+		reflect.Slice,
+	}
+	if token.allowMap {
+		allowedType = append(allowedType, reflect.Map)
+	}
+	if token.allowString {
+		allowedType = append(allowedType, reflect.String)
+	}
+
 	objType, objVal := getTypeAndValue(current)
 	if objType == nil {
 		return nil, getInvalidTokenTargetNilError(
 			token.Type(),
-			reflect.Array,
-			reflect.Map,
-			reflect.Slice,
-			reflect.String,
+			allowedType...,
 		)
 	}
 
@@ -38,6 +51,13 @@ func (token *indexToken) Apply(root, current interface{}, next []Token) (interfa
 
 	switch objType.Kind() {
 	case reflect.Map:
+		if !token.allowMap {
+			return nil, getInvalidTokenTargetError(
+				token.Type(),
+				objType.Kind(),
+				allowedType...,
+			)
+		}
 		length = int64(objVal.Len())
 		mapKeys = objVal.MapKeys()
 
@@ -48,6 +68,13 @@ func (token *indexToken) Apply(root, current interface{}, next []Token) (interfa
 			return one.String() < two.String()
 		})
 	case reflect.String:
+		if !token.allowString {
+			return nil, getInvalidTokenTargetError(
+				token.Type(),
+				objType.Kind(),
+				allowedType...,
+			)
+		}
 		isString = true
 		fallthrough
 	case reflect.Array, reflect.Slice:
@@ -57,7 +84,7 @@ func (token *indexToken) Apply(root, current interface{}, next []Token) (interfa
 		return nil, getInvalidTokenTargetError(
 			token.Type(),
 			objType.Kind(),
-			reflect.Array, reflect.Map, reflect.Slice, reflect.String,
+			allowedType...,
 		)
 	}
 

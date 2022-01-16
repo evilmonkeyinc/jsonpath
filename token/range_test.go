@@ -555,9 +555,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 			input: input{
 				current: "this is a substring",
 				tokens: []Token{
-					&indexToken{
-						index: 0,
-					},
+					&indexToken{index: 0, allowString: true},
 				},
 			},
 			expected: expected{

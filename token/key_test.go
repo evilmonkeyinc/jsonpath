@@ -147,7 +147,7 @@ func Test_KeyToken_Apply(t *testing.T) {
 					Two: "two's value",
 				},
 				tokens: []Token{
-					&indexToken{index: 0},
+					&indexToken{index: 0, allowString: true},
 				},
 			},
 			expected: expected{
