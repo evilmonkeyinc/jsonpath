@@ -44,9 +44,19 @@ func printConsensusMatrix(tests []testData) {
 	fmt.Println("|query|data|consensus|actual|match|")
 	fmt.Println("|---|---|---|---|---|")
 	for _, test := range tests {
+		expected := test.expected
+		if expected == nil {
+			expected = "nil"
+		}
+
 		if test.consensus == consensusNone {
-			fmt.Printf("|%s|%v|%s|%v|%s|\n", test.query, test.data, "none", test.expected, ":question:")
+			fmt.Printf("|%s|%v|%s|%v|%s|\n", test.query, test.data, "none", expected, ":question:")
 			continue
+		}
+
+		consensus := test.consensus
+		if consensus == nil {
+			consensus = "nil"
 		}
 
 		symbol := ":no_entry:"
@@ -54,6 +64,6 @@ func printConsensusMatrix(tests []testData) {
 			symbol = ":white_check_mark:"
 		}
 
-		fmt.Printf("|%s|%v|%v|%v|%s|\n", test.query, test.data, test.consensus, test.expected, symbol)
+		fmt.Printf("|%s|%v|%v|%v|%s|\n", test.query, test.data, consensus, expected, symbol)
 	}
 }

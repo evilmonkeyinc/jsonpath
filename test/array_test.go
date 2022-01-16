@@ -29,9 +29,9 @@ func Test_Array(t *testing.T) {
 		{
 			query:         "$[1:3]",
 			data:          `{":": 42, "more": "string", "a": 1, "b": 2, "c": 3, "1:3": "nice"}`,
-			expected:      []interface{}{float64(42), float64(1)},
-			expectedError: "",
-			consensus:     []interface{}{},
+			expected:      nil,
+			expectedError: "range: invalid token target. expected [array slice] got [map]",
+			consensus:     nil,
 		},
 		{
 			query:         "$[1:10]",
@@ -169,9 +169,9 @@ func Test_Array(t *testing.T) {
 		{
 			query:         "$[:]",
 			data:          `{":": 42, "more": "string"}`,
-			expected:      []interface{}{float64(42), "string"},
-			expectedError: "",
-			consensus:     []interface{}{},
+			expected:      nil,
+			expectedError: "range: invalid token target. expected [array slice] got [map]",
+			consensus:     nil,
 		},
 		{
 			query:         "$[::]",

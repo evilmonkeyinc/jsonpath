@@ -353,5 +353,5 @@ func Test_Bracket(t *testing.T) {
 	}
 
 	batchTest(t, tests)
-	printConsensusMatrix(tests)
+	// printConsensusMatrix(tests)
 }

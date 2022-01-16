@@ -547,11 +547,20 @@ func Test_RangeToken_Apply(t *testing.T) {
 				current: "this is a substring",
 			},
 			expected: expected{
+				err: "range: invalid token target. expected [array slice] got [string]",
+			},
+		},
+		{
+			token: &rangeToken{from: 10, allowString: true},
+			input: input{
+				current: "this is a substring",
+			},
+			expected: expected{
 				value: "substring",
 			},
 		},
 		{
-			token: &rangeToken{from: -9},
+			token: &rangeToken{from: -9, allowString: true},
 			input: input{
 				current: "this is a substring",
 				tokens: []Token{
@@ -641,7 +650,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 				current: 123,
 			},
 			expected: expected{
-				err: "range: invalid token target. expected [array map slice string] got [int]",
+				err: "range: invalid token target. expected [array slice] got [int]",
 			},
 		},
 	}
@@ -651,6 +660,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 
 func Test_getRange(t *testing.T) {
 	type input struct {
+		token            *rangeToken
 		obj              interface{}
 		start, end, step *int64
 	}
@@ -672,22 +682,52 @@ func Test_getRange(t *testing.T) {
 	}{
 		{
 			input: input{
-				obj: nil,
+				token: &rangeToken{},
+				obj:   nil,
 			},
 			expected: expected{
-				err: "range: invalid token target. expected [array map slice string] got [nil]",
+				err: "range: invalid token target. expected [array slice] got [nil]",
 			},
 		},
 		{
 			input: input{
-				obj: 123,
+				token: &rangeToken{},
+				obj:   123,
 			},
 			expected: expected{
-				err: "range: invalid token target. expected [array map slice string] got [int]",
+				err: "range: invalid token target. expected [array slice] got [int]",
 			},
 		},
 		{
 			input: input{
+				token: &rangeToken{allowMap: true},
+				obj:   123,
+			},
+			expected: expected{
+				err: "range: invalid token target. expected [array slice map] got [int]",
+			},
+		},
+		{
+			input: input{
+				token: &rangeToken{allowString: true},
+				obj:   123,
+			},
+			expected: expected{
+				err: "range: invalid token target. expected [array slice string] got [int]",
+			},
+		},
+		{
+			input: input{
+				token: &rangeToken{allowMap: true, allowString: true},
+				obj:   123,
+			},
+			expected: expected{
+				err: "range: invalid token target. expected [array slice map string] got [int]",
+			},
+		},
+		{
+			input: input{
+				token: &rangeToken{allowString: true},
 				obj:   "return after this:result text",
 				start: intPtr(18),
 			},
@@ -697,6 +737,7 @@ func Test_getRange(t *testing.T) {
 		},
 		{
 			input: input{
+				token: &rangeToken{},
 				obj:   testArray,
 				start: intPtr(15),
 			},
@@ -706,8 +747,9 @@ func Test_getRange(t *testing.T) {
 		},
 		{
 			input: input{
-				obj: testArray,
-				end: intPtr(15),
+				token: &rangeToken{},
+				obj:   testArray,
+				end:   intPtr(15),
 			},
 			expected: expected{
 				obj: []interface{}{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, "ten", "eleven", "twelve", 13},
@@ -715,8 +757,9 @@ func Test_getRange(t *testing.T) {
 		},
 		{
 			input: input{
-				obj:  testArray,
-				step: intPtr(0),
+				token: &rangeToken{},
+				obj:   testArray,
+				step:  intPtr(0),
 			},
 			expected: expected{
 				err: "range: invalid token out of range",
@@ -724,7 +767,8 @@ func Test_getRange(t *testing.T) {
 		},
 		{
 			input: input{
-				obj: testArray,
+				token: &rangeToken{},
+				obj:   testArray,
 			},
 			expected: expected{
 				obj: testArray,
@@ -732,8 +776,9 @@ func Test_getRange(t *testing.T) {
 		},
 		{
 			input: input{
-				obj: testArray,
-				end: nil,
+				token: &rangeToken{},
+				obj:   testArray,
+				end:   nil,
 			},
 			expected: expected{
 				obj: testArray[0:14],
@@ -741,8 +786,9 @@ func Test_getRange(t *testing.T) {
 		},
 		{
 			input: input{
-				obj: testArray,
-				end: intPtr(-1),
+				token: &rangeToken{},
+				obj:   testArray,
+				end:   intPtr(-1),
 			},
 			expected: expected{
 				obj: testArray[0:13],
@@ -750,8 +796,9 @@ func Test_getRange(t *testing.T) {
 		},
 		{
 			input: input{
-				obj: testArray,
-				end: intPtr(-3),
+				token: &rangeToken{},
+				obj:   testArray,
+				end:   intPtr(-3),
 			},
 			expected: expected{
 				obj: testArray[0:11],
@@ -759,6 +806,7 @@ func Test_getRange(t *testing.T) {
 		},
 		{
 			input: input{
+				token: &rangeToken{},
 				obj:   testArray,
 				start: intPtr(-3),
 				end:   intPtr(-1),
@@ -769,8 +817,9 @@ func Test_getRange(t *testing.T) {
 		},
 		{
 			input: input{
-				obj:  []string{"one", "two", "three", "four", "five"},
-				step: intPtr(2),
+				token: &rangeToken{},
+				obj:   []string{"one", "two", "three", "four", "five"},
+				step:  intPtr(2),
 			},
 			expected: expected{
 				obj: []interface{}{"one", "three", "five"},
@@ -778,6 +827,7 @@ func Test_getRange(t *testing.T) {
 		},
 		{
 			input: input{
+				token: &rangeToken{},
 				obj:   []string{"one", "two", "three", "four", "five"},
 				start: intPtr(1),
 				step:  intPtr(2),
@@ -788,6 +838,7 @@ func Test_getRange(t *testing.T) {
 		},
 		{
 			input: input{
+				token: &rangeToken{},
 				obj:   []string{"one", "two", "three", "four", "five"},
 				start: intPtr(1),
 				end:   intPtr(1),
@@ -798,6 +849,7 @@ func Test_getRange(t *testing.T) {
 		},
 		{
 			input: input{
+				token: &rangeToken{},
 				obj:   []string{"one", "two", "three", "four", "five"},
 				start: intPtr(1),
 				end:   intPtr(2),
@@ -808,6 +860,7 @@ func Test_getRange(t *testing.T) {
 		},
 		{
 			input: input{
+				token: &rangeToken{allowMap: true},
 				obj: map[string]interface{}{
 					"b": "bee",
 					"a": "ae",
@@ -832,6 +885,7 @@ func Test_getRange(t *testing.T) {
 		},
 		{
 			input: input{
+				token: &rangeToken{allowMap: true},
 				obj: map[string]interface{}{
 					"b": "bee",
 					"a": "ae",
@@ -854,6 +908,7 @@ func Test_getRange(t *testing.T) {
 		},
 		{
 			input: input{
+				token: &rangeToken{allowMap: true},
 				obj: map[string]interface{}{
 					"b": "bee",
 					"a": "ae",
@@ -877,8 +932,9 @@ func Test_getRange(t *testing.T) {
 		},
 		{
 			input: input{
-				obj:  []string{"one", "two", "three", "four", "five"},
-				step: intPtr(-1),
+				token: &rangeToken{},
+				obj:   []string{"one", "two", "three", "four", "five"},
+				step:  intPtr(-1),
 			},
 			expected: expected{
 				obj: []interface{}{"five", "four", "three", "two", "one"},
@@ -886,8 +942,9 @@ func Test_getRange(t *testing.T) {
 		},
 		{
 			input: input{
-				obj:  "abcdef",
-				step: intPtr(-1),
+				token: &rangeToken{allowString: true},
+				obj:   "abcdef",
+				step:  intPtr(-1),
 			},
 			expected: expected{
 				obj: "fedcba",
@@ -895,6 +952,7 @@ func Test_getRange(t *testing.T) {
 		},
 		{
 			input: input{
+				token: &rangeToken{allowMap: true},
 				obj: map[string]interface{}{
 					"b": "bee",
 					"a": "ae",
@@ -910,6 +968,7 @@ func Test_getRange(t *testing.T) {
 		},
 		{
 			input: input{
+				token: &rangeToken{},
 				obj:   []string{"one", "two", "three", "four", "five"},
 				start: intPtr(1),
 				end:   intPtr(2),
@@ -921,6 +980,7 @@ func Test_getRange(t *testing.T) {
 		},
 		{
 			input: input{
+				token: &rangeToken{allowString: true},
 				obj:   "abcdef",
 				step:  intPtr(-1),
 				start: intPtr(1),
@@ -932,6 +992,25 @@ func Test_getRange(t *testing.T) {
 		},
 		{
 			input: input{
+				token: &rangeToken{},
+				obj: map[string]interface{}{
+					"b": "bee",
+					"a": "ae",
+					"c": "see",
+					"e": "ee",
+					"d": "dee",
+				},
+				start: intPtr(1),
+				end:   intPtr(2),
+				step:  intPtr(-1),
+			},
+			expected: expected{
+				err: "range: invalid token target. expected [array slice] got [map]",
+			},
+		},
+		{
+			input: input{
+				token: &rangeToken{allowMap: true},
 				obj: map[string]interface{}{
 					"b": "bee",
 					"a": "ae",
@@ -949,6 +1028,7 @@ func Test_getRange(t *testing.T) {
 		},
 		{
 			input: input{
+				token: &rangeToken{},
 				obj:   []string{"one", "two", "three", "four", "five"},
 				step:  intPtr(-1),
 				start: intPtr(1),
@@ -960,6 +1040,19 @@ func Test_getRange(t *testing.T) {
 		},
 		{
 			input: input{
+				token: &rangeToken{},
+				obj:   "abcdef",
+				step:  intPtr(-1),
+				start: intPtr(1),
+				end:   intPtr(5),
+			},
+			expected: expected{
+				err: "range: invalid token target. expected [array slice] got [string]",
+			},
+		},
+		{
+			input: input{
+				token: &rangeToken{allowString: true},
 				obj:   "abcdef",
 				step:  intPtr(-1),
 				start: intPtr(1),
@@ -971,6 +1064,7 @@ func Test_getRange(t *testing.T) {
 		},
 		{
 			input: input{
+				token: &rangeToken{allowMap: true},
 				obj: map[string]interface{}{
 					"b": "bee",
 					"a": "ae",
@@ -988,6 +1082,7 @@ func Test_getRange(t *testing.T) {
 		},
 		{
 			input: input{
+				token: &rangeToken{},
 				obj:   []string{"one", "two", "three", "four", "five"},
 				start: intPtr(-10),
 			},
@@ -997,6 +1092,7 @@ func Test_getRange(t *testing.T) {
 		},
 		{
 			input: input{
+				token: &rangeToken{},
 				obj:   []string{"one", "two", "three", "four", "five"},
 				start: intPtr(0),
 				end:   intPtr(-10),
@@ -1009,7 +1105,7 @@ func Test_getRange(t *testing.T) {
 
 	for idx, test := range tests {
 		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
-			obj, err := getRange(&rangeToken{}, test.input.obj, test.input.start, test.input.end, test.input.step)
+			obj, err := test.input.token.getRange(test.input.obj, test.input.start, test.input.end, test.input.step)
 
 			if test.expected.obj == nil {
 				assert.Nil(t, obj)

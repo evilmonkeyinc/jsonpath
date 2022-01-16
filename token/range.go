@@ -6,8 +6,13 @@ import (
 	"sort"
 )
 
+// TODO : support optional settings
+// TODO : need to be able to set these inside script/expression as well
+
 type rangeToken struct {
 	from, to, step interface{}
+	allowMap       bool
+	allowString    bool
 }
 
 func (token *rangeToken) String() string {
@@ -120,7 +125,7 @@ func (token *rangeToken) Apply(root, current interface{}, next []Token) (interfa
 		}
 	}
 
-	rangeResult, err := getRange(token, current, fromInt, toInt, stepInt)
+	rangeResult, err := token.getRange(current, fromInt, toInt, stepInt)
 	if err != nil {
 		if isInvalidTokenTargetError(err) {
 			return nil, err
@@ -167,12 +172,24 @@ expected responses
 2. []interface{}, nil - if an array, map, or slice is processed correctly
 3. string, nil - if a string is processed correctly
 **/
-func getRange(token Token, obj interface{}, start, end, step *int64) (interface{}, error) {
+func (token *rangeToken) getRange(obj interface{}, start, end, step *int64) (interface{}, error) {
+
+	allowedType := []reflect.Kind{
+		reflect.Array,
+		reflect.Slice,
+	}
+	if token.allowMap {
+		allowedType = append(allowedType, reflect.Map)
+	}
+	if token.allowString {
+		allowedType = append(allowedType, reflect.String)
+	}
+
 	objType, objVal := getTypeAndValue(obj)
 	if objType == nil {
 		return nil, getInvalidTokenTargetNilError(
 			token.Type(),
-			reflect.Array, reflect.Map, reflect.Slice, reflect.String,
+			allowedType...,
 		)
 	}
 
@@ -182,6 +199,13 @@ func getRange(token Token, obj interface{}, start, end, step *int64) (interface{
 
 	switch objType.Kind() {
 	case reflect.Map:
+		if !token.allowMap {
+			return nil, getInvalidTokenTargetError(
+				token.Type(),
+				objType.Kind(),
+				allowedType...,
+			)
+		}
 		length = int64(objVal.Len())
 		mapKeys = objVal.MapKeys()
 
@@ -193,6 +217,13 @@ func getRange(token Token, obj interface{}, start, end, step *int64) (interface{
 		})
 		break
 	case reflect.String:
+		if !token.allowString {
+			return nil, getInvalidTokenTargetError(
+				token.Type(),
+				objType.Kind(),
+				allowedType...,
+			)
+		}
 		isString = true
 		fallthrough
 	case reflect.Array:
@@ -205,7 +236,7 @@ func getRange(token Token, obj interface{}, start, end, step *int64) (interface{
 		return nil, getInvalidTokenTargetError(
 			token.Type(),
 			objType.Kind(),
-			reflect.Array, reflect.Map, reflect.Slice, reflect.String,
+			allowedType...,
 		)
 	}
 
