@@ -50,7 +50,7 @@ func printConsensusMatrix(tests []testData) {
 		}
 
 		if test.consensus == consensusNone {
-			fmt.Printf("|%s|%v|%s|%v|%s|\n", test.query, test.data, "none", expected, ":question:")
+			fmt.Printf("|`%s`|`%v`|`%s`|%v|%s|\n", test.query, test.data, "none", expected, ":question:")
 			continue
 		}
 
@@ -64,6 +64,6 @@ func printConsensusMatrix(tests []testData) {
 			symbol = ":white_check_mark:"
 		}
 
-		fmt.Printf("|%s|%v|%v|%v|%s|\n", test.query, test.data, consensus, expected, symbol)
+		fmt.Printf("|`%s`|`%v`|`%v`|`%v`|%s|\n", test.query, test.data, consensus, expected, symbol)
 	}
 }
