@@ -10,8 +10,7 @@ import (
 func Test_Parse(t *testing.T) {
 
 	type input struct {
-		query   string
-		options *ParseOptions
+		query string
 	}
 
 	type expected struct {
@@ -259,16 +258,16 @@ func Test_Parse(t *testing.T) {
 		{
 			input: input{query: "[:2]"},
 			expected: expected{
-				token: &sliceToken{
-					number: int64(2),
+				token: &rangeToken{
+					to: int64(2),
 				},
 			},
 		},
 		{
 			input: input{query: "[:(@.length-1)]"},
 			expected: expected{
-				token: &sliceToken{
-					number: &expressionToken{
+				token: &rangeToken{
+					to: &expressionToken{
 						expression: "@.length-1",
 					},
 				},
@@ -367,7 +366,7 @@ func Test_Parse(t *testing.T) {
 		{
 			input: input{query: "[::2]"},
 			expected: expected{
-				err: "invalid token. '[::2]' does not match any token format",
+				token: &rangeToken{step: int64(2)},
 			},
 		},
 		{
@@ -435,41 +434,17 @@ func Test_Parse(t *testing.T) {
 		{
 			input: input{query: "[:10:1]"},
 			expected: expected{
-				err: "invalid token. '[:10:1]' does not match any token format",
+				token: &rangeToken{to: int64(10), step: int64(1)},
 			},
 		},
 		{
 			input: input{query: "[1, 2]"},
-			expected: expected{
-				err: "invalid token. '[1, 2]' does not match any token format",
-			},
-		},
-		{
-			input: input{query: "[1, 2]", options: &ParseOptions{IsStrict: true}},
-			expected: expected{
-				err: "invalid token. '[1, 2]' does not match any token format",
-			},
-		},
-		{
-			input: input{query: "[1, 2]", options: &ParseOptions{IsStrict: false}},
 			expected: expected{
 				token: &unionToken{[]interface{}{int64(1), int64(2)}},
 			},
 		},
 		{
 			input: input{query: "[1: 2]"},
-			expected: expected{
-				err: "invalid token. '[1: 2]' does not match any token format",
-			},
-		},
-		{
-			input: input{query: "[1: 2]", options: &ParseOptions{IsStrict: true}},
-			expected: expected{
-				err: "invalid token. '[1: 2]' does not match any token format",
-			},
-		},
-		{
-			input: input{query: "[1: 2]", options: &ParseOptions{IsStrict: false}},
 			expected: expected{
 				token: &rangeToken{from: int64(1), to: int64(2)},
 			},
@@ -492,7 +467,7 @@ func Test_Parse(t *testing.T) {
 
 	for idx, test := range tests {
 		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
-			token, err := Parse(test.input.query, test.input.options)
+			token, err := Parse(test.input.query)
 
 			if test.expected.err == "" {
 				assert.Nil(t, err, fmt.Sprintf("input '%s' err check failed. expected 'nil' actual '%v'", test.input.query, err))

@@ -474,7 +474,6 @@ func Test_Compile(t *testing.T) {
 
 	type input struct {
 		queryPath string
-		isStrict  bool
 	}
 
 	type expected struct {
@@ -489,7 +488,6 @@ func Test_Compile(t *testing.T) {
 		{
 			input: input{
 				queryPath: "",
-				isStrict:  false,
 			},
 			expected: expected{
 				err: "invalid JSONPath query '' unexpected token '' at index 0",
@@ -498,16 +496,6 @@ func Test_Compile(t *testing.T) {
 		{
 			input: input{
 				queryPath: "@.[1, 2]",
-				isStrict:  true,
-			},
-			expected: expected{
-				err: "invalid JSONPath query '@.[1, 2]' invalid token. '[1, 2]' does not match any token format",
-			},
-		},
-		{
-			input: input{
-				queryPath: "@.[1, 2]",
-				isStrict:  false,
 			},
 			expected: expected{
 				tokens: 2,
@@ -525,7 +513,7 @@ func Test_Compile(t *testing.T) {
 
 	for idx, test := range tests {
 		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
-			jsonPath, err := Compile(test.input.queryPath, test.input.isStrict)
+			jsonPath, err := Compile(test.input.queryPath)
 			if test.expected.err != "" {
 				assert.Nil(t, jsonPath)
 				assert.EqualError(t, err, test.expected.err)
@@ -535,8 +523,6 @@ func Test_Compile(t *testing.T) {
 			assert.Nil(t, err)
 			assert.NotNil(t, jsonPath)
 
-			assert.NotNil(t, jsonPath.options)
-			assert.Equal(t, test.input.isStrict, jsonPath.options.IsStrict)
 			assert.Equal(t, test.input.queryPath, jsonPath.queryString)
 			assert.Len(t, jsonPath.tokens, test.expected.tokens)
 		})
@@ -637,6 +623,24 @@ func Test_QueryString(t *testing.T) {
 				value: []interface{}{
 					int64(4),
 				},
+			},
+		},
+		{
+			input: input{
+				queryString: "$.length",
+				jsonData:    `[1,2,3]`,
+			},
+			expected: expected{
+				value: int64(3),
+			},
+		},
+		{
+			input: input{
+				queryString: "$.length",
+				jsonData:    `[1,2,]`,
+			},
+			expected: expected{
+				err: "invalid data. invalid character ']' looking for beginning of value",
 			},
 		},
 	}
@@ -794,9 +798,9 @@ func Test_JSONPath_compile(t *testing.T) {
 			},
 		},
 		{
-			input: "@.[1, 2]",
+			input: "@.[1,(]",
 			expected: expected{
-				err: "invalid token. '[1, 2]' does not match any token format",
+				err: "invalid token. '[1,(]' does not match any token format",
 			},
 		},
 		{
@@ -824,8 +828,9 @@ func Test_JSONPath_compile(t *testing.T) {
 
 func Test_JSONPath_QueryString(t *testing.T) {
 
-	sampleQuery, _ := Compile("$.expensive", false)
-	altSampleQuery, _ := Compile("$..author", false)
+	sampleQuery, _ := Compile("$.expensive")
+	altSampleQuery, _ := Compile("$..author")
+	lengthQuery, _ := Compile("$.length")
 
 	type input struct {
 		jsonPath *JSONPath
@@ -910,6 +915,24 @@ func Test_JSONPath_QueryString(t *testing.T) {
 				},
 			},
 		},
+		{
+			input: input{
+				jsonPath: lengthQuery,
+				jsonData: `[1,2,3]`,
+			},
+			expected: expected{
+				value: int64(3),
+			},
+		},
+		{
+			input: input{
+				jsonPath: lengthQuery,
+				jsonData: `[1,2,]`,
+			},
+			expected: expected{
+				err: "invalid data. invalid character ']' looking for beginning of value",
+			},
+		},
 	}
 
 	for idx, test := range tests {
@@ -933,8 +956,8 @@ func Test_JSONPath_QueryString(t *testing.T) {
 
 func Test_JSONPath_Query(t *testing.T) {
 
-	sampleQuery, _ := Compile("$.expensive", false)
-	altSampleQuery, _ := Compile("$..author", false)
+	sampleQuery, _ := Compile("$.expensive")
+	altSampleQuery, _ := Compile("$..author")
 
 	type input struct {
 		jsonPath *JSONPath
@@ -962,7 +985,7 @@ func Test_JSONPath_Query(t *testing.T) {
 		{
 			input: input{
 				jsonPath: sampleQuery,
-				jsonData: "not something that can be marshalled",
+				jsonData: "not something that can be marshaled",
 			},
 			expected: expected{
 				err: "key: invalid token target. expected [map] got [string]",

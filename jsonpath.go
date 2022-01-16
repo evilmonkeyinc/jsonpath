@@ -8,10 +8,8 @@ import (
 )
 
 // Compile compile the JSON path query
-func Compile(queryPath string, isStrict bool) (*JSONPath, error) {
-	jsonPath := &JSONPath{
-		options: &token.ParseOptions{IsStrict: isStrict},
-	}
+func Compile(queryPath string) (*JSONPath, error) {
+	jsonPath := &JSONPath{}
 	if err := jsonPath.compile(queryPath); err != nil {
 		return nil, getInvalidJSONPathQueryWithReason(queryPath, err)
 	}
@@ -21,7 +19,7 @@ func Compile(queryPath string, isStrict bool) (*JSONPath, error) {
 
 // Query will return the result of the JSONPath query applied against the specified JSON data.
 func Query(queryPath string, jsonData interface{}) (interface{}, error) {
-	jsonPath, err := Compile(queryPath, false)
+	jsonPath, err := Compile(queryPath)
 	if err != nil {
 		return nil, getInvalidJSONPathQueryWithReason(queryPath, err)
 	}
@@ -30,7 +28,7 @@ func Query(queryPath string, jsonData interface{}) (interface{}, error) {
 
 // QueryString will return the result of the JSONPath query applied against the specified JSON data.
 func QueryString(queryPath string, jsonData string) (interface{}, error) {
-	jsonPath, err := Compile(queryPath, false)
+	jsonPath, err := Compile(queryPath)
 	if err != nil {
 		return nil, getInvalidJSONPathQueryWithReason(queryPath, err)
 	}
@@ -41,7 +39,6 @@ func QueryString(queryPath string, jsonData string) (interface{}, error) {
 type JSONPath struct {
 	queryString string
 	tokens      []token.Token
-	options     *token.ParseOptions
 }
 
 func (query *JSONPath) compile(queryString string) error {
@@ -54,7 +51,7 @@ func (query *JSONPath) compile(queryString string) error {
 
 	tokens := make([]token.Token, len(tokenStrings))
 	for idx, tokenString := range tokenStrings {
-		token, err := token.Parse(tokenString, query.options)
+		token, err := token.Parse(tokenString)
 		if err != nil {
 			return err
 		}

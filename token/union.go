@@ -154,7 +154,7 @@ func getUnionByKey(token Token, obj interface{}, keys []string) ([]interface{}, 
 	case reflect.Struct:
 		elements := make([]interface{}, 0)
 
-		mapKeys := getStructFields(objVal)
+		mapKeys := getStructFields(objVal, false)
 
 		for key, field := range mapKeys {
 			if keyMap[key] {

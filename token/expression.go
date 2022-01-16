@@ -53,7 +53,6 @@ func evaluateExpression(root, current interface{}, expression string) (interface
 	currentIndex := strings.Index(expression, "@")
 
 	for rootIndex > -1 || currentIndex > -1 {
-		praseOptions := &ParseOptions{IsStrict: false}
 
 		query := ""
 		if rootIndex > -1 {
@@ -73,7 +72,7 @@ func evaluateExpression(root, current interface{}, expression string) (interface
 		if len(tokenStrings) > 0 {
 			tokens := make([]Token, 0)
 			for _, tokenString := range tokenStrings {
-				token, err := Parse(tokenString, praseOptions)
+				token, err := Parse(tokenString)
 				if err != nil {
 					return nil, getInvalidExpressionError(err)
 				}

@@ -59,7 +59,7 @@ func flatten(obj interface{}) []interface{} {
 		return slice
 	}
 
-	slice = append(slice, obj)
+	slice = append(slice, objVal.Interface())
 
 	elements := make([]interface{}, 0)
 	switch objType.Kind() {
@@ -76,9 +76,9 @@ func flatten(obj interface{}) []interface{} {
 			elements = append(elements, value)
 		}
 	case reflect.Struct:
-		length := objVal.NumField()
-		for i := 0; i < length; i++ {
-			value := objVal.Field(i).Interface()
+		fields := getStructFields(objVal, true)
+		for _, field := range fields {
+			value := objVal.FieldByName(field.Name).Interface()
 			elements = append(elements, value)
 		}
 	default:

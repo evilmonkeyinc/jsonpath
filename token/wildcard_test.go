@@ -153,6 +153,41 @@ func Test_WildcardToken_Apply(t *testing.T) {
 				},
 			},
 		},
+		{
+			token: &wildcardToken{},
+			input: input{
+				current: sampleStruct{},
+			},
+			expected: expected{
+				value: []interface{}{
+					"",
+					int64(0),
+					"",
+				},
+			},
+		},
+		{
+			token: &wildcardToken{},
+			input: input{
+				current: sampleStruct{
+					One:   "one",
+					Two:   "two",
+					Three: 3,
+					Four:  4,
+					Five:  "five",
+					Six:   "six",
+				},
+			},
+			expected: expected{
+				value: []interface{}{
+					"one",
+					"two",
+					int64(4),
+					"five",
+					"six",
+				},
+			},
+		},
 	}
 
 	batchTokenTests(t, tests)

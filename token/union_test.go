@@ -539,6 +539,44 @@ func Test_getUnionByKey(t *testing.T) {
 				err: "union: invalid token key 'blah,f,one' not found",
 			},
 		},
+		{
+			input: input{
+				obj: sampleStruct{
+					One:   "one",
+					Two:   "two",
+					Three: 3,
+					Four:  4,
+					Five:  "five",
+					Six:   "six",
+				},
+				keys: []string{"one", "three", "Six"},
+			},
+			expected: expected{
+				obj: []interface{}{
+					"one", int64(4), "six",
+				},
+			},
+		},
+		{
+			input: input{
+				obj:  sampleStruct{},
+				keys: []string{"one", "three", "Six"},
+			},
+			expected: expected{
+				obj: []interface{}{
+					"", int64(0), "",
+				},
+			},
+		},
+		{
+			input: input{
+				obj:  sampleStruct{},
+				keys: []string{"missing", "gone"},
+			},
+			expected: expected{
+				err: "union: invalid token key 'gone,missing' not found",
+			},
+		},
 	}
 
 	for idx, test := range tests {

@@ -118,6 +118,71 @@ func Test_KeyToken_Apply(t *testing.T) {
 				err: "",
 			},
 		},
+		{
+			token: &keyToken{key: "two"},
+			input: input{
+				current: sampleStruct{
+					Two: "two's value",
+				},
+			},
+			expected: expected{
+				value: "two's value",
+			},
+		},
+		{
+			token: &keyToken{key: "Five"},
+			input: input{
+				current: &sampleStruct{
+					Five: "value",
+				},
+			},
+			expected: expected{
+				value: "value",
+			},
+		},
+		{
+			token: &keyToken{key: "two"},
+			input: input{
+				current: sampleStruct{
+					Two: "two's value",
+				},
+				tokens: []Token{
+					&indexToken{index: 0},
+				},
+			},
+			expected: expected{
+				value: "t",
+			},
+		},
+		{
+			token: &keyToken{key: "two"},
+			input: input{
+				current: sampleStruct{},
+			},
+			expected: expected{
+				value: "",
+			},
+		},
+		{
+			token: &keyToken{key: "three"},
+			input: input{
+				current: sampleStruct{
+					Four: 100,
+				},
+			},
+			expected: expected{
+				value: int64(100),
+			},
+		},
+		{
+			token: &keyToken{key: "other"},
+			input: input{
+				current: sampleStruct{},
+			},
+			expected: expected{
+				err: "key: invalid token key 'other' not found",
+			},
+		},
 	}
 
 	batchTokenTests(t, tests)

@@ -18,16 +18,12 @@ func (token *rangeToken) String() string {
 	tString := ""
 	if token.to != nil {
 		tString = fmt.Sprint(token.to)
-	} else {
-		return fmt.Sprintf("[%s:]", fString)
 	}
-	sString := ""
-	if token.step != nil {
-		sString = fmt.Sprint(token.step)
-	} else {
+	if token.step == nil {
 		return fmt.Sprintf("[%s:%s]", fString, tString)
 	}
 
+	sString := fmt.Sprint(token.step)
 	return fmt.Sprintf("[%s:%s:%s]", fString, tString, sString)
 }
 
@@ -37,39 +33,35 @@ func (token *rangeToken) Type() string {
 
 func (token *rangeToken) Apply(root, current interface{}, next []Token) (interface{}, error) {
 
-	var fromInt int64
-	var toInt, stepInt *int64
+	var fromInt, toInt, stepInt *int64
 
-	if token.from == nil {
-		return nil, getInvalidTokenArgumentNilError(
-			token.Type(),
-			reflect.Int,
-		)
-	}
+	if token.from != nil {
+		if script, ok := token.from.(Token); ok {
+			result, err := script.Apply(root, current, nil)
+			if err != nil {
+				return nil, getInvalidTokenError(token.Type(), err)
+			}
 
-	if script, ok := token.from.(Token); ok {
-		result, err := script.Apply(root, current, nil)
-		if err != nil {
-			return nil, getInvalidTokenError(token.Type(), err)
-		}
+			if result == nil {
+				err := getUnexpectedExpressionResultNilError(reflect.Int)
+				return nil, getInvalidTokenError(token.Type(), err)
+			}
 
-		if result == nil {
-			err := getUnexpectedExpressionResultNilError(reflect.Int)
-			return nil, getInvalidTokenError(token.Type(), err)
-		}
-
-		if intVal, ok := isInteger(result); ok {
-			fromInt = int64(intVal)
+			if intVal, ok := isInteger(result); ok {
+				tmp := int64(intVal)
+				fromInt = &tmp
+			} else {
+				kind := reflect.TypeOf(result).Kind()
+				err := getUnexpectedExpressionResultError(kind, reflect.Int)
+				return nil, getInvalidTokenError(token.Type(), err)
+			}
+		} else if intVal, ok := isInteger(token.from); ok {
+			tmp := int64(intVal)
+			fromInt = &tmp
 		} else {
-			kind := reflect.TypeOf(result).Kind()
-			err := getUnexpectedExpressionResultError(kind, reflect.Int)
-			return nil, getInvalidTokenError(token.Type(), err)
+			kind := reflect.TypeOf(token.from).Kind()
+			return nil, getInvalidTokenArgumentError(token.Type(), kind, reflect.Int)
 		}
-	} else if intVal, ok := isInteger(token.from); ok {
-		fromInt = intVal
-	} else {
-		kind := reflect.TypeOf(token.from).Kind()
-		return nil, getInvalidTokenArgumentError(token.Type(), kind, reflect.Int)
 	}
 
 	if token.to != nil {
@@ -175,7 +167,7 @@ expected responses
 2. []interface{}, nil - if an array, map, or slice is processed correctly
 3. string, nil - if a string is processed correctly
 **/
-func getRange(token Token, obj interface{}, start int64, end, step *int64) (interface{}, error) {
+func getRange(token Token, obj interface{}, start, end, step *int64) (interface{}, error) {
 	objType, objVal := getTypeAndValue(obj)
 	if objType == nil {
 		return nil, getInvalidTokenTargetNilError(
@@ -218,13 +210,18 @@ func getRange(token Token, obj interface{}, start int64, end, step *int64) (inte
 	}
 
 	var from int64 = 0
-	from = start
-	if from < 0 {
-		from = length + from
-	}
+	if start != nil {
+		from = *start
+		if from < 0 {
+			from = length + from
+		}
 
-	if from < 0 || from > length {
-		return nil, getInvalidTokenOutOfRangeError(token.Type())
+		if from < 0 {
+			from = 0
+		}
+		if from > length {
+			from = length
+		}
 	}
 
 	to := length
@@ -234,8 +231,11 @@ func getRange(token Token, obj interface{}, start int64, end, step *int64) (inte
 			to = length + to
 		}
 
-		if to < 0 || to > length {
-			return nil, getInvalidTokenOutOfRangeError(token.Type())
+		if to < 0 {
+			to = 0
+		}
+		if to > length {
+			to = length
 		}
 	}
 

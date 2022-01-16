@@ -44,7 +44,7 @@ func (token *keyToken) Apply(root, current interface{}, next []Token) (interface
 		}
 		return nil, getInvalidTokenKeyNotFoundError(token.Type(), token.key)
 	case reflect.Struct:
-		fields := getStructFields(objVal)
+		fields := getStructFields(objVal, false)
 		if field, ok := fields[token.key]; ok {
 			value := objVal.FieldByName(field.Name).Interface()
 

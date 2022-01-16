@@ -140,22 +140,8 @@ tokenize:
 	return tokens, remainder, nil
 }
 
-// ParseOptions represents the options for the parse function
-type ParseOptions struct {
-	// IsString if true will allow Parse() to error
-	// if there is additional whitespace in tokens
-	// or other minor format issues that could be ignored
-	IsStrict bool
-}
-
 // Parse will parse a single token string and return an actionable token
-func Parse(tokenString string, options *ParseOptions) (Token, error) {
-	if options == nil {
-		options = &ParseOptions{
-			IsStrict: true,
-		}
-	}
-
+func Parse(tokenString string) (Token, error) {
 	isScript := func(token string) bool {
 		return len(token) > 2 && strings.HasPrefix(token, "(") && strings.HasSuffix(token, ")")
 	}
@@ -232,13 +218,7 @@ func Parse(tokenString string, options *ParseOptions) (Token, error) {
 		bufferString += string(rne)
 		switch rne {
 		case ' ':
-
 			if !openQuote && openBracketCount == closeBracketCount {
-				if options.IsStrict {
-					// do not allow spaces outside of quotes keys or scripts
-					return nil, getInvalidTokenFormatError(tokenString)
-				}
-
 				// remove whitespace
 				bufferString = strings.TrimSpace(bufferString)
 			}
@@ -366,8 +346,7 @@ func Parse(tokenString string, options *ParseOptions) (Token, error) {
 		case ":":
 			colonCount++
 			if lastWasColon {
-				// cannot have two colons in a row
-				return nil, getInvalidTokenFormatError(tokenString)
+				justArgs = append(justArgs, nil)
 			}
 			lastWasColon = true
 			continue
@@ -425,28 +404,6 @@ func Parse(tokenString string, options *ParseOptions) (Token, error) {
 		var from, to, step interface{} = args[0], args[1], nil
 		if len(args) > 2 {
 			step = args[2]
-		}
-
-		if from == nil {
-			// This could be a slice token if step is not set
-			if len(args) == 2 && args[1] != nil {
-
-				number := args[1]
-				if strValue, ok := number.(string); ok {
-					if !isScript(strValue) {
-						return nil, getInvalidExpressionFormatError(strValue)
-					}
-					number = &expressionToken{
-						expression: strValue[1 : len(strValue)-1],
-					}
-				}
-
-				return &sliceToken{
-					number: number,
-				}, nil
-			}
-
-			return nil, getInvalidTokenFormatError(tokenString)
 		}
 
 		if strFrom, ok := from.(string); ok {

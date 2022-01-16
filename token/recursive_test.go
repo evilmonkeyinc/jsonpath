@@ -177,6 +177,40 @@ func Test_flatten(t *testing.T) {
 				"array",
 			},
 		},
+		{
+			input: sampleStruct{},
+			expected: []interface{}{
+				sampleStruct{},
+				"",
+				int64(0),
+				"",
+			},
+		},
+		{
+			input: &sampleStruct{
+				One:   "one",
+				Two:   "two",
+				Three: 3,
+				Four:  4,
+				Five:  "five",
+				Six:   "six",
+			},
+			expected: []interface{}{
+				sampleStruct{
+					One:   "one",
+					Two:   "two",
+					Three: 3,
+					Four:  4,
+					Five:  "five",
+					Six:   "six",
+				},
+				"one",
+				"two",
+				int64(4),
+				"five",
+				"six",
+			},
+		},
 	}
 
 	for idx, test := range tests {

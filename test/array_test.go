@@ -1,26 +1,12 @@
 package test
 
 import (
-	"fmt"
 	"testing"
-
-	"github.com/evilmonkeyinc/jsonpath"
-	"github.com/stretchr/testify/assert"
 )
-
-var consensusNone string = "none"
 
 func Test_Array(t *testing.T) {
 
-	type test struct {
-		query         string
-		data          string
-		expected      interface{}
-		consensus     interface{}
-		expectedError string
-	}
-
-	tests := []test{
+	tests := []testData{
 		{
 			query:     "$[1:3]",
 			data:      `["first", "second", "third", "forth", "fifth"]`,
@@ -36,8 +22,8 @@ func Test_Array(t *testing.T) {
 		{
 			query:         "$[7:10]",
 			data:          `["first", "second", "third"]`,
-			expected:      nil,
-			expectedError: "range: invalid token out of range",
+			expected:      []interface{}{},
+			expectedError: "",
 			consensus:     []interface{}{},
 		},
 		{
@@ -50,36 +36,36 @@ func Test_Array(t *testing.T) {
 		{
 			query:         "$[1:10]",
 			data:          `["first", "second", "third"]`,
-			expected:      nil,
-			expectedError: "range: invalid token out of range",
+			expected:      []interface{}{"second", "third"},
+			expectedError: "",
 			consensus:     []interface{}{"second", "third"},
 		},
 		{
 			query:         "$[2:113667776004]",
 			data:          `["first", "second", "third", "forth", "fifth"]`,
-			expected:      nil,
-			expectedError: "range: invalid token out of range",
+			expected:      []interface{}{"third", "forth", "fifth"},
+			expectedError: "",
 			consensus:     []interface{}{"third", "forth", "fifth"},
 		},
 		{
 			query:         "$[2:-113667776004:-1]",
 			data:          `["first", "second", "third", "forth", "fifth"]`,
-			expected:      nil,
-			expectedError: "range: invalid token out of range",
-			consensus:     []interface{}{},
+			expected:      []interface{}{},
+			expectedError: "",
+			consensus:     consensusNone,
 		},
 		{
 			query:         "$[-113667776004:2]",
 			data:          `["first", "second", "third", "forth", "fifth"]`,
-			expected:      nil,
-			expectedError: "range: invalid token out of range",
+			expected:      []interface{}{"first", "second"},
+			expectedError: "",
 			consensus:     []interface{}{"first", "second"},
 		},
 		{
 			query:         "$[113667776004:2:-1]",
 			data:          `["first", "second", "third", "forth", "fifth"]`,
-			expected:      nil,
-			expectedError: "range: invalid token out of range",
+			expected:      []interface{}{},
+			expectedError: "",
 			consensus:     []interface{}{},
 		},
 		{
@@ -134,8 +120,8 @@ func Test_Array(t *testing.T) {
 		{
 			query:         "$[7:3:-1]",
 			data:          `["first", "second", "third", "forth", "fifth"]`,
-			expected:      nil,
-			expectedError: "range: invalid token out of range",
+			expected:      []interface{}{},
+			expectedError: "",
 			consensus:     []interface{}{},
 		},
 		{
@@ -148,8 +134,8 @@ func Test_Array(t *testing.T) {
 		{
 			query:         "$[::-2]",
 			data:          `["first", "second", "third", "forth", "fifth"]`,
-			expected:      nil,
-			expectedError: "invalid JSONPath query '$[::-2]' invalid token. '[::-2]' does not match any token format",
+			expected:      []interface{}{"fifth", "third", "first"},
+			expectedError: "",
 			consensus:     consensusNone,
 		},
 		{
@@ -162,8 +148,8 @@ func Test_Array(t *testing.T) {
 		{
 			query:         "$[3::-1]",
 			data:          `["first", "second", "third", "forth", "fifth"]`,
-			expected:      nil,
-			expectedError: "invalid JSONPath query '$[3::-1]' invalid token. '[3::-1]' does not match any token format",
+			expected:      []interface{}{"fifth", "forth"},
+			expectedError: "",
 			consensus:     consensusNone,
 		},
 		{
@@ -176,29 +162,29 @@ func Test_Array(t *testing.T) {
 		{
 			query:         "$[:]",
 			data:          `["first","second"]`,
-			expected:      nil,
-			expectedError: "invalid JSONPath query '$[:]' invalid token. '[:]' does not match any token format",
+			expected:      []interface{}{"first", "second"},
+			expectedError: "",
 			consensus:     []interface{}{"first", "second"},
 		},
 		{
 			query:         "$[:]",
 			data:          `{":": 42, "more": "string"}`,
-			expected:      nil,
-			expectedError: "invalid JSONPath query '$[:]' invalid token. '[:]' does not match any token format",
+			expected:      []interface{}{float64(42), "string"},
+			expectedError: "",
 			consensus:     []interface{}{},
 		},
 		{
 			query:         "$[::]",
 			data:          `["first","second"]`,
-			expected:      nil,
-			expectedError: "invalid JSONPath query '$[::]' invalid token. '[::]' does not match any token format",
+			expected:      []interface{}{"first", "second"},
+			expectedError: "",
 			consensus:     []interface{}{"first", "second"},
 		},
 		{
 			query:         "$[:2:-1]",
 			data:          `["first", "second", "third", "forth", "fifth"]`,
-			expected:      nil,
-			expectedError: "invalid JSONPath query '$[:2:-1]' invalid token. '[:2:-1]' does not match any token format",
+			expected:      []interface{}{"second", "first"},
+			expectedError: "",
 			consensus:     consensusNone,
 		},
 		{
@@ -260,8 +246,8 @@ func Test_Array(t *testing.T) {
 		{
 			query:         "$[-4:]",
 			data:          `["first", "second", "third"]`,
-			expected:      nil,
-			expectedError: "range: invalid token out of range",
+			expected:      []interface{}{"first", "second", "third"},
+			expectedError: "",
 			consensus:     []interface{}{"first", "second", "third"},
 		},
 		{
@@ -309,22 +295,12 @@ func Test_Array(t *testing.T) {
 		{
 			query:         "$[::2]",
 			data:          `["first", "second", "third", "forth", "fifth"]`,
-			expected:      nil,
-			expectedError: "invalid JSONPath query '$[::2]' invalid token. '[::2]' does not match any token format",
+			expected:      []interface{}{"first", "third", "fifth"},
+			expectedError: "",
 			consensus:     []interface{}{"first", "third", "fifth"},
 		},
 	}
 
-	for idx, test := range tests {
-		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
-			actual, err := jsonpath.QueryString(test.query, test.data)
-			if test.expectedError == "" {
-				assert.Nil(t, err, fmt.Sprintf("%s error should be nil", test.query))
-			} else {
-				assert.EqualError(t, err, test.expectedError, fmt.Sprintf("%s invalid error", test.query))
-			}
-			assert.EqualValues(t, test.expected, actual, fmt.Sprintf("%s unexpected value", test.query))
-		})
-	}
-
+	batchTest(t, tests)
+	// printConsensusMatrix(tests)
 }
