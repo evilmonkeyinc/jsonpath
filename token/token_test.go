@@ -81,7 +81,8 @@ func Test_Parse(t *testing.T) {
 		{
 			input: input{query: "1"},
 			expected: expected{
-				err: "invalid token. '1' does not match any token format",
+				token: &keyToken{key: "1"},
+				err:   "",
 			},
 		},
 		{
@@ -480,7 +481,7 @@ func Test_Parse(t *testing.T) {
 
 }
 
-func Test_Tokenize(t *testing.T) {
+func Test_tokenize(t *testing.T) {
 
 	type expected struct {
 		tokens    []string
@@ -762,7 +763,7 @@ func Test_Tokenize(t *testing.T) {
 
 	for idx, test := range tests {
 		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
-			tokens, remainder, err := Tokenize(test.input)
+			tokens, remainder, err := tokenize(test.input, true)
 
 			if test.expected.err != "" {
 				assert.EqualError(t, err, test.expected.err, "unexpected error for %s", test.input)

@@ -101,3 +101,60 @@ This implementation would be closer to the `Scalar consensus` as it does not alw
 |`$[*].bar[*]`|`[{"bar": [42]}]`|`[42]`|`[[42]]`|:no_entry:|
 |`$..[*]`|`{ "key": "value", "another key": { "complex": "string", "primitives": [0, 1] } }`|`[value map[complex:string primitives:[0 1]] [0 1] string 0 1]`|`[value map[complex:string primitives:[0 1]] [0 1] string 0 1]`|:white_check_mark:|
 |`$[key]`|`{ "key": "value" }`|`nil`|`nil`|:white_check_mark:|
+
+## Dot Tests
+
+|query|data|consensus|actual|match|
+|---|---|---|---|---|
+|`@.a`|`{"a": 1}`|`nil`|`1`|:no_entry:|
+|`$.['key']`|`{ "key": "value", "other": {"key": [{"key": 42}]} }`|`value`|`value`|:white_check_mark:|
+|`$.["key"]`|`{ "key": "value", "other": {"key": [{"key": 42}]} }`|none|`nil`|:question:|
+|`$.[key]`|`{ "key": "value", "other": {"key": [{"key": 42}]} }`|none|`nil`|:question:|
+|`$.key`|`{ "key": "value" }`|`value`|`value`|:white_check_mark:|
+|`$.key`|`[0, 1]`|`nil`|`nil`|:white_check_mark:|
+|`$.key`|`{ "key": ["first", "second"] }`|`[first second]`|`[first second]`|:white_check_mark:|
+|`$.id`|`[{"id": 2}]`|`nil`|`nil`|:white_check_mark:|
+|`$.key`|`{ "key": {} }`|`map[]`|`map[]`|:white_check_mark:|
+|`$.key`|`{ "key": null }`|`nil`|`nil`|:white_check_mark:|
+|`$.missing`|`{"key": "value"}`|`nil`|`nil`|:white_check_mark:|
+|`$[0:2].key`|`[{"key": "ey"}, {"key": "bee"}, {"key": "see"}]`|`[ey bee]`|`[ey bee]`|:white_check_mark:|
+|`$..[1].key`|`{ "k": [{"key": "some value"}, {"key": 42}], "kk": [[{"key": 100}, {"key": 200}, {"key": 300}], [{"key": 400}, {"key": 500}, {"key": 600}]], "key": [0, 1] }`|`[200 42 500]`|`[200 42 500]`|:white_check_mark:|
+|`$[*].a`|`[{"a": 1},{"a": 1}]`|`[1 1]`|`[1 1]`|:white_check_mark:|
+|`$[*].a`|`[{"a": 1}]`|`[1]`|`[1]`|:white_check_mark:|
+|`$[*].a`|`[{"a": 1},{"b": 1}]`|`[1]`|`[1]`|:white_check_mark:|
+|`$[?(@.id==42)].name`|`[{"id": 42, "name": "forty-two"}, {"id": 1, "name": "one"}]`|`[forty-two]`|`[forty-two]`|:white_check_mark:|
+|`$..key`|`{ "object": { "key": "value", "array": [ {"key": "something"}, {"key": {"key": "russian dolls"}} ] }, "key": "top" }`|`[russian dolls something top value map[key:russian dolls]]`|`[russian dolls something top value map[key:russian dolls]]`|:white_check_mark:|
+|`$.store..price`|`{ "store": { "book": [ { "category": "reference", "author": "Nigel Rees", "title": "Sayings of the Century", "price": 8.95 }, { "category": "fiction", "author": "Evelyn Waugh", "title": "Sword of Honour", "price": 12.99 }, { "category": "fiction", "author": "Herman Melville", "title": "Moby Dick", "isbn": "0-553-21311-3", "price": 8.99 }, { "category": "fiction", "author": "J. R. R. Tolkien", "title": "The Lord of the Rings", "isbn": "0-395-19395-8", "price": 22.99 } ], "bicycle": { "color": "red", "price": 19.95 } } }`|`[12.99 19.95 22.99 8.95 8.99]`|`[12.99 19.95 22.99 8.95 8.99]`|:white_check_mark:|
+|`$...key`|`{ "object": { "key": "value", "array": [ {"key": "something"}, {"key": {"key": "russian dolls"}} ] }, "key": "top" }`|`[russian dolls something top value]`|`[russian dolls something top value map[key:russian dolls]]`|:no_entry:|
+|`$[0,2].key`|`[{"key": "ey"}, {"key": "bee"}, {"key": "see"}]`|`[ey see]`|`[ey see]`|:white_check_mark:|
+|`$['one','three'].key`|`{ "one": {"key": "value"}, "two": {"k": "v"}, "three": {"some": "more", "key": "other value"} }`|`[value other value]`|`[value other value]`|:white_check_mark:|
+|`$.key-dash`|`{ "key": 42, "key-": 43, "-": 44, "dash": 45, "-dash": 46, "": 47, "key-dash": "value", "something": "else" }`|`value`|`value`|:white_check_mark:|
+|`$."key"`|`{ "key": "value", "\"key\"": 42 }`|none|`42`|:question:|
+|`$.."key"`|`{ "object": { "key": "value", "\"key\"": 100, "array": [ {"key": "something", "\"key\"": 0}, {"key": {"key": "russian dolls"}, "\"key\"": {"\"key\"": 99}} ] }, "key": "top", "\"key\"": 42 }`|none|`[0 42 99 100 map["key":99]]`|:question:|
+|`$.`|`{"key": 42, "": 9001, "''": "nice"}`|none|`nil`|:question:|
+|`$.in`|`{ "in": "value" }`|`value`|`value`|:white_check_mark:|
+|`$.length`|`{ "length": "value" }`|`value`|`value`|:white_check_mark:|
+|`$.length`|`[4, 5, 6]`|`nil`|`3`|:no_entry:|
+|`$.null`|`{ "null": "value" }`|`value`|`value`|:white_check_mark:|
+|`$.true`|`{ "true": "value" }`|`value`|`value`|:white_check_mark:|
+|`$.$`|`{ "$": "value" }`|none|`map[$:value]`|:question:|
+|`$.屬性`|`{ "屬性": "value" }`|`value`|`value`|:white_check_mark:|
+|`$.2`|`["first", "second", "third", "forth", "fifth"]`|none|`nil`|:question:|
+|`$.2`|`{"a": "first", "2": "second", "b": "third"}`|`second`|`second`|:white_check_mark:|
+|`$.-1`|`["first", "second", "third", "forth", "fifth"]`|`nil`|`nil`|:white_check_mark:|
+|`$.'key'`|`{ "key": "value", "'key'": 42 }`|none|`42`|:question:|
+|`$..'key'`|`{ "object": { "key": "value", "'key'": 100, "array": [ {"key": "something", "'key'": 0}, {"key": {"key": "russian dolls"}, "'key'": {"'key'": 99}} ] }, "key": "top", "'key'": 42 }`|none|`[42 100 0 map['key':99] 99]`|:question:|
+|`$.'some.key'`|`{"some.key": 42, "some": {"key": "value"}, "'some.key'": 43}`|none|`43`|:question:|
+|`$. a`|`{" a": 1, "a": 2, " a ": 3, "": 4}`|none|`2`|:question:|
+|`$.*`|`[ "string", 42, { "key": "value" }, [0, 1] ]`|`[string 42 map[key:value] [0 1]]`|`[string 42 map[key:value] [0 1]]`|:white_check_mark:|
+|`$.*`|`[]`|`[]`|`[]`|:white_check_mark:|
+|`$.*`|`{}`|`[]`|`[]`|:white_check_mark:|
+|`$.*`|`{ "some": "string", "int": 42, "object": { "key": "value" }, "array": [0, 1] }`|`[string 42 [0 1] map[key:value]]`|`[string 42 [0 1] map[key:value]]`|:white_check_mark:|
+|`$.*.bar.*`|`[{"bar": [42]}]`|`[42]`|`[[42]]`|:no_entry:|
+|`$.*.*`|`[[1, 2, 3], [4, 5, 6]]`|`[1 2 3 4 5 6]`|`[[1 2 3] [4 5 6]]`|:no_entry:|
+|`$..*`|`{ "key": "value", "another key": { "complex": "string", "primitives": [0, 1] } }`|`[string value 0 1 [0 1] map[complex:string primitives:[0 1]]]`|`[string value 0 1 [0 1] map[complex:string primitives:[0 1]]]`|:white_check_mark:|
+|`$..*`|`[ 40, null, 42 ]`|`[40 42 <nil>]`|`[40 42 <nil>]`|:white_check_mark:|
+|`$..*`|`42`|`nil`|`nil`|:white_check_mark:|
+|`$a`|`{"a": 1, "$a": 2}`|`nil`|`nil`|:white_check_mark:|
+|`.key`|`{ "key": "value" }`|`nil`|`nil`|:white_check_mark:|
+|`key`|`{ "key": "value" }`|`nil`|`nil`|:white_check_mark:|

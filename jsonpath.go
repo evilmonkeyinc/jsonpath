@@ -44,7 +44,7 @@ type JSONPath struct {
 func (query *JSONPath) compile(queryString string) error {
 	query.queryString = queryString
 
-	tokenStrings, _, err := token.Tokenize(queryString)
+	tokenStrings, err := token.Tokenize(queryString)
 	if err != nil {
 		return err
 	}

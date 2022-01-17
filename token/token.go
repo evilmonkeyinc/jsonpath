@@ -15,7 +15,12 @@ type Token interface {
 }
 
 // Tokenize converts a JSON Path query to a collection of parsable tokens
-func Tokenize(query string) ([]string, string, error) {
+func Tokenize(query string) ([]string, error) {
+	tokens, _, err := tokenize(query, false)
+	return tokens, err
+}
+
+func tokenize(query string, allowRemainder bool) ([]string, string, error) {
 	if query == "" {
 		return nil, query, getUnexpectedTokenError("", 0)
 	}
@@ -130,6 +135,11 @@ tokenize:
 				continue
 			}
 		} else if rne == '.' {
+			if quoteCount%2 == 1 || openScriptBracket != closeScriptBracket {
+				// inside expression or quotes
+				continue
+			}
+
 			if tokenString[0] == '.' {
 				tokenString = tokenString[1 : len(tokenString)-1]
 			} else {
@@ -140,7 +150,7 @@ tokenize:
 
 			tokenString = "."
 			continue
-		} else {
+		} else if allowRemainder {
 			// check for script operators outside of subscript
 			switch rne {
 			case '*':
@@ -204,17 +214,10 @@ func Parse(tokenString string) (Token, error) {
 	}
 
 	if !strings.HasPrefix(tokenString, "[") {
-
-		if _, err := strconv.ParseInt(tokenString, 10, 64); err == nil {
-			return nil, getInvalidTokenFormatError(tokenString)
-		}
-
 		if tokenString == "length" {
 			return &lengthToken{}, nil
 		}
-
 		return &keyToken{key: tokenString}, nil
-
 	}
 
 	if !strings.HasSuffix(tokenString, "]") {

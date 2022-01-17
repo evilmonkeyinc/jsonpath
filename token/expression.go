@@ -61,7 +61,7 @@ func evaluateExpression(root, current interface{}, expression string) (interface
 			query = expression[currentIndex:]
 		}
 
-		tokenStrings, remainder, err := Tokenize(query)
+		tokenStrings, remainder, err := tokenize(query, true)
 		if err != nil {
 			return nil, getInvalidExpressionError(err)
 		}
