@@ -199,6 +199,7 @@ func Test_UnionToken_Apply(t *testing.T) {
 					"a",
 					"d",
 				},
+				allowMapIndex: true,
 			},
 			input: input{
 				current: map[string]interface{}{
@@ -222,6 +223,7 @@ func Test_UnionToken_Apply(t *testing.T) {
 					"d",
 					"e",
 				},
+				allowMapIndex: true,
 			},
 			input: input{
 				current: map[string]interface{}{
@@ -237,7 +239,8 @@ func Test_UnionToken_Apply(t *testing.T) {
 		},
 		{
 			token: &unionToken{
-				arguments: []interface{}{0, 2, 4},
+				arguments:        []interface{}{0, 2, 4},
+				allowStringIndex: true,
 			},
 			input: input{
 				current: "abcdefghijkl",
@@ -248,7 +251,8 @@ func Test_UnionToken_Apply(t *testing.T) {
 		},
 		{
 			token: &unionToken{
-				arguments: []interface{}{0, 2, 4},
+				arguments:        []interface{}{0, 2, 4},
+				allowStringIndex: true,
 			},
 			input: input{
 				current: "abcdefghijkl",
@@ -316,11 +320,12 @@ func Test_UnionToken_Apply(t *testing.T) {
 	batchTokenTests(t, tests)
 }
 
-func Test_getUnionByIndex(t *testing.T) {
+func Test_UnionToken_getUnionByIndex(t *testing.T) {
 
 	type input struct {
-		obj  interface{}
-		keys []int64
+		token *unionToken
+		obj   interface{}
+		keys  []int64
 	}
 
 	type expected struct {
@@ -334,24 +339,61 @@ func Test_getUnionByIndex(t *testing.T) {
 	}{
 		{
 			input: input{
+				token: &unionToken{},
+				obj:   nil,
+			},
+			expected: expected{
+				err: "union: invalid token target. expected [array slice] got [nil]",
+			},
+		},
+		{
+			input: input{
+				token: &unionToken{
+					allowMapIndex: true,
+				},
 				obj: nil,
 			},
 			expected: expected{
-				err: "union: invalid token target. expected [array map slice string] got [nil]",
+				err: "union: invalid token target. expected [array slice map] got [nil]",
 			},
 		},
 		{
 			input: input{
-				obj: 123,
+				token: &unionToken{
+					allowStringIndex: true,
+				},
+				obj: nil,
 			},
 			expected: expected{
-				err: "union: invalid token target. expected [array map slice string] got [int]",
+				err: "union: invalid token target. expected [array slice string] got [nil]",
 			},
 		},
 		{
 			input: input{
-				obj:  []string{"one", "two", "three"},
-				keys: []int64{4},
+				token: &unionToken{
+					allowMapIndex:    true,
+					allowStringIndex: true,
+				},
+				obj: nil,
+			},
+			expected: expected{
+				err: "union: invalid token target. expected [array slice map string] got [nil]",
+			},
+		},
+		{
+			input: input{
+				token: &unionToken{},
+				obj:   123,
+			},
+			expected: expected{
+				err: "union: invalid token target. expected [array slice] got [int]",
+			},
+		},
+		{
+			input: input{
+				token: &unionToken{},
+				obj:   []string{"one", "two", "three"},
+				keys:  []int64{4},
 			},
 			expected: expected{
 				err: "union: invalid token out of range",
@@ -359,8 +401,9 @@ func Test_getUnionByIndex(t *testing.T) {
 		},
 		{
 			input: input{
-				obj:  []string{"one", "two", "three"},
-				keys: []int64{-10},
+				token: &unionToken{},
+				obj:   []string{"one", "two", "three"},
+				keys:  []int64{-10},
 			},
 			expected: expected{
 				err: "union: invalid token out of range",
@@ -368,8 +411,9 @@ func Test_getUnionByIndex(t *testing.T) {
 		},
 		{
 			input: input{
-				obj:  []string{"one", "two", "three"},
-				keys: []int64{-1, -2},
+				token: &unionToken{},
+				obj:   []string{"one", "two", "three"},
+				keys:  []int64{-1, -2},
 			},
 			expected: expected{
 				obj: []interface{}{"three", "two"},
@@ -377,8 +421,9 @@ func Test_getUnionByIndex(t *testing.T) {
 		},
 		{
 			input: input{
-				obj:  []string{"one", "two", "three"},
-				keys: []int64{0, 2},
+				token: &unionToken{},
+				obj:   []string{"one", "two", "three"},
+				keys:  []int64{0, 2},
 			},
 			expected: expected{
 				obj: []interface{}{"three", "one"},
@@ -386,8 +431,9 @@ func Test_getUnionByIndex(t *testing.T) {
 		},
 		{
 			input: input{
-				obj:  []interface{}{"one", "two", 3},
-				keys: []int64{0, 2},
+				token: &unionToken{},
+				obj:   []interface{}{"one", "two", 3},
+				keys:  []int64{0, 2},
 			},
 			expected: expected{
 				obj: []interface{}{"one", 3},
@@ -395,8 +441,9 @@ func Test_getUnionByIndex(t *testing.T) {
 		},
 		{
 			input: input{
-				obj:  [3]int64{1, 2, 3},
-				keys: []int64{0, 2},
+				token: &unionToken{},
+				obj:   [3]int64{1, 2, 3},
+				keys:  []int64{0, 2},
 			},
 			expected: expected{
 				obj: []interface{}{
@@ -407,8 +454,19 @@ func Test_getUnionByIndex(t *testing.T) {
 		},
 		{
 			input: input{
-				obj:  "abcdefghijklmnopqrstuvwxyz",
-				keys: []int64{0, 2, 4},
+				token: &unionToken{},
+				obj:   "abcdefghijklmnopqrstuvwxyz",
+				keys:  []int64{0, 2, 4},
+			},
+			expected: expected{
+				err: "union: invalid token target. expected [array slice] got [string]",
+			},
+		},
+		{
+			input: input{
+				token: &unionToken{allowStringIndex: true},
+				obj:   "abcdefghijklmnopqrstuvwxyz",
+				keys:  []int64{0, 2, 4},
 			},
 			expected: expected{
 				obj: "ace",
@@ -416,6 +474,23 @@ func Test_getUnionByIndex(t *testing.T) {
 		},
 		{
 			input: input{
+				token: &unionToken{},
+				obj: map[string]interface{}{
+					"a": "one",
+					"d": "four",
+					"e": "five",
+					"c": "three",
+					"b": "two",
+				},
+				keys: []int64{0, 1, 3},
+			},
+			expected: expected{
+				err: "union: invalid token target. expected [array slice] got [map]",
+			},
+		},
+		{
+			input: input{
+				token: &unionToken{allowMapIndex: true},
 				obj: map[string]interface{}{
 					"a": "one",
 					"d": "four",
@@ -437,7 +512,7 @@ func Test_getUnionByIndex(t *testing.T) {
 
 	for idx, test := range tests {
 		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
-			obj, err := getUnionByIndex(&unionToken{}, test.input.obj, test.input.keys)
+			obj, err := test.input.token.getUnionByIndex(test.input.obj, test.input.keys)
 
 			if test.expected.obj == nil {
 				assert.Nil(t, obj)
@@ -460,11 +535,12 @@ func Test_getUnionByIndex(t *testing.T) {
 
 }
 
-func Test_getUnionByKey(t *testing.T) {
+func Test_UnionToken_getUnionByKey(t *testing.T) {
 
 	type input struct {
-		obj  interface{}
-		keys []string
+		token *unionToken
+		obj   interface{}
+		keys  []string
 	}
 
 	type expected struct {
@@ -477,14 +553,17 @@ func Test_getUnionByKey(t *testing.T) {
 		expected expected
 	}{
 		{
-			input: input{},
+			input: input{
+				token: &unionToken{},
+			},
 			expected: expected{
 				err: "union: invalid token target. expected [map] got [nil]",
 			},
 		},
 		{
 			input: input{
-				obj: "string",
+				token: &unionToken{},
+				obj:   "string",
 			},
 			expected: expected{
 				err: "union: invalid token target. expected [map] got [string]",
@@ -492,6 +571,7 @@ func Test_getUnionByKey(t *testing.T) {
 		},
 		{
 			input: input{
+				token: &unionToken{},
 				obj: map[string]interface{}{
 					"a": "one",
 					"b": "two",
@@ -511,6 +591,7 @@ func Test_getUnionByKey(t *testing.T) {
 		},
 		{
 			input: input{
+				token: &unionToken{},
 				obj: map[string]interface{}{
 					"a": "one",
 					"b": "two",
@@ -526,6 +607,7 @@ func Test_getUnionByKey(t *testing.T) {
 		},
 		{
 			input: input{
+				token: &unionToken{},
 				obj: map[string]interface{}{
 					"a": "one",
 					"b": "two",
@@ -541,6 +623,7 @@ func Test_getUnionByKey(t *testing.T) {
 		},
 		{
 			input: input{
+				token: &unionToken{},
 				obj: sampleStruct{
 					One:   "one",
 					Two:   "two",
@@ -559,8 +642,9 @@ func Test_getUnionByKey(t *testing.T) {
 		},
 		{
 			input: input{
-				obj:  sampleStruct{},
-				keys: []string{"one", "three", "Six"},
+				token: &unionToken{},
+				obj:   sampleStruct{},
+				keys:  []string{"one", "three", "Six"},
 			},
 			expected: expected{
 				obj: []interface{}{
@@ -570,8 +654,9 @@ func Test_getUnionByKey(t *testing.T) {
 		},
 		{
 			input: input{
-				obj:  sampleStruct{},
-				keys: []string{"missing", "gone"},
+				token: &unionToken{},
+				obj:   sampleStruct{},
+				keys:  []string{"missing", "gone"},
 			},
 			expected: expected{
 				err: "union: invalid token key 'gone,missing' not found",
@@ -581,7 +666,7 @@ func Test_getUnionByKey(t *testing.T) {
 
 	for idx, test := range tests {
 		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
-			obj, err := getUnionByKey(&unionToken{}, test.input.obj, test.input.keys)
+			obj, err := test.input.token.getUnionByKey(test.input.obj, test.input.keys)
 
 			if test.expected.obj == nil {
 				assert.Nil(t, obj)

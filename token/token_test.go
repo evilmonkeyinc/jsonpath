@@ -441,7 +441,9 @@ func Test_Parse(t *testing.T) {
 		{
 			input: input{query: "[1, 2]"},
 			expected: expected{
-				token: &unionToken{[]interface{}{int64(1), int64(2)}},
+				token: &unionToken{
+					arguments: []interface{}{int64(1), int64(2)},
+				},
 			},
 		},
 		{

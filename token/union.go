@@ -7,11 +7,14 @@ import (
 	"strings"
 )
 
+// TODO : options set by parser
+// TODO : passed down some way so can give to expressions
+// TODO : maybe context?
 type unionToken struct {
-	arguments []interface{}
+	arguments        []interface{}
+	allowMapIndex    bool
+	allowStringIndex bool
 }
-
-// TODO : only support strings and maps with index if option set
 
 func (token *unionToken) String() string {
 	args := ""
@@ -74,13 +77,13 @@ func (token *unionToken) Apply(root, current interface{}, next []Token) (interfa
 
 	if len(keys) > 0 {
 		var err error
-		unionValue, err = getUnionByKey(token, current, keys)
+		unionValue, err = token.getUnionByKey(current, keys)
 		if err != nil {
 			return nil, getInvalidTokenError(token.Type(), err)
 		}
 	} else if len(indices) > 0 {
 		var err error
-		unionValue, err = getUnionByIndex(token, current, indices)
+		unionValue, err = token.getUnionByIndex(current, indices)
 		if err != nil {
 			return nil, getInvalidTokenError(token.Type(), err)
 		}
@@ -119,7 +122,7 @@ func (token *unionToken) Apply(root, current interface{}, next []Token) (interfa
 	return elements, nil
 }
 
-func getUnionByKey(token Token, obj interface{}, keys []string) ([]interface{}, error) {
+func (token *unionToken) getUnionByKey(obj interface{}, keys []string) ([]interface{}, error) {
 	objType, objVal := getTypeAndValue(obj)
 	if objType == nil {
 		return nil, getInvalidTokenTargetNilError(token.Type(), reflect.Map)
@@ -185,12 +188,23 @@ func getUnionByKey(token Token, obj interface{}, keys []string) ([]interface{}, 
 	}
 }
 
-func getUnionByIndex(token Token, obj interface{}, indices []int64) (interface{}, error) {
+func (token *unionToken) getUnionByIndex(obj interface{}, indices []int64) (interface{}, error) {
+	allowedType := []reflect.Kind{
+		reflect.Array,
+		reflect.Slice,
+	}
+	if token.allowMapIndex {
+		allowedType = append(allowedType, reflect.Map)
+	}
+	if token.allowStringIndex {
+		allowedType = append(allowedType, reflect.String)
+	}
+
 	objType, objVal := getTypeAndValue(obj)
 	if objType == nil {
 		return nil, getInvalidTokenTargetNilError(
 			token.Type(),
-			reflect.Array, reflect.Map, reflect.Slice, reflect.String,
+			allowedType...,
 		)
 	}
 
@@ -200,11 +214,25 @@ func getUnionByIndex(token Token, obj interface{}, indices []int64) (interface{}
 
 	switch objType.Kind() {
 	case reflect.Map:
+		if !token.allowMapIndex {
+			return nil, getInvalidTokenTargetError(
+				token.Type(),
+				objType.Kind(),
+				allowedType...,
+			)
+		}
 		length = int64(objVal.Len())
 		mapKeys = objVal.MapKeys()
 		sortMapKeys(mapKeys)
 		break
 	case reflect.String:
+		if !token.allowStringIndex {
+			return nil, getInvalidTokenTargetError(
+				token.Type(),
+				objType.Kind(),
+				allowedType...,
+			)
+		}
 		isString = true
 		fallthrough
 	case reflect.Array:
@@ -217,7 +245,7 @@ func getUnionByIndex(token Token, obj interface{}, indices []int64) (interface{}
 		return nil, getInvalidTokenTargetError(
 			token.Type(),
 			objType.Kind(),
-			reflect.Array, reflect.Map, reflect.Slice, reflect.String,
+			allowedType...,
 		)
 	}
 
