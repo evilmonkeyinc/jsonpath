@@ -2,6 +2,7 @@ package token
 
 import (
 	"reflect"
+	"sort"
 	"strings"
 )
 
@@ -18,6 +19,7 @@ func isInteger(obj interface{}) (int64, bool) {
 
 	return 0, false
 }
+
 func getStructFields(obj reflect.Value, omitempty bool) map[string]reflect.StructField {
 	objType := obj.Type()
 	if objType.Kind() != reflect.Struct {
@@ -79,4 +81,14 @@ func getTypeAndValue(obj interface{}) (reflect.Type, reflect.Value) {
 	}
 
 	return objType, objVal
+}
+
+// TODO: add unit test inside helper_test.go
+func sortMapKeys(mapKeys []reflect.Value) {
+	sort.SliceStable(mapKeys, func(i, j int) bool {
+		one := mapKeys[i]
+		two := mapKeys[j]
+
+		return one.String() < two.String()
+	})
 }

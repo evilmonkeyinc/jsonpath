@@ -3,7 +3,6 @@ package token
 import (
 	"fmt"
 	"reflect"
-	"sort"
 )
 
 // TODO : support optional settings
@@ -60,13 +59,7 @@ func (token *indexToken) Apply(root, current interface{}, next []Token) (interfa
 		}
 		length = int64(objVal.Len())
 		mapKeys = objVal.MapKeys()
-
-		sort.SliceStable(mapKeys, func(i, j int) bool {
-			one := mapKeys[i]
-			two := mapKeys[j]
-
-			return one.String() < two.String()
-		})
+		sortMapKeys(mapKeys)
 	case reflect.String:
 		if !token.allowString {
 			return nil, getInvalidTokenTargetError(

@@ -30,6 +30,7 @@ func (token *wildcardToken) Apply(root, current interface{}, next []Token) (inte
 	switch objType.Kind() {
 	case reflect.Map:
 		keys := objVal.MapKeys()
+		sortMapKeys(keys)
 		for _, kv := range keys {
 			value := objVal.MapIndex(kv).Interface()
 			elements = append(elements, value)

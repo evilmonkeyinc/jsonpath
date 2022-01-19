@@ -47,6 +47,7 @@ func (token *filterToken) Apply(root, current interface{}, next []Token) (interf
 	switch objType.Kind() {
 	case reflect.Map:
 		keys := objVal.MapKeys()
+		sortMapKeys(keys)
 
 		for _, kv := range keys {
 			element := objVal.MapIndex(kv).Interface()

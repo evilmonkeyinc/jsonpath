@@ -133,6 +133,7 @@ func getUnionByKey(token Token, obj interface{}, keys []string) ([]interface{}, 
 	switch objType.Kind() {
 	case reflect.Map:
 		mapKeys := objVal.MapKeys()
+		sortMapKeys(mapKeys)
 
 		elements := make([]interface{}, 0)
 
@@ -201,13 +202,7 @@ func getUnionByIndex(token Token, obj interface{}, indices []int64) (interface{}
 	case reflect.Map:
 		length = int64(objVal.Len())
 		mapKeys = objVal.MapKeys()
-
-		sort.SliceStable(mapKeys, func(i, j int) bool {
-			one := mapKeys[i]
-			two := mapKeys[j]
-
-			return one.String() < two.String()
-		})
+		sortMapKeys(mapKeys)
 		break
 	case reflect.String:
 		isString = true

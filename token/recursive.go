@@ -65,6 +65,7 @@ func flatten(obj interface{}) []interface{} {
 	switch objType.Kind() {
 	case reflect.Map:
 		keys := objVal.MapKeys()
+		sortMapKeys(keys)
 		for _, kv := range keys {
 			value := objVal.MapIndex(kv).Interface()
 			elements = append(elements, value)

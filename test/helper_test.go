@@ -31,8 +31,12 @@ func batchTest(t *testing.T, tests []testData) {
 				assert.EqualError(t, err, test.expectedError, fmt.Sprintf("%s invalid error", test.query))
 			}
 
-			if array, ok := test.expected.([]interface{}); ok {
-				assert.ElementsMatch(t, array, actual, fmt.Sprintf("%s unexpected value", test.query))
+			if expectedArray, ok := test.expected.([]interface{}); ok {
+				actualArray, ok := actual.([]interface{})
+				assert.True(t, ok, "expected array response")
+				if ok {
+					assert.ElementsMatch(t, expectedArray, actualArray, fmt.Sprintf("%s unexpected value", test.query))
+				}
 			} else {
 				assert.EqualValues(t, test.expected, actual, fmt.Sprintf("%s unexpected value", test.query))
 			}

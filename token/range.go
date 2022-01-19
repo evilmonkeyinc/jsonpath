@@ -3,7 +3,6 @@ package token
 import (
 	"fmt"
 	"reflect"
-	"sort"
 )
 
 // TODO : support optional settings
@@ -208,13 +207,7 @@ func (token *rangeToken) getRange(obj interface{}, start, end, step *int64) (int
 		}
 		length = int64(objVal.Len())
 		mapKeys = objVal.MapKeys()
-
-		sort.SliceStable(mapKeys, func(i, j int) bool {
-			one := mapKeys[i]
-			two := mapKeys[j]
-
-			return one.String() < two.String()
-		})
+		sortMapKeys(mapKeys)
 		break
 	case reflect.String:
 		if !token.allowString {
