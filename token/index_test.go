@@ -1,6 +1,7 @@
 package token
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -8,6 +9,120 @@ import (
 
 // Test indexToken struct conforms to Token interface
 var _ Token = &indexToken{}
+
+func Test_newIndexToken(t *testing.T) {
+	assert.IsType(t, &indexToken{}, newIndexToken(0, nil))
+
+	type input struct {
+		index   int64
+		options *Options
+	}
+
+	type expected *indexToken
+
+	tests := []struct {
+		input    input
+		expected expected
+	}{
+		{
+			input: input{
+				index:   0,
+				options: nil,
+			},
+			expected: &indexToken{
+				index:       0,
+				allowMap:    false,
+				allowString: false,
+			},
+		},
+		{
+			input: input{
+				index:   0,
+				options: &Options{},
+			},
+			expected: &indexToken{
+				index:       0,
+				allowMap:    false,
+				allowString: false,
+			},
+		},
+		{
+			input: input{
+				index: 0,
+				options: &Options{
+					AllowMapReferenceByIndex:    false,
+					AllowStringReferenceByIndex: false,
+
+					AllowMapReferenceByIndexInSubscript:    true,
+					AllowStringReferenceByIndexInSubscript: true,
+				},
+			},
+			expected: &indexToken{
+				index:       0,
+				allowMap:    true,
+				allowString: true,
+			},
+		},
+		{
+			input: input{
+				index: 0,
+				options: &Options{
+					AllowMapReferenceByIndex:    true,
+					AllowStringReferenceByIndex: true,
+
+					AllowMapReferenceByIndexInSubscript:    false,
+					AllowStringReferenceByIndexInSubscript: false,
+				},
+			},
+			expected: &indexToken{
+				index:       0,
+				allowMap:    true,
+				allowString: true,
+			},
+		},
+		{
+			input: input{
+				index: 0,
+				options: &Options{
+					AllowMapReferenceByIndex:    true,
+					AllowStringReferenceByIndex: true,
+
+					AllowMapReferenceByIndexInSubscript:    true,
+					AllowStringReferenceByIndexInSubscript: true,
+				},
+			},
+			expected: &indexToken{
+				index:       0,
+				allowMap:    true,
+				allowString: true,
+			},
+		},
+		{
+			input: input{
+				index: 0,
+				options: &Options{
+					AllowMapReferenceByIndex:    false,
+					AllowStringReferenceByIndex: false,
+
+					AllowMapReferenceByIndexInSubscript:    false,
+					AllowStringReferenceByIndexInSubscript: true,
+				},
+			},
+			expected: &indexToken{
+				index:       0,
+				allowMap:    false,
+				allowString: true,
+			},
+		},
+	}
+
+	for idx, test := range tests {
+		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
+			actual := newIndexToken(test.input.index, test.input.options)
+			assert.EqualValues(t, test.expected, actual)
+		})
+	}
+}
 
 func Test_IndexToken_String(t *testing.T) {
 	tests := []*tokenStringTest{
@@ -202,6 +317,28 @@ func Test_IndexToken_Apply(t *testing.T) {
 			},
 			expected: expected{
 				value: "two",
+			},
+		},
+		{
+			token: &indexToken{index: 1},
+			input: input{
+				current: map[string]interface{}{
+					"a": map[string]interface{}{
+						"name":  "one",
+						"value": 1,
+					},
+					"c": map[string]interface{}{
+						"name":  "three",
+						"value": 3,
+					},
+					"b": map[string]interface{}{
+						"name":  "two",
+						"value": 2,
+					},
+				},
+			},
+			expected: expected{
+				err: "index: invalid token target. expected [array slice] got [map]",
 			},
 		},
 		{

@@ -5,8 +5,13 @@ import (
 	"reflect"
 )
 
+func newScriptToken(expression string, options *Options) *scriptToken {
+	return &scriptToken{expression: expression, options: options}
+}
+
 type scriptToken struct {
 	expression string
+	options    *Options
 }
 
 func (token *scriptToken) String() string {
@@ -22,7 +27,7 @@ func (token *scriptToken) Apply(root, current interface{}, next []Token) (interf
 		return nil, getInvalidExpressionEmptyError()
 	}
 
-	value, err := evaluateExpression(root, current, token.expression)
+	value, err := evaluateExpression(root, current, token.expression, token.options)
 	if err != nil {
 		return nil, getInvalidExpressionError(err)
 	}
@@ -35,7 +40,7 @@ func (token *scriptToken) Apply(root, current interface{}, next []Token) (interf
 		nextToken := &keyToken{key: strValue}
 		return nextToken.Apply(root, current, next)
 	} else if intValue, ok := isInteger(value); ok {
-		nextToken := &indexToken{index: int64(intValue)}
+		nextToken := newIndexToken(intValue, token.options)
 		return nextToken.Apply(root, current, next)
 	}
 

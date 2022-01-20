@@ -1,5 +1,9 @@
 package token
 
+func newCurrentToken() *currentToken {
+	return &currentToken{}
+}
+
 type currentToken struct {
 }
 

@@ -7,13 +7,26 @@ import (
 	"strings"
 )
 
-// TODO : options set by parser
-// TODO : passed down some way so can give to expressions
-// TODO : maybe context?
+func newUnionToken(arguments []interface{}, options *Options) *unionToken {
+	allowMap := false
+	allowString := false
+
+	if options != nil {
+		allowMap = options.AllowMapReferenceByIndex || options.AllowMapReferenceByIndexInUnion
+		allowString = options.AllowStringReferenceByIndex || options.AllowStringReferenceByIndexInUnion
+	}
+
+	return &unionToken{
+		arguments:   arguments,
+		allowMap:    allowMap,
+		allowString: allowString,
+	}
+}
+
 type unionToken struct {
-	arguments        []interface{}
-	allowMapIndex    bool
-	allowStringIndex bool
+	arguments   []interface{}
+	allowMap    bool
+	allowString bool
 }
 
 func (token *unionToken) String() string {
@@ -193,10 +206,10 @@ func (token *unionToken) getUnionByIndex(obj interface{}, indices []int64) (inte
 		reflect.Array,
 		reflect.Slice,
 	}
-	if token.allowMapIndex {
+	if token.allowMap {
 		allowedType = append(allowedType, reflect.Map)
 	}
-	if token.allowStringIndex {
+	if token.allowString {
 		allowedType = append(allowedType, reflect.String)
 	}
 
@@ -214,7 +227,7 @@ func (token *unionToken) getUnionByIndex(obj interface{}, indices []int64) (inte
 
 	switch objType.Kind() {
 	case reflect.Map:
-		if !token.allowMapIndex {
+		if !token.allowMap {
 			return nil, getInvalidTokenTargetError(
 				token.Type(),
 				objType.Kind(),
@@ -226,7 +239,7 @@ func (token *unionToken) getUnionByIndex(obj interface{}, indices []int64) (inte
 		sortMapKeys(mapKeys)
 		break
 	case reflect.String:
-		if !token.allowStringIndex {
+		if !token.allowString {
 			return nil, getInvalidTokenTargetError(
 				token.Type(),
 				objType.Kind(),

@@ -83,7 +83,6 @@ func getTypeAndValue(obj interface{}) (reflect.Type, reflect.Value) {
 	return objType, objVal
 }
 
-// TODO: add unit test inside helper_test.go
 func sortMapKeys(mapKeys []reflect.Value) {
 	sort.SliceStable(mapKeys, func(i, j int) bool {
 		one := mapKeys[i]

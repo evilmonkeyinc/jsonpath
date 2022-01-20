@@ -1,5 +1,9 @@
 package token
 
+func newRootToken() *rootToken {
+	return &rootToken{}
+}
+
 type rootToken struct {
 }
 

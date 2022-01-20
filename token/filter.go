@@ -6,8 +6,13 @@ import (
 	"strings"
 )
 
+func newFilterToken(expression string, options *Options) *filterToken {
+	return &filterToken{expression: expression, options: options}
+}
+
 type filterToken struct {
 	expression string
+	options    *Options
 }
 
 func (token *filterToken) String() string {
@@ -52,7 +57,8 @@ func (token *filterToken) Apply(root, current interface{}, next []Token) (interf
 		for _, kv := range keys {
 			element := objVal.MapIndex(kv).Interface()
 
-			evaluation, err := evaluateExpression(root, element, token.expression)
+			// TODO : we should compile expression so we don't have to tokenize each time
+			evaluation, err := evaluateExpression(root, element, token.expression, token.options)
 			if err != nil {
 				// we ignore errors, it has failed evaluation
 				evaluation = nil
@@ -67,7 +73,8 @@ func (token *filterToken) Apply(root, current interface{}, next []Token) (interf
 
 		for i := 0; i < length; i++ {
 			element := objVal.Index(i).Interface()
-			evaluation, err := evaluateExpression(root, element, token.expression)
+			// TODO : we should compile expression so we don't have to tokenize each time
+			evaluation, err := evaluateExpression(root, element, token.expression, token.options)
 			if err != nil {
 				// we ignore errors, it has failed evaluation
 				evaluation = nil

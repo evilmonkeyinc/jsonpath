@@ -10,6 +10,10 @@ import (
 // Test expressionToken struct conforms to Token interface
 var _ Token = &expressionToken{}
 
+func Test_newExpressionToken(t *testing.T) {
+	assert.IsType(t, &expressionToken{}, newExpressionToken("", nil))
+}
+
 func Test_ExpressionToken_String(t *testing.T) {
 
 	tests := []*tokenStringTest{
@@ -112,6 +116,7 @@ func Test_evaluateExpression(t *testing.T) {
 	type input struct {
 		root, current interface{}
 		expression    string
+		options       *Options
 	}
 
 	type expected struct {
@@ -519,7 +524,7 @@ func Test_evaluateExpression(t *testing.T) {
 
 	for idx, test := range tests {
 		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
-			actual, err := evaluateExpression(test.input.root, test.input.current, test.input.expression)
+			actual, err := evaluateExpression(test.input.root, test.input.current, test.input.expression, test.input.options)
 
 			if test.expected.err == "" {
 				assert.Nil(t, err)

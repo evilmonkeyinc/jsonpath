@@ -10,6 +10,108 @@ import (
 // Test rangeToken struct conforms to Token interface
 var _ Token = &rangeToken{}
 
+func Test_newRangeToken(t *testing.T) {
+	assert.IsType(t, &rangeToken{}, newRangeToken(nil, nil, nil, nil))
+
+	type input struct {
+		to, from, step interface{}
+		options        *Options
+	}
+
+	type expected *rangeToken
+
+	tests := []struct {
+		input    input
+		expected expected
+	}{
+		{
+			input: input{
+				options: nil,
+			},
+			expected: &rangeToken{
+				allowMap:    false,
+				allowString: false,
+			},
+		},
+		{
+			input: input{
+				options: &Options{},
+			},
+			expected: &rangeToken{
+				allowMap:    false,
+				allowString: false,
+			},
+		},
+		{
+			input: input{
+				options: &Options{
+					AllowMapReferenceByIndex:    false,
+					AllowStringReferenceByIndex: false,
+
+					AllowMapReferenceByIndexInRange:    true,
+					AllowStringReferenceByIndexInRange: true,
+				},
+			},
+			expected: &rangeToken{
+				allowMap:    true,
+				allowString: true,
+			},
+		},
+		{
+			input: input{
+				options: &Options{
+					AllowMapReferenceByIndex:    true,
+					AllowStringReferenceByIndex: true,
+
+					AllowMapReferenceByIndexInRange:    false,
+					AllowStringReferenceByIndexInRange: false,
+				},
+			},
+			expected: &rangeToken{
+				allowMap:    true,
+				allowString: true,
+			},
+		},
+		{
+			input: input{
+				options: &Options{
+					AllowMapReferenceByIndex:    true,
+					AllowStringReferenceByIndex: true,
+
+					AllowMapReferenceByIndexInRange:    true,
+					AllowStringReferenceByIndexInRange: true,
+				},
+			},
+			expected: &rangeToken{
+				allowMap:    true,
+				allowString: true,
+			},
+		},
+		{
+			input: input{
+				options: &Options{
+					AllowMapReferenceByIndex:    false,
+					AllowStringReferenceByIndex: false,
+
+					AllowMapReferenceByIndexInRange:    false,
+					AllowStringReferenceByIndexInRange: true,
+				},
+			},
+			expected: &rangeToken{
+				allowMap:    false,
+				allowString: true,
+			},
+		},
+	}
+
+	for idx, test := range tests {
+		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
+			actual := newRangeToken(test.input.to, test.input.from, test.input.step, test.input.options)
+			assert.EqualValues(t, test.expected, actual)
+		})
+	}
+}
+
 func Test_RangeToken_String(t *testing.T) {
 	tests := []*tokenStringTest{
 		{

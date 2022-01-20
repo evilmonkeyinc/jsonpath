@@ -10,6 +10,108 @@ import (
 // Test unionToken struct conforms to Token interface
 var _ Token = &unionToken{}
 
+func Test_newUnionToken(t *testing.T) {
+	assert.IsType(t, &unionToken{}, newUnionToken(nil, nil))
+
+	type input struct {
+		args    []interface{}
+		options *Options
+	}
+
+	type expected *unionToken
+
+	tests := []struct {
+		input    input
+		expected expected
+	}{
+		{
+			input: input{
+				options: nil,
+			},
+			expected: &unionToken{
+				allowMap:    false,
+				allowString: false,
+			},
+		},
+		{
+			input: input{
+				options: &Options{},
+			},
+			expected: &unionToken{
+				allowMap:    false,
+				allowString: false,
+			},
+		},
+		{
+			input: input{
+				options: &Options{
+					AllowMapReferenceByIndex:    false,
+					AllowStringReferenceByIndex: false,
+
+					AllowMapReferenceByIndexInUnion:    true,
+					AllowStringReferenceByIndexInUnion: true,
+				},
+			},
+			expected: &unionToken{
+				allowMap:    true,
+				allowString: true,
+			},
+		},
+		{
+			input: input{
+				options: &Options{
+					AllowMapReferenceByIndex:    true,
+					AllowStringReferenceByIndex: true,
+
+					AllowMapReferenceByIndexInUnion:    false,
+					AllowStringReferenceByIndexInUnion: false,
+				},
+			},
+			expected: &unionToken{
+				allowMap:    true,
+				allowString: true,
+			},
+		},
+		{
+			input: input{
+				options: &Options{
+					AllowMapReferenceByIndex:    true,
+					AllowStringReferenceByIndex: true,
+
+					AllowMapReferenceByIndexInUnion:    true,
+					AllowStringReferenceByIndexInUnion: true,
+				},
+			},
+			expected: &unionToken{
+				allowMap:    true,
+				allowString: true,
+			},
+		},
+		{
+			input: input{
+				options: &Options{
+					AllowMapReferenceByIndex:    false,
+					AllowStringReferenceByIndex: false,
+
+					AllowMapReferenceByIndexInUnion:    false,
+					AllowStringReferenceByIndexInUnion: true,
+				},
+			},
+			expected: &unionToken{
+				allowMap:    false,
+				allowString: true,
+			},
+		},
+	}
+
+	for idx, test := range tests {
+		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
+			actual := newUnionToken(test.input.args, test.input.options)
+			assert.EqualValues(t, test.expected, actual)
+		})
+	}
+}
+
 func Test_UnionToken_String(t *testing.T) {
 	tests := []*tokenStringTest{
 		{
@@ -199,7 +301,7 @@ func Test_UnionToken_Apply(t *testing.T) {
 					"a",
 					"d",
 				},
-				allowMapIndex: true,
+				allowMap: true,
 			},
 			input: input{
 				current: map[string]interface{}{
@@ -223,7 +325,7 @@ func Test_UnionToken_Apply(t *testing.T) {
 					"d",
 					"e",
 				},
-				allowMapIndex: true,
+				allowMap: true,
 			},
 			input: input{
 				current: map[string]interface{}{
@@ -239,8 +341,8 @@ func Test_UnionToken_Apply(t *testing.T) {
 		},
 		{
 			token: &unionToken{
-				arguments:        []interface{}{0, 2, 4},
-				allowStringIndex: true,
+				arguments:   []interface{}{0, 2, 4},
+				allowString: true,
 			},
 			input: input{
 				current: "abcdefghijkl",
@@ -251,8 +353,8 @@ func Test_UnionToken_Apply(t *testing.T) {
 		},
 		{
 			token: &unionToken{
-				arguments:        []interface{}{0, 2, 4},
-				allowStringIndex: true,
+				arguments:   []interface{}{0, 2, 4},
+				allowString: true,
 			},
 			input: input{
 				current: "abcdefghijkl",
@@ -349,7 +451,7 @@ func Test_UnionToken_getUnionByIndex(t *testing.T) {
 		{
 			input: input{
 				token: &unionToken{
-					allowMapIndex: true,
+					allowMap: true,
 				},
 				obj: nil,
 			},
@@ -360,7 +462,7 @@ func Test_UnionToken_getUnionByIndex(t *testing.T) {
 		{
 			input: input{
 				token: &unionToken{
-					allowStringIndex: true,
+					allowString: true,
 				},
 				obj: nil,
 			},
@@ -371,8 +473,8 @@ func Test_UnionToken_getUnionByIndex(t *testing.T) {
 		{
 			input: input{
 				token: &unionToken{
-					allowMapIndex:    true,
-					allowStringIndex: true,
+					allowMap:    true,
+					allowString: true,
 				},
 				obj: nil,
 			},
@@ -464,7 +566,7 @@ func Test_UnionToken_getUnionByIndex(t *testing.T) {
 		},
 		{
 			input: input{
-				token: &unionToken{allowStringIndex: true},
+				token: &unionToken{allowString: true},
 				obj:   "abcdefghijklmnopqrstuvwxyz",
 				keys:  []int64{0, 2, 4},
 			},
@@ -490,7 +592,7 @@ func Test_UnionToken_getUnionByIndex(t *testing.T) {
 		},
 		{
 			input: input{
-				token: &unionToken{allowMapIndex: true},
+				token: &unionToken{allowMap: true},
 				obj: map[string]interface{}{
 					"a": "one",
 					"d": "four",

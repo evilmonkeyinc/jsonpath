@@ -5,8 +5,23 @@ import (
 	"reflect"
 )
 
-// TODO : support optional settings
-// TODO : need to be able to set these inside script/expression as well
+func newRangeToken(from, to, step interface{}, options *Options) *rangeToken {
+	allowMap := false
+	allowString := false
+
+	if options != nil {
+		allowMap = options.AllowMapReferenceByIndex || options.AllowMapReferenceByIndexInRange
+		allowString = options.AllowStringReferenceByIndex || options.AllowStringReferenceByIndexInRange
+	}
+
+	return &rangeToken{
+		from:        from,
+		to:          to,
+		step:        step,
+		allowMap:    allowMap,
+		allowString: allowString,
+	}
+}
 
 type rangeToken struct {
 	from, to, step interface{}

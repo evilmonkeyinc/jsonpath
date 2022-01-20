@@ -5,8 +5,6 @@ import (
 	"strings"
 )
 
-// TODO : optional feature - support double quotes in subscript instead of single quote
-
 // Token represents a component of a JSON Path query
 type Token interface {
 	Apply(root, current interface{}, next []Token) (interface{}, error)
@@ -186,7 +184,7 @@ tokenize:
 }
 
 // Parse will parse a single token string and return an actionable token
-func Parse(tokenString string) (Token, error) {
+func Parse(tokenString string, options *Options) (Token, error) {
 	isScript := func(token string) bool {
 		return len(token) > 2 && strings.HasPrefix(token, "(") && strings.HasSuffix(token, ")")
 	}
@@ -201,23 +199,23 @@ func Parse(tokenString string) (Token, error) {
 	}
 
 	if tokenString == "$" {
-		return &rootToken{}, nil
+		return newRootToken(), nil
 	}
 	if tokenString == "@" {
-		return &currentToken{}, nil
+		return newCurrentToken(), nil
 	}
 	if tokenString == "*" {
-		return &wildcardToken{}, nil
+		return newWildcardToken(), nil
 	}
 	if tokenString == ".." {
-		return &recursiveToken{}, nil
+		return newRecursiveToken(), nil
 	}
 
 	if !strings.HasPrefix(tokenString, "[") {
 		if tokenString == "length" {
-			return &lengthToken{}, nil
+			return newLengthToken(), nil
 		}
-		return &keyToken{key: tokenString}, nil
+		return newKeyToken(tokenString), nil
 	}
 
 	if !strings.HasSuffix(tokenString, "]") {
@@ -232,15 +230,13 @@ func Parse(tokenString string) (Token, error) {
 
 	if subscript == "*" {
 		// range all
-		return &wildcardToken{}, nil
+		return newWildcardToken(), nil
 	} else if strings.HasPrefix(subscript, "?") {
 		// filter
 		if !strings.HasPrefix(subscript, "?(") || !strings.HasSuffix(subscript, ")") {
 			return nil, getInvalidTokenFormatError(tokenString)
 		}
-		return &filterToken{
-			expression: strings.TrimSpace(subscript[2 : len(subscript)-1]),
-		}, nil
+		return newFilterToken(strings.TrimSpace(subscript[2:len(subscript)-1]), options), nil
 	}
 
 	// from this point we have the chance of things being nested or wrapped
@@ -357,16 +353,12 @@ func Parse(tokenString string) (Token, error) {
 		arg := args[0]
 		if strArg, ok := arg.(string); ok {
 			if isKey(strArg) {
-				return &keyToken{
-					key: strArg[1 : len(strArg)-1],
-				}, nil
+				return newKeyToken(strArg[1 : len(strArg)-1]), nil
 			} else if isScript(strArg) {
-				return &scriptToken{
-					expression: strArg[1 : len(strArg)-1],
-				}, nil
+				return newScriptToken(strArg[1:len(strArg)-1], options), nil
 			}
 		} else if intArg, ok := isInteger(arg); ok {
-			return &indexToken{index: intArg}, nil
+			return newIndexToken(intArg, options), nil
 		}
 		return nil, getInvalidTokenFormatError(tokenString)
 	}
@@ -412,9 +404,7 @@ func Parse(tokenString string) (Token, error) {
 		for idx, arg := range args {
 			if strArg, ok := arg.(string); ok {
 				if isScript(strArg) {
-					arg = &expressionToken{
-						expression: strArg[1 : len(strArg)-1],
-					}
+					arg = newExpressionToken(strArg[1:len(strArg)-1], options)
 					args[idx] = arg
 					continue
 				} else if isKey(strArg) {
@@ -428,7 +418,7 @@ func Parse(tokenString string) (Token, error) {
 			return nil, getInvalidTokenFormatError(tokenString)
 		}
 
-		return &unionToken{arguments: args}, nil
+		return newUnionToken(args, options), nil
 	} else if colonCount > 0 {
 		// Range
 		if colonCount > 2 {
@@ -448,32 +438,22 @@ func Parse(tokenString string) (Token, error) {
 			if !isScript(strFrom) {
 				return nil, getInvalidExpressionFormatError(strFrom)
 			}
-			from = &expressionToken{
-				expression: strFrom[1 : len(strFrom)-1],
-			}
+			from = newExpressionToken(strFrom[1:len(strFrom)-1], options)
 		}
 		if strTo, ok := to.(string); ok {
 			if !isScript(strTo) {
 				return nil, getInvalidExpressionFormatError(strTo)
 			}
-			to = &expressionToken{
-				expression: strTo[1 : len(strTo)-1],
-			}
+			to = newExpressionToken(strTo[1:len(strTo)-1], options)
 		}
 		if strStep, ok := step.(string); ok {
 			if !isScript(strStep) {
 				return nil, getInvalidExpressionFormatError(strStep)
 			}
-			step = &expressionToken{
-				expression: strStep[1 : len(strStep)-1],
-			}
+			step = newExpressionToken(strStep[1:len(strStep)-1], options)
 		}
 
-		return &rangeToken{
-			from: from,
-			to:   to,
-			step: step,
-		}, nil
+		return newRangeToken(from, to, step, options), nil
 	}
 
 	return nil, getInvalidTokenFormatError(tokenString)

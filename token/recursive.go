@@ -4,6 +4,10 @@ import (
 	"reflect"
 )
 
+func newRecursiveToken() *recursiveToken {
+	return &recursiveToken{}
+}
+
 type recursiveToken struct {
 }
 

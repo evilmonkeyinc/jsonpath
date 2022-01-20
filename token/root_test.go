@@ -9,6 +9,10 @@ import (
 // Test rootToken struct conforms to Token interface
 var _ Token = &rootToken{}
 
+func Test_newRootToken(t *testing.T) {
+	assert.IsType(t, &rootToken{}, newRootToken())
+}
+
 func Test_RootToken_String(t *testing.T) {
 	assert.Equal(t, "$", (&rootToken{}).String())
 }

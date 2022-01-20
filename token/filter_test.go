@@ -9,6 +9,10 @@ import (
 // Test filterToken struct conforms to Token interface
 var _ Token = &filterToken{}
 
+func Test_newFilterToken(t *testing.T) {
+	assert.IsType(t, &filterToken{}, newFilterToken("", nil))
+}
+
 func Test_FilterToken_String(t *testing.T) {
 	tests := []*tokenStringTest{
 		{

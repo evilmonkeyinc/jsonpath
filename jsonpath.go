@@ -2,6 +2,7 @@ package jsonpath
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"github.com/evilmonkeyinc/jsonpath/token"
@@ -35,10 +36,21 @@ func QueryString(queryPath string, jsonData string) (interface{}, error) {
 	return jsonPath.QueryString(jsonData)
 }
 
-// JSONPath i need to expand this
+// JSONPath represents a compiled JSONPath query
+// and exposes functions to query JSON data and objects.
 type JSONPath struct {
+	Options     *token.Options
 	queryString string
 	tokens      []token.Token
+}
+
+// String returns the compiled query string representation
+func (query *JSONPath) String() string {
+	jsonPath := ""
+	for _, token := range query.tokens {
+		jsonPath += fmt.Sprintf("%s", token)
+	}
+	return jsonPath
 }
 
 func (query *JSONPath) compile(queryString string) error {
@@ -51,7 +63,7 @@ func (query *JSONPath) compile(queryString string) error {
 
 	tokens := make([]token.Token, len(tokenStrings))
 	for idx, tokenString := range tokenStrings {
-		token, err := token.Parse(tokenString)
+		token, err := token.Parse(tokenString, query.Options)
 		if err != nil {
 			return err
 		}

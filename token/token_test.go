@@ -470,7 +470,7 @@ func Test_Parse(t *testing.T) {
 
 	for idx, test := range tests {
 		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
-			token, err := Parse(test.input.query)
+			token, err := Parse(test.input.query, nil)
 
 			if test.expected.err == "" {
 				assert.Nil(t, err, fmt.Sprintf("input '%s' err check failed. expected 'nil' actual '%v'", test.input.query, err))

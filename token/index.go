@@ -5,8 +5,21 @@ import (
 	"reflect"
 )
 
-// TODO : support optional settings
-// TODO : need to be able to set these inside script/expression as well
+func newIndexToken(index int64, options *Options) *indexToken {
+	allowMap := false
+	allowString := false
+
+	if options != nil {
+		allowMap = options.AllowMapReferenceByIndex || options.AllowMapReferenceByIndexInSubscript
+		allowString = options.AllowStringReferenceByIndex || options.AllowStringReferenceByIndexInSubscript
+	}
+
+	return &indexToken{
+		index:       index,
+		allowMap:    allowMap,
+		allowString: allowString,
+	}
+}
 
 type indexToken struct {
 	index       int64

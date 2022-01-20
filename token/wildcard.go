@@ -4,6 +4,10 @@ import (
 	"reflect"
 )
 
+func newWildcardToken() *wildcardToken {
+	return &wildcardToken{}
+}
+
 type wildcardToken struct {
 }
 

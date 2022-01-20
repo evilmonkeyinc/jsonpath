@@ -9,6 +9,10 @@ import (
 // Test keyToken struct conforms to Token interface
 var _ Token = &keyToken{}
 
+func Test_newKeyToken(t *testing.T) {
+	assert.IsType(t, &keyToken{}, newKeyToken(""))
+}
+
 func Test_KeyToken_String(t *testing.T) {
 	tests := []*tokenStringTest{
 		{

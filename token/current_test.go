@@ -9,6 +9,10 @@ import (
 // Test currentToken struct conforms to Token interface
 var _ Token = &currentToken{}
 
+func Test_newCurrentToken(t *testing.T) {
+	assert.IsType(t, &currentToken{}, newCurrentToken())
+}
+
 func Test_CurrentToken_String(t *testing.T) {
 	assert.Equal(t, "@", (&currentToken{}).String())
 }

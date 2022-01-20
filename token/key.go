@@ -6,6 +6,10 @@ import (
 	"strings"
 )
 
+func newKeyToken(key string) *keyToken {
+	return &keyToken{key: key}
+}
+
 type keyToken struct {
 	key string
 }

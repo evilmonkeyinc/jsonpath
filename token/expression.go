@@ -10,8 +10,13 @@ import (
 	"strings"
 )
 
+func newExpressionToken(expression string, options *Options) *expressionToken {
+	return &expressionToken{expression: expression, options: options}
+}
+
 type expressionToken struct {
 	expression string
+	options    *Options
 }
 
 func (token *expressionToken) String() string {
@@ -27,7 +32,7 @@ func (token *expressionToken) Apply(root, current interface{}, next []Token) (in
 		return nil, getInvalidExpressionEmptyError()
 	}
 
-	value, err := evaluateExpression(root, current, token.expression)
+	value, err := evaluateExpression(root, current, token.expression, token.options)
 	if err != nil {
 		return nil, getInvalidExpressionError(err)
 	}
@@ -44,7 +49,7 @@ func (token *expressionToken) Apply(root, current interface{}, next []Token) (in
 1. regex
 */
 
-func evaluateExpression(root, current interface{}, expression string) (interface{}, error) {
+func evaluateExpression(root, current interface{}, expression string, options *Options) (interface{}, error) {
 	if expression == "" {
 		return nil, getInvalidExpressionEmptyError()
 	}
@@ -72,7 +77,7 @@ func evaluateExpression(root, current interface{}, expression string) (interface
 		if len(tokenStrings) > 0 {
 			tokens := make([]Token, 0)
 			for _, tokenString := range tokenStrings {
-				token, err := Parse(tokenString)
+				token, err := Parse(tokenString, options)
 				if err != nil {
 					return nil, getInvalidExpressionError(err)
 				}

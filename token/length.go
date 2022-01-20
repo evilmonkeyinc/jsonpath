@@ -4,6 +4,10 @@ import (
 	"reflect"
 )
 
+func newLengthToken() *lengthToken {
+	return &lengthToken{}
+}
+
 type lengthToken struct {
 }
 

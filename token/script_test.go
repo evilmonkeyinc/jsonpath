@@ -9,6 +9,10 @@ import (
 // Test scriptToken struct conforms to Token interface
 var _ Token = &scriptToken{}
 
+func Test_newScriptToken(t *testing.T) {
+	assert.IsType(t, &scriptToken{}, newScriptToken("", nil))
+}
+
 func Test_ScriptToken_String(t *testing.T) {
 
 	tests := []*tokenStringTest{
