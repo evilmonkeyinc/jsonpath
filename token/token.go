@@ -5,6 +5,10 @@ import (
 	"strings"
 )
 
+/** Feature request
+support double quotes in keys?
+**/
+
 // Token represents a component of a JSON Path query
 type Token interface {
 	Apply(root, current interface{}, next []Token) (interface{}, error)

@@ -67,6 +67,14 @@ This object is returned by the `Compile` function.
 
 The JSONPath struct represents a reusable compiled JSONPath query which supports the `Query`, and `QueryString` functions as detailed above.
 
+### Options
+
+Part of the JSONPath object, Options allows you to specify what additional functionality, if any, that you want to enable while querying data.
+
+You are able to enable index referencing support for maps for all tokens using `AllowMapReferenceByIndex` or use enable it for each token type individually.
+
+You are able to enable index referencing support for strings for all tokens using `AllowStringReferenceByIndex` or use enable it for each token type individually.
+
 ## Supported Syntax
 
 | syntax | name  | example |
@@ -118,8 +126,6 @@ can also be used with the subscript syntax `$.store.book[*]`
 
 allows for additional operators to be applied to the current object to retrieve a child element.
 
-It is possible to use indexes to reference elements in a map, the order is determined by the keys in alphabetical order.
-
 A negative value for an index is supported, resulting in the elements being counted in reverse, `-1` would represent the last item in the collection, `-2` the second last, and so on.
 
 ### Union
@@ -129,8 +135,6 @@ A negative value for an index is supported, resulting in the elements being coun
 allows for a comma separated list of indices or keys to denote the elements to return
 
 It is possible to use script expressions to define the union keys i.e. `$.store.book[0,(@.length-1)]` returns the first and last elements of the book collection.
-
-It is possible to use indexes to reference elements in a map, the order is determined by the keys in alphabetical order.
 
 A negative value for an index is supported, resulting in the elements being counted in reverse, `-1` would represent the last item in the collection, `-2` the second last, and so on.
 
@@ -185,11 +189,13 @@ the length token will allow you to return the length of an array, map, slice, or
 
 If used with a map that has a key `length` it will return the corresponding value instead of the length of the map.
 
-### Subscript, Union, and Range with strings
+### Subscript, Union, and Range with maps and strings
 
-It is possible to use a string in place of an array with the subscript `[1]` union `[1,2,3]` and range `[0:3]` operations, and instead of returning an array of characters instead will return a substring.
+Using the Compile() function, and modifying the JSONPath Options, it is possible to use a map or a string in place of an array with the subscript `[1]` union `[1,2,3]` and range `[0:3]` operations. 
 
-For example if you applied `[0:3]` to the string `string` it would return `str`.
+For maps, the keys will be sorted into alphabetical order and they will be used to determine the index order. For example, if you had a map with strings `a` and `b`, regardless of the order, `a` would be the `0` index, and `b` the `1` index.
+
+For strings instead of returning an array of characters instead will return a substring. For example if you applied `[0:3]` to the string `string` it would return `str`.
 
 ## Supported standard evaluation operations
 

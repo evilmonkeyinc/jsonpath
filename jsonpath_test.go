@@ -780,6 +780,75 @@ func Test_Query(t *testing.T) {
 	}
 }
 
+func Test_JSONPath_String(t *testing.T) {
+
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{
+			input:    "$.store.book[*].author",
+			expected: "$['store']['book'][*]['author']",
+		},
+		{
+			input:    "$..author",
+			expected: "$..['author']",
+		},
+		{
+			input:    "$.store.*",
+			expected: "$['store'][*]",
+		},
+		{
+			input:    "$.store..price",
+			expected: "$['store']..['price']",
+		},
+		{
+			input:    "$..book[2]",
+			expected: "$..['book'][2]",
+		},
+		{
+			input:    "$..book[(@.length-1)]",
+			expected: "$..['book'][(@.length-1)]",
+		},
+		{
+			input:    "$..book[-1:]",
+			expected: "$..['book'][-1:]",
+		},
+		{
+			input:    "$..book[0,1]",
+			expected: "$..['book'][0,1]",
+		},
+		{
+			input:    "$..book[:2]",
+			expected: "$..['book'][:2]",
+		},
+		{
+			input:    "$..book[?(@.isbn)]",
+			expected: "$..['book'][?(@.isbn)]",
+		},
+		{
+			input:    "$..book[?(@.price<10)]",
+			expected: "$..['book'][?(@.price<10)]",
+		},
+		{
+			input:    "$..*",
+			expected: "$..[*]",
+		},
+		{
+			input:    "$.store. book[0].author",
+			expected: "$['store']['book'][0]['author']",
+		},
+	}
+
+	for idx, test := range tests {
+		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
+			compiled, _ := Compile(test.input)
+			assert.Equal(t, test.expected, compiled.String())
+		})
+	}
+
+}
+
 func Test_JSONPath_compile(t *testing.T) {
 
 	type expected struct {
