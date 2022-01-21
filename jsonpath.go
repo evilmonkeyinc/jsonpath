@@ -3,6 +3,7 @@ package jsonpath
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/evilmonkeyinc/jsonpath/token"
@@ -95,18 +96,41 @@ func (query *JSONPath) Query(root interface{}) (interface{}, error) {
 // QueryString will return the result of the JSONPath query applied against the specified JSON data.
 func (query *JSONPath) QueryString(jsonData string) (interface{}, error) {
 	jsonData = strings.TrimSpace(jsonData)
-
-	var root interface{}
-	if strings.HasPrefix(jsonData, "{") && strings.HasSuffix(jsonData, "}") {
-		root = make(map[string]interface{})
-	} else if strings.HasPrefix(jsonData, "[") && strings.HasSuffix(jsonData, "]") {
-		root = make([]interface{}, 0)
-	} else {
+	if jsonData == "" {
 		return nil, getInvalidJSONData(errDataIsUnexpectedTypeOrNil)
 	}
 
-	if err := json.Unmarshal([]byte(jsonData), &root); err != nil {
-		return nil, getInvalidJSONData(err)
+	var root interface{}
+
+	if strings.HasPrefix(jsonData, "{") && strings.HasSuffix(jsonData, "}") {
+		// object
+		root = make(map[string]interface{})
+		if err := json.Unmarshal([]byte(jsonData), &root); err != nil {
+			return nil, getInvalidJSONData(err)
+		}
+	} else if strings.HasPrefix(jsonData, "[") && strings.HasSuffix(jsonData, "]") {
+		// array
+		root = make([]interface{}, 0)
+		if err := json.Unmarshal([]byte(jsonData), &root); err != nil {
+			return nil, getInvalidJSONData(err)
+		}
+	} else if len(jsonData) > 2 && strings.HasPrefix(jsonData, "\"") && strings.HasPrefix(jsonData, "\"") {
+		// string
+		root = jsonData[1 : len(jsonData)-1]
+	} else if strings.ToLower(jsonData) == "true" {
+		// bool true
+		root = true
+	} else if strings.ToLower(jsonData) == "false" {
+		// bool false
+		root = false
+	} else if val, err := strconv.ParseInt(jsonData, 10, 64); err == nil {
+		// integer
+		root = val
+	} else if val, err := strconv.ParseFloat(jsonData, 64); err == nil {
+		// float
+		root = val
+	} else {
+		return nil, getInvalidJSONData(errDataIsUnexpectedTypeOrNil)
 	}
 
 	return query.Query(root)

@@ -342,9 +342,9 @@ func Test_Dot(t *testing.T) {
 		{
 			query:         `$..*`,
 			data:          `42`,
-			expected:      nil,
-			consensus:     nil,
-			expectedError: "invalid data. unexpected type or nil",
+			expected:      []interface{}{},
+			consensus:     []interface{}{},
+			expectedError: "",
 		},
 		{
 			query:         `$a`,
