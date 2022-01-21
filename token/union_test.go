@@ -45,6 +45,18 @@ func Test_newUnionToken(t *testing.T) {
 		{
 			input: input{
 				options: &Options{
+					FailUnionOnInvalidIdentifier: true,
+				},
+			},
+			expected: &unionToken{
+				allowMap:                     false,
+				allowString:                  false,
+				failUnionOnInvalidIdentifier: true,
+			},
+		},
+		{
+			input: input{
+				options: &Options{
 					AllowMapReferenceByIndex:    false,
 					AllowStringReferenceByIndex: false,
 
@@ -270,7 +282,7 @@ func Test_UnionToken_Apply(t *testing.T) {
 				},
 			},
 			expected: expected{
-				err: "union: invalid token out of range",
+				value: []interface{}{"one", "four"},
 			},
 		},
 		{
@@ -336,7 +348,7 @@ func Test_UnionToken_Apply(t *testing.T) {
 				},
 			},
 			expected: expected{
-				err: "union: invalid token key 'e' not found",
+				value: []interface{}{"one", "four"},
 			},
 		},
 		{
@@ -493,9 +505,33 @@ func Test_UnionToken_getUnionByIndex(t *testing.T) {
 		},
 		{
 			input: input{
+				token: &unionToken{
+					failUnionOnInvalidIdentifier: true,
+				},
+				obj:  []string{"one", "two", "three"},
+				keys: []int64{4},
+			},
+			expected: expected{
+				err: "union: invalid token out of range",
+			},
+		},
+		{
+			input: input{
 				token: &unionToken{},
 				obj:   []string{"one", "two", "three"},
 				keys:  []int64{4},
+			},
+			expected: expected{
+				obj: []interface{}{},
+			},
+		},
+		{
+			input: input{
+				token: &unionToken{
+					failUnionOnInvalidIdentifier: true,
+				},
+				obj:  []string{"one", "two", "three"},
+				keys: []int64{-10},
 			},
 			expected: expected{
 				err: "union: invalid token out of range",
@@ -508,7 +544,7 @@ func Test_UnionToken_getUnionByIndex(t *testing.T) {
 				keys:  []int64{-10},
 			},
 			expected: expected{
-				err: "union: invalid token out of range",
+				obj: []interface{}{},
 			},
 		},
 		{
@@ -703,7 +739,9 @@ func Test_UnionToken_getUnionByKey(t *testing.T) {
 		},
 		{
 			input: input{
-				token: &unionToken{},
+				token: &unionToken{
+					failUnionOnInvalidIdentifier: true,
+				},
 				obj: map[string]interface{}{
 					"a": "one",
 					"b": "two",
@@ -727,10 +765,44 @@ func Test_UnionToken_getUnionByKey(t *testing.T) {
 					"d": "four",
 					"e": "five",
 				},
+				keys: []string{"a", "b", "c", "f"},
+			},
+			expected: expected{
+				obj: []interface{}{"one", "two", "three"},
+			},
+		},
+		{
+			input: input{
+				token: &unionToken{
+					failUnionOnInvalidIdentifier: true,
+				},
+				obj: map[string]interface{}{
+					"a": "one",
+					"b": "two",
+					"c": "three",
+					"d": "four",
+					"e": "five",
+				},
 				keys: []string{"a", "b", "c", "f", "one", "blah"},
 			},
 			expected: expected{
 				err: "union: invalid token key 'blah,f,one' not found",
+			},
+		},
+		{
+			input: input{
+				token: &unionToken{},
+				obj: map[string]interface{}{
+					"a": "one",
+					"b": "two",
+					"c": "three",
+					"d": "four",
+					"e": "five",
+				},
+				keys: []string{"a", "b", "c", "f", "one", "blah"},
+			},
+			expected: expected{
+				obj: []interface{}{"one", "two", "three"},
 			},
 		},
 		{
@@ -766,12 +838,24 @@ func Test_UnionToken_getUnionByKey(t *testing.T) {
 		},
 		{
 			input: input{
+				token: &unionToken{
+					failUnionOnInvalidIdentifier: true,
+				},
+				obj:  sampleStruct{},
+				keys: []string{"missing", "gone"},
+			},
+			expected: expected{
+				err: "union: invalid token key 'gone,missing' not found",
+			},
+		},
+		{
+			input: input{
 				token: &unionToken{},
 				obj:   sampleStruct{},
 				keys:  []string{"missing", "gone"},
 			},
 			expected: expected{
-				err: "union: invalid token key 'gone,missing' not found",
+				obj: []interface{}{},
 			},
 		},
 		{

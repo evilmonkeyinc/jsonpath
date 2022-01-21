@@ -23,4 +23,7 @@ type Options struct {
 	AllowMapReferenceByIndexInSubscript bool
 	// AllowStringReferenceByIndexInSubscript allow string characters to be referenced by index in subscript tokens.
 	AllowStringReferenceByIndexInSubscript bool
+
+	// FailUnionOnInvalidIdentifier force union tokens to fail on missing or invalid keys or invalid index.
+	FailUnionOnInvalidIdentifier bool
 }

@@ -41,11 +41,11 @@ func Test_Union(t *testing.T) {
 			expectedError: "",
 		},
 		{
-			query:         `$['missing','key']`, // TODO : should we error with invald keys?
+			query:         `$['missing','key']`,
 			data:          `{ "key": "value", "another": "entry" }`,
-			expected:      nil,
+			expected:      []interface{}{"value"},
 			consensus:     []interface{}{"value"},
-			expectedError: "union: invalid token key 'missing' not found",
+			expectedError: "",
 		},
 		{
 			query:         `$[:]['c','d']`,
@@ -71,7 +71,7 @@ func Test_Union(t *testing.T) {
 		{
 			query:         `$..['c','d']`,
 			data:          `[{"c":"cc1","d":"dd1","e":"ee1"}, {"c": "cc2", "child": {"d": "dd2"}}, {"c": "cc3"}, {"d": "dd4"}, {"child": {"c": "cc5"}}]`,
-			expected:      []interface{}{"cc1", "dd1"},
+			expected:      []interface{}{"cc1", "dd1", "cc2", "dd2", "cc3", "dd4", "cc5"},
 			consensus:     consensusNone,
 			expectedError: "",
 		},
@@ -113,5 +113,5 @@ func Test_Union(t *testing.T) {
 	}
 
 	batchTest(t, tests)
-	// printConsensusMatrix(tests)
+	//printConsensusMatrix(tests)
 }

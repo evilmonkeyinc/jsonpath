@@ -10,23 +10,28 @@ import (
 func newUnionToken(arguments []interface{}, options *Options) *unionToken {
 	allowMap := false
 	allowString := false
+	failUnionOnInvalidIdentifier := false
 
 	if options != nil {
 		allowMap = options.AllowMapReferenceByIndex || options.AllowMapReferenceByIndexInUnion
 		allowString = options.AllowStringReferenceByIndex || options.AllowStringReferenceByIndexInUnion
+
+		failUnionOnInvalidIdentifier = options.FailUnionOnInvalidIdentifier
 	}
 
 	return &unionToken{
-		arguments:   arguments,
-		allowMap:    allowMap,
-		allowString: allowString,
+		arguments:                    arguments,
+		allowMap:                     allowMap,
+		allowString:                  allowString,
+		failUnionOnInvalidIdentifier: failUnionOnInvalidIdentifier,
 	}
 }
 
 type unionToken struct {
-	arguments   []interface{}
-	allowMap    bool
-	allowString bool
+	arguments                    []interface{}
+	allowMap                     bool
+	allowString                  bool
+	failUnionOnInvalidIdentifier bool
 }
 
 func (token *unionToken) String() string {
@@ -163,7 +168,7 @@ func (token *unionToken) getUnionByKey(obj interface{}, keys []string) ([]interf
 			}
 		}
 
-		if len(missingKeys) > 0 {
+		if token.failUnionOnInvalidIdentifier && len(missingKeys) > 0 {
 			sort.Strings(missingKeys)
 			return nil, getInvalidTokenKeyNotFoundError(token.Type(), strings.Join(missingKeys, ","))
 		}
@@ -183,7 +188,7 @@ func (token *unionToken) getUnionByKey(obj interface{}, keys []string) ([]interf
 			}
 		}
 
-		if len(missingKeys) > 0 {
+		if token.failUnionOnInvalidIdentifier && len(missingKeys) > 0 {
 			sort.Strings(missingKeys)
 			return nil, getInvalidTokenKeyNotFoundError(token.Type(), strings.Join(missingKeys, ","))
 		}
@@ -267,7 +272,10 @@ func (token *unionToken) getUnionByIndex(obj interface{}, indices []int64) (inte
 			idx = length + idx
 		}
 		if idx < 0 || idx >= length {
-			return nil, getInvalidTokenOutOfRangeError(token.Type())
+			if token.failUnionOnInvalidIdentifier {
+				return nil, getInvalidTokenOutOfRangeError(token.Type())
+			}
+			continue
 		}
 
 		if mapKeys != nil {
