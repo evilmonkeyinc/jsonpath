@@ -268,7 +268,7 @@ This implementation would be closer to the `Scalar consensus` as it does not alw
 |---|---|---|---|---|
 |`$[0,1]`|`["first", "second", "third"]`|`[first second]`|`[first second]`|:white_check_mark:|
 |`$[0,0]`|`["a"]`|`[a a]`|`[a a]`|:white_check_mark:|
-|`$['a','a']`|`{"a":1}`|`[1 1]`|`[1]`|:no_entry:|
+|`$['a','a']`|`{"a":1}`|`[1 1]`|`[1 1]`|:white_check_mark:|
 |`$[?(@.key<3),?(@.key>6)]`|`[{"key": 1}, {"key": 8}, {"key": 3}, {"key": 10}, {"key": 7}, {"key": 2}, {"key": 6}, {"key": 4}]`|none|`[]`|:question:|
 |`$['key','another']`|`{ "key": "value", "another": "entry" }`|`[value entry]`|`[value entry]`|:white_check_mark:|
 |`$['missing','key']`|`{ "key": "value", "another": "entry" }`|`[value]`|`nil`|:no_entry:|

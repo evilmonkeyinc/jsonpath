@@ -610,6 +610,16 @@ func Test_UnionToken_getUnionByIndex(t *testing.T) {
 				},
 			},
 		},
+		{
+			input: input{
+				token: &unionToken{},
+				obj:   []string{"one", "two", "three"},
+				keys:  []int64{1, 1},
+			},
+			expected: expected{
+				obj: []interface{}{"two", "two"},
+			},
+		},
 	}
 
 	for idx, test := range tests {
@@ -762,6 +772,30 @@ func Test_UnionToken_getUnionByKey(t *testing.T) {
 			},
 			expected: expected{
 				err: "union: invalid token key 'gone,missing' not found",
+			},
+		},
+		{
+			input: input{
+				token: &unionToken{},
+				obj: sampleStruct{
+					One: "value",
+				},
+				keys: []string{"one", "one"},
+			},
+			expected: expected{
+				obj: []interface{}{"value", "value"},
+			},
+		},
+		{
+			input: input{
+				token: &unionToken{},
+				obj: map[string]interface{}{
+					"a": "value",
+				},
+				keys: []string{"a", "a", "a"},
+			},
+			expected: expected{
+				obj: []interface{}{"value", "value", "value"},
 			},
 		},
 	}
