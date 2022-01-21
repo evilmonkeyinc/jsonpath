@@ -271,11 +271,11 @@ This implementation would be closer to the `Scalar consensus` as it does not alw
 |`$['a','a']`|`{"a":1}`|`[1 1]`|`[1 1]`|:white_check_mark:|
 |`$[?(@.key<3),?(@.key>6)]`|`[{"key": 1}, {"key": 8}, {"key": 3}, {"key": 10}, {"key": 7}, {"key": 2}, {"key": 6}, {"key": 4}]`|none|`[]`|:question:|
 |`$['key','another']`|`{ "key": "value", "another": "entry" }`|`[value entry]`|`[value entry]`|:white_check_mark:|
-|`$['missing','key']`|`{ "key": "value", "another": "entry" }`|`[value]`|`nil`|:no_entry:|
+|`$['missing','key']`|`{ "key": "value", "another": "entry" }`|`[value]`|`[value]`|:white_check_mark:|
 |`$[:]['c','d']`|`[{"c":"cc1","d":"dd1","e":"ee1"},{"c":"cc2","d":"dd2","e":"ee2"}]`|`[cc1 dd1 cc2 dd2]`|`[[cc1 dd1] [cc2 dd2]]`|:no_entry:|
 |`$[0]['c','d']`|`[{"c":"cc1","d":"dd1","e":"ee1"},{"c":"cc2","d":"dd2","e":"ee2"}]`|`[cc1 dd1]`|`[cc1 dd1]`|:white_check_mark:|
 |`$.*['c','d']`|`[{"c":"cc1","d":"dd1","e":"ee1"},{"c":"cc2","d":"dd2","e":"ee2"}]`|`[cc1 dd1 cc2 dd2]`|`[[cc1 dd1] [cc2 dd2]]`|:no_entry:|
-|`$..['c','d']`|`[{"c":"cc1","d":"dd1","e":"ee1"}, {"c": "cc2", "child": {"d": "dd2"}}, {"c": "cc3"}, {"d": "dd4"}, {"child": {"c": "cc5"}}]`|none|`[cc1 dd1]`|:question:|
+|`$..['c','d']`|`[{"c":"cc1","d":"dd1","e":"ee1"}, {"c": "cc2", "child": {"d": "dd2"}}, {"c": "cc3"}, {"d": "dd4"}, {"child": {"c": "cc5"}}]`|none|`[cc1 dd1 cc2 dd2 cc3 dd4 cc5]`|:question:|
 |`$[4,1]`|`[1,2,3,4,5]`|`[5 2]`|`[5 2]`|:white_check_mark:|
 |`$.*[0,:5]`|`{ "a": [ "string", null, true ], "b": [ false, "string", 5.4 ] }`|none|`nil`|:question:|
 |`$[1:3,4]`|`[1,2,3,4,5]`|none|`nil`|:question:|
