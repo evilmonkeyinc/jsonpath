@@ -154,7 +154,7 @@ This implementation would be closer to the `Scalar consensus` as it does not alw
 |`$.*.*`|`[[1, 2, 3], [4, 5, 6]]`|`[1 2 3 4 5 6]`|`[[1 2 3] [4 5 6]]`|:no_entry:|
 |`$..*`|`{ "key": "value", "another key": { "complex": "string", "primitives": [0, 1] } }`|`[string value 0 1 [0 1] map[complex:string primitives:[0 1]]]`|`[string value 0 1 [0 1] map[complex:string primitives:[0 1]]]`|:white_check_mark:|
 |`$..*`|`[ 40, null, 42 ]`|`[40 42 <nil>]`|`[40 42 <nil>]`|:white_check_mark:|
-|`$..*`|`42`|`nil`|`nil`|:white_check_mark:|
+|`$..*`|`42`|`[]`|`[]`|:white_check_mark:|
 |`$a`|`{"a": 1, "$a": 2}`|`nil`|`nil`|:white_check_mark:|
 |`.key`|`{ "key": "value" }`|`nil`|`nil`|:white_check_mark:|
 |`key`|`{ "key": "value" }`|`nil`|`nil`|:white_check_mark:|
@@ -256,9 +256,9 @@ This implementation would be closer to the `Scalar consensus` as it does not alw
 |`$..`|`[{"a": {"b": "c"}}, [0, 1]]`|none|`[[map[a:map[b:c]] [0 1]] map[a:map[b:c]] map[b:c] c [0 1] 0 1]`|:question:|
 |`$.key..`|`{"some key": "value", "key": {"complex": "string", "primitives": [0, 1]}}`|none|`[map[complex:string primitives:[0 1]] [0 1] 0 1 string]`|:question:|
 |`$`|`{ "key": "value", "another key": { "complex": [ "a", 1 ] } }`|`map[another key:map[complex:[a 1]] key:value]`|`map[another key:map[complex:[a 1]] key:value]`|:white_check_mark:|
-|`$`|`42`|`42`|`nil`|:no_entry:|
-|`$`|`false`|`false`|`nil`|:no_entry:|
-|`$`|`true`|`false`|`nil`|:no_entry:|
+|`$`|`42`|`42`|`42`|:white_check_mark:|
+|`$`|`false`|`false`|`false`|:white_check_mark:|
+|`$`|`true`|`true`|`true`|:white_check_mark:|
 |`$[(@.length-1)]`|`["first", "second", "third", "forth", "fifth"]`|`nil`|`fifth`|:no_entry:|
 
 

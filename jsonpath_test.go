@@ -900,6 +900,7 @@ func Test_JSONPath_QueryString(t *testing.T) {
 	sampleQuery, _ := Compile("$.expensive")
 	altSampleQuery, _ := Compile("$..author")
 	lengthQuery, _ := Compile("$.length")
+	rootQuery, _ := Compile("$")
 
 	type input struct {
 		jsonPath *JSONPath
@@ -921,6 +922,60 @@ func Test_JSONPath_QueryString(t *testing.T) {
 			},
 			expected: expected{
 				err: "invalid data. unexpected type or nil",
+			},
+		},
+		{
+			input: input{
+				jsonPath: rootQuery,
+				jsonData: "42",
+			},
+			expected: expected{
+				value: int64(42),
+			},
+		},
+		{
+			input: input{
+				jsonPath: rootQuery,
+				jsonData: "3.14",
+			},
+			expected: expected{
+				value: float64(3.14),
+			},
+		},
+		{
+			input: input{
+				jsonPath: rootQuery,
+				jsonData: "true",
+			},
+			expected: expected{
+				value: true,
+			},
+		},
+		{
+			input: input{
+				jsonPath: rootQuery,
+				jsonData: "false",
+			},
+			expected: expected{
+				value: false,
+			},
+		},
+		{
+			input: input{
+				jsonPath: rootQuery,
+				jsonData: "not a json string",
+			},
+			expected: expected{
+				err: "invalid data. unexpected type or nil",
+			},
+		},
+		{
+			input: input{
+				jsonPath: rootQuery,
+				jsonData: `"json string"`,
+			},
+			expected: expected{
+				value: "json string",
 			},
 		},
 		{

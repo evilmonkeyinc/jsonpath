@@ -48,25 +48,25 @@ func Test_Misc(t *testing.T) {
 			expectedError: "",
 		},
 		{
-			query:         `$`, // TODO : should we support more than [] and {}
+			query:         `$`,
 			data:          `42`,
-			expected:      nil,
-			consensus:     float64(42),
-			expectedError: "invalid data. unexpected type or nil",
+			expected:      int64(42),
+			consensus:     int64(42),
+			expectedError: "",
 		},
 		{
-			query:         `$`, // TODO : should we support more than [] and {}
+			query:         `$`,
 			data:          `false`,
-			expected:      nil,
+			expected:      false,
 			consensus:     false,
-			expectedError: "invalid data. unexpected type or nil",
+			expectedError: "",
 		},
 		{
-			query:         `$`, // TODO : should we support more than [] and {}
+			query:         `$`,
 			data:          `true`,
-			expected:      nil,
-			consensus:     false,
-			expectedError: "invalid data. unexpected type or nil",
+			expected:      true,
+			consensus:     true,
+			expectedError: "",
 		},
 		{
 			query:         `$[(@.length-1)]`,
