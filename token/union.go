@@ -141,11 +141,6 @@ func (token *unionToken) getUnionByKey(obj interface{}, keys []string) ([]interf
 		return nil, getInvalidTokenTargetNilError(token.Type(), reflect.Map)
 	}
 
-	keyMap := make(map[string]bool)
-	for _, key := range keys {
-		keyMap[key] = true
-	}
-
 	switch objType.Kind() {
 	case reflect.Map:
 		mapKeys := objVal.MapKeys()
@@ -153,42 +148,44 @@ func (token *unionToken) getUnionByKey(obj interface{}, keys []string) ([]interf
 
 		elements := make([]interface{}, 0)
 
+		keysMap := make(map[string]reflect.Value)
 		for _, key := range mapKeys {
-			if keyMap[key.String()] {
-				delete(keyMap, key.String())
+			keysMap[key.String()] = key
+		}
+
+		missingKeys := make([]string, 0)
+
+		for _, requestedKey := range keys {
+			if key, ok := keysMap[requestedKey]; ok {
 				elements = append(elements, objVal.MapIndex(key).Interface())
+			} else {
+				missingKeys = append(missingKeys, requestedKey)
 			}
 		}
 
-		if len(keyMap) > 0 {
-			remaining := make([]string, 0)
-			for key := range keyMap {
-				remaining = append(remaining, key)
-			}
-			sort.Strings(remaining)
-			return nil, getInvalidTokenKeyNotFoundError(token.Type(), strings.Join(remaining, ","))
+		if len(missingKeys) > 0 {
+			sort.Strings(missingKeys)
+			return nil, getInvalidTokenKeyNotFoundError(token.Type(), strings.Join(missingKeys, ","))
 		}
 
 		return elements, nil
 	case reflect.Struct:
 		elements := make([]interface{}, 0)
 
-		mapKeys := getStructFields(objVal, false)
+		keysMap := getStructFields(objVal, false)
+		missingKeys := make([]string, 0)
 
-		for key, field := range mapKeys {
-			if keyMap[key] {
-				delete(keyMap, key)
+		for _, requestedKey := range keys {
+			if field, ok := keysMap[requestedKey]; ok {
 				elements = append(elements, objVal.FieldByName(field.Name).Interface())
+			} else {
+				missingKeys = append(missingKeys, requestedKey)
 			}
 		}
 
-		if len(keyMap) > 0 {
-			remaining := make([]string, 0)
-			for key := range keyMap {
-				remaining = append(remaining, key)
-			}
-			sort.Strings(remaining)
-			return nil, getInvalidTokenKeyNotFoundError(token.Type(), strings.Join(remaining, ","))
+		if len(missingKeys) > 0 {
+			sort.Strings(missingKeys)
+			return nil, getInvalidTokenKeyNotFoundError(token.Type(), strings.Join(missingKeys, ","))
 		}
 
 		return elements, nil

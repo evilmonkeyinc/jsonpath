@@ -20,9 +20,9 @@ func Test_Union(t *testing.T) {
 			expectedError: "",
 		},
 		{
-			query:         `$['a','a']`, // TODO : need to support repeat keys?
+			query:         `$['a','a']`,
 			data:          `{"a":1}`,
-			expected:      []interface{}{float64(1)},
+			expected:      []interface{}{float64(1), float64(1)},
 			consensus:     []interface{}{float64(1), float64(1)},
 			expectedError: "",
 		},
