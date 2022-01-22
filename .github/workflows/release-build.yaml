@@ -32,5 +32,4 @@ jobs:
         goversion: ${{ matrix.goversion }}
         project_path: "./cmd/"
         binary_name: "jsonpath"
-        ldflags: -X "main.Command=jsonpath" -X "main.Version=${{ env.RELEASE_TAG }}" -X "main.OS=${{ matrix.goos }}" -X "main.Arch=${{ matrix.goos }}"
-
+        ldflags: -X "main.Command=jsonpath" -X "main.Version=${{ env.RELEASE_TAG }}" -X "main.OS=${{ matrix.goos }}" -X "main.Arch=${{ matrix.goarch }}"
