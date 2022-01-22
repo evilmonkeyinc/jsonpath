@@ -466,6 +466,32 @@ func Test_Parse(t *testing.T) {
 				err: "invalid token. '[\\'key\\'s']' does not match any token format",
 			},
 		},
+		{
+			input: input{query: `["key"]`},
+			expected: expected{
+				token: newKeyToken("key"),
+			},
+		},
+		{
+			input: input{query: `["key's"]`},
+			expected: expected{
+				token: newKeyToken("key's"),
+			},
+		},
+		{
+			input: input{query: `["\"keys\""]`},
+			expected: expected{
+				token: newKeyToken("\"keys\""),
+			},
+		},
+		{
+			input: input{query: `["one","two",'three']`},
+			expected: expected{
+				token: &unionToken{
+					arguments: []interface{}{"one", "two", "three"},
+				},
+			},
+		},
 	}
 
 	for idx, test := range tests {

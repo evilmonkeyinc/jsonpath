@@ -61,10 +61,10 @@ This implementation would be closer to the 'Scalar consensus' as it does not alw
 |:white_check_mark:|`$..[0]`|`[ "first", { "key": [ "first nested", { "more": [ { "nested": ["deepest", "second"] }, ["more", "values"] ] } ] } ]`|`["deepest","first nested","first","more",{"nested":["deepest","second"]}]`|`["deepest","first nested","first","more",{"nested":["deepest","second"]}]`|
 |:white_check_mark:|`$['ü']`|`{"ü": 42}`|`nil`|`null`|
 |:white_check_mark:|`$['two.some']`|`{ "one": {"key": "value"}, "two": {"some": "more", "key": "other value"}, "two.some": "42" }`|`"42"`|`"42"`|
-|:no_entry:|`$["key"]`|`{"key": "value"}`|`"value"`|`null`|
+|:white_check_mark:|`$["key"]`|`{"key": "value"}`|`"value"`|`"value"`|
 |:white_check_mark:|`$[]`|`{"": 42, "''": 123, "\"\"": 222}`|`nil`|`null`|
 |:white_check_mark:|`$['']`|`{"": 42, "''": 123, "\"\"": 222}`|`42`|`42`|
-|:no_entry:|`$[""]`|`{"": 42, "''": 123, "\"\"": 222}`|`42`|`null`|
+|:white_check_mark:|`$[""]`|`{"": 42, "''": 123, "\"\"": 222}`|`42`|`42`|
 |:white_check_mark:|`$[-2]`|`["one element"]`|`nil`|`null`|
 |:white_check_mark:|`$[2]`|`["first", "second", "third", "forth", "fifth"]`|`"third"`|`"third"`|
 |:white_check_mark:|`$[0]`|`{ "0": "value" }`|`nil`|`null`|
@@ -109,7 +109,7 @@ This implementation would be closer to the 'Scalar consensus' as it does not alw
 |---|---|---|---|---|
 |:no_entry:|`@.a`|`{"a": 1}`|`nil`|`1`|
 |:white_check_mark:|`$.['key']`|`{ "key": "value", "other": {"key": [{"key": 42}]} }`|`"value"`|`"value"`|
-|:question:|`$.["key"]`|`{ "key": "value", "other": {"key": [{"key": 42}]} }`|none|`null`|
+|:question:|`$.["key"]`|`{ "key": "value", "other": {"key": [{"key": 42}]} }`|none|`"value"`|
 |:question:|`$.[key]`|`{ "key": "value", "other": {"key": [{"key": 42}]} }`|none|`null`|
 |:white_check_mark:|`$.key`|`{ "key": "value" }`|`"value"`|`"value"`|
 |:white_check_mark:|`$.key`|`[0, 1]`|`nil`|`null`|
