@@ -1,5 +1,5 @@
 [![codecov](https://codecov.io/gh/evilmonkeyinc/jsonpath/branch/main/graph/badge.svg?token=4PU85I7J2R)](https://codecov.io/gh/evilmonkeyinc/jsonpath)
-[![main](https://github.com/evilmonkeyinc/jsonpath/actions/workflows/test.yaml/badge.svg?branch=main)](https://github.com/evilmonkeyinc/jsonpath/actions/workflows/test.yaml)
+[![Push Main](https://github.com/evilmonkeyinc/jsonpath/actions/workflows/push_main.yaml/badge.svg?branch=main)](https://github.com/evilmonkeyinc/jsonpath/actions/workflows/push_main.yaml)
 [![Go Reference](https://pkg.go.dev/badge/github.com/evilmonkeyinc/jsonpath.svg)](https://pkg.go.dev/github.com/evilmonkeyinc/jsonpath)
 
 > This library is on the unstable version v0.X.X, which means there is a chance that any minor update may introduce a breaking change. Where I will endeavor to avoid this, care should be taken updating your dependency on this library until the first stable release v1.0.0 at which point any future breaking changes will result in a new major release.
@@ -219,5 +219,8 @@ For strings instead of returning an array of characters instead will return a su
 
 The [original specification for JSONPath](https://goessner.net/articles/JsonPath/) was proposed in 2007, and was a programing challenge I had not attempted before while being a practical tool.
 
+## Hows does this compare to...
+
 There are many [implementations](https://cburgmer.github.io/json-path-comparison/) in multiple languages so I will not claim that this library is better in any way but I believe that it is true to the original specification and was an enjoyable challenge.
 
+Sample queries and the expected response for this implementation compared to the community consensus are available [here](test/README.md)
