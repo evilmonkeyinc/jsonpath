@@ -103,9 +103,11 @@ jobs:
     - uses: wangyoucao577/go-release-action@v1.22
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
+        release_tag: "v${{ needs.release.outputs.version }}"
         goos: ${{ matrix.goos }}
         goarch: ${{ matrix.goarch }}
         goversion: ${{ matrix.goversion }}
         project_path: "./cmd/"
         binary_name: "jsonpath"
+        overwrite: true
         ldflags: -X "main.Command=jsonpath" -X "main.Version=${{ needs.release.outputs.version }}" -X "main.OS=${{ matrix.goos }}" -X "main.Arch=${{ matrix.goarch }}"
