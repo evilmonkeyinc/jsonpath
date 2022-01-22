@@ -171,17 +171,17 @@ This implementation would be closer to the 'Scalar consensus' as it does not alw
 |`$[?(@.key>42 && @.key<44)]`|`[ {"key": 42}, {"key": 43}, {"key": 44} ]`|`[{"key":43}]`|`[{"key":43}]`|:white_check_mark:|
 |`$[?(@.key>0 && false)]`|`[ {"key": 1}, {"key": 3}, {"key": "nice"}, {"key": true}, {"key": null}, {"key": false}, {"key": {}}, {"key": []}, {"key": -1}, {"key": 0}, {"key": ""} ]`|none|`[]`|:question:|
 |`$[?(@.key>0 && true)]`|`[ {"key": 1}, {"key": 3}, {"key": "nice"}, {"key": true}, {"key": null}, {"key": false}, {"key": {}}, {"key": []}, {"key": -1}, {"key": 0}, {"key": ""} ]`|none|`[{"key":1},{"key":3}]`|:question:|
-|`$[?(@.key>43 || @.key<43)]`|`[ {"key": 42}, {"key": 43}, {"key": 44} ]`|`[{"key":42},{"key":44}]`|`[{"key":42},{"key":44}]`|:white_check_mark:|
-|`$[?(@.key>0 || false)]`|`[ {"key": 1}, {"key": 3}, {"key": "nice"}, {"key": true}, {"key": null}, {"key": false}, {"key": {}}, {"key": []}, {"key": -1}, {"key": 0}, {"key": ""} ]`|none|`[{"key":1},{"key":3}]`|:question:|
-|`$[?(@.key>0 || true)]`|`[ {"key": 1}, {"key": 3}, {"key": "nice"}, {"key": true}, {"key": null}, {"key": false}, {"key": {}}, {"key": []}, {"key": -1}, {"key": 0}, {"key": ""} ]`|none|`[{"key":1},{"key":3},{"key":-1},{"key":0}]`|:question:|
+|`$[?(@.key>43 \|\| @.key<43)]`|`[ {"key": 42}, {"key": 43}, {"key": 44} ]`|`[{"key":42},{"key":44}]`|`[{"key":42},{"key":44}]`|:white_check_mark:|
+|`$[?(@.key>0 \|\| false)]`|`[ {"key": 1}, {"key": 3}, {"key": "nice"}, {"key": true}, {"key": null}, {"key": false}, {"key": {}}, {"key": []}, {"key": -1}, {"key": 0}, {"key": ""} ]`|none|`[{"key":1},{"key":3}]`|:question:|
+|`$[?(@.key>0 \|\| true)]`|`[ {"key": 1}, {"key": 3}, {"key": "nice"}, {"key": true}, {"key": null}, {"key": false}, {"key": {}}, {"key": []}, {"key": -1}, {"key": 0}, {"key": ""} ]`|none|`[{"key":1},{"key":3},{"key":-1},{"key":0}]`|:question:|
 |`$[?(@['key']==42)]`|`[ {"key": 0}, {"key": 42}, {"key": -1}, {"key": 41}, {"key": 43}, {"key": 42.0001}, {"key": 41.9999}, {"key": 100}, {"some": "value"} ]`|`[{"key":42}]`|`[{"key":42}]`|:white_check_mark:|
 |`$[?(@['@key']==42)]`|`[ {"@key": 0}, {"@key": 42}, {"key": 42}, {"@key": 43}, {"some": "value"} ]`|`[{"@key":42}]`|`[{"@key":42}]`|:white_check_mark:|
 |`$[?(@[-1]==2)]`|`[[2, 3], ["a"], [0, 2], [2]]`|none|`[[0,2],[2]]`|:question:|
 |`$[?(@[1]=='b')]`|`[["a", "b"], ["x", "y"]]`|`[["a","b"]]`|`[["a","b"]]`|:white_check_mark:|
 |`$[?(@[1]=='b')]`|`{"1": ["a", "b"], "2": ["x", "y"]}`|none|`[["a","b"]]`|:question:|
 |`$[?(@)]`|`[ "some value", null, "value", 0, 1, -1, "", [], {}, false, true ]`|none|`["some value","value",0,1,-1,true]`|:question:|
-|`$[?(@.a && (@.b || @.c))]`|`[ { "a": true }, { "a": true, "b": true }, { "a": true, "b": true, "c": true }, { "b": true, "c": true }, { "a": true, "c": true }, { "c": true }, { "b": true } ]`|none|`[]`|:question:|
-|`[?(@.a && @.b || @.c)]`|`[ { "a": true, "b": true }, { "a": true, "b": true, "c": true }, { "b": true, "c": true }, { "a": true, "c": true }, { "a": true }, { "b": true }, { "c": true }, { "d": true }, {} ]`|none|`null`|:question:|
+|`$[?(@.a && (@.b \|\| @.c))]`|`[ { "a": true }, { "a": true, "b": true }, { "a": true, "b": true, "c": true }, { "b": true, "c": true }, { "a": true, "c": true }, { "c": true }, { "b": true } ]`|none|`[]`|:question:|
+|`[?(@.a && @.b \|\| @.c)]`|`[ { "a": true, "b": true }, { "a": true, "b": true, "c": true }, { "b": true, "c": true }, { "a": true, "c": true }, { "a": true }, { "b": true }, { "c": true }, { "d": true }, {} ]`|none|`null`|:question:|
 |`$[?(@.key/10==5)]`|`[{"key": 60}, {"key": 50}, {"key": 10}, {"key": -50}, {"key/10": 5}]`|none|`[{"key":50}]`|:question:|
 |`$[?(@.key-dash == 'value')]`|`[ { "key-dash": "value" } ]`|none|`[]`|:question:|
 |`$[?(@.2 == 'second')]`|`[{"a": "first", "2": "second", "b": "third"}]`|none|`[{"2":"second","a":"first","b":"third"}]`|:question:|
