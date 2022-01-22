@@ -44,18 +44,71 @@ func (token *expressionToken) Apply(root, current interface{}, next []Token) (in
 	return value, nil
 }
 
+func getRootTokenIndex(expression string) int {
+	idx := strings.Index(expression, "$")
+	if idx < 0 {
+		return -1
+	}
+	if idx+1 >= len(expression) {
+		// there is no next character
+		return idx
+	}
+
+	// TODO: this is not accurate enough, we need to properly parse expressions
+	nextRune := expression[idx+1]
+	switch nextRune {
+	case '.', '[', ' ', '-', '+', '/', '%', '>', '<', '=', '!':
+		// valid root token
+		return idx
+	default:
+		// not a root token
+		// need to check if there are other $ tokens
+		subCheck := getRootTokenIndex(expression[idx+1:])
+		if subCheck > 0 {
+			return idx + 1 + subCheck
+		}
+		return -1
+	}
+}
+
+func getCurrentTokenIndex(expression string) int {
+	idx := strings.Index(expression, "@")
+	if idx < 0 {
+		return -1
+	}
+	if idx+1 >= len(expression) {
+		// there is no next character
+		return idx
+	}
+
+	// TODO: this is not accurate enough, we need to properly parse expressions
+	nextRune := expression[idx+1]
+	switch nextRune {
+	case '.', '[', ' ', '-', '+', '/', '%', '>', '<', '=', '!':
+		// valid current token
+		return idx
+	default:
+		// not a current token
+		// need to check if there are other @ tokens
+		subCheck := getCurrentTokenIndex(expression[idx+1:])
+		if subCheck > 0 {
+			return idx + 1 + subCheck
+		}
+		return -1
+	}
+}
+
 // TODO : add extra support
 /*
 1. regex
 */
-
 func evaluateExpression(root, current interface{}, expression string, options *Options) (interface{}, error) {
 	if expression == "" {
 		return nil, getInvalidExpressionEmptyError()
 	}
 
-	rootIndex := strings.Index(expression, "$")
-	currentIndex := strings.Index(expression, "@")
+	rootIndex := getRootTokenIndex(expression)
+	currentIndex := getCurrentTokenIndex(expression)
 
 	for rootIndex > -1 || currentIndex > -1 {
 
@@ -103,8 +156,8 @@ func evaluateExpression(root, current interface{}, expression string, options *O
 			expression = strings.ReplaceAll(expression, query, new)
 		}
 
-		rootIndex = strings.Index(expression, "$")
-		currentIndex = strings.Index(expression, "@")
+		rootIndex = getRootTokenIndex(expression)
+		currentIndex = getCurrentTokenIndex(expression)
 	}
 
 	expression = strings.TrimSpace(expression)
