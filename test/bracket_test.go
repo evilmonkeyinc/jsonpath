@@ -68,9 +68,9 @@ var bracketTests []testData = []testData{
 	{
 		query:         `$["key"]`,
 		data:          `{"key": "value"}`,
-		expected:      nil,
+		expected:      "value",
 		consensus:     "value",
-		expectedError: "invalid JSONPath query '$[\"key\"]' invalid token. '[\"key\"]' does not match any token format",
+		expectedError: "",
 	},
 	{
 		query:         "$[]",
@@ -89,9 +89,9 @@ var bracketTests []testData = []testData{
 	{
 		query:         `$[""]`,
 		data:          `{"": 42, "''": 123, "\"\"": 222}`,
-		expected:      nil,
+		expected:      float64(42),
 		consensus:     float64(42),
-		expectedError: "invalid JSONPath query '$[\"\"]' invalid token. '[\"\"]' does not match any token format",
+		expectedError: "",
 	},
 	{
 		query:         "$[-2]",

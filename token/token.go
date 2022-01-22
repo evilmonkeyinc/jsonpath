@@ -194,7 +194,9 @@ func Parse(tokenString string, options *Options) (Token, error) {
 	}
 
 	isKey := func(token string) bool {
-		return len(token) > 1 && strings.HasPrefix(token, "'") && strings.HasSuffix(token, "'")
+		isSingleQuoted := strings.HasPrefix(token, "'") && strings.HasSuffix(token, "'")
+		isDoubleQuoted := strings.HasPrefix(token, "\"") && strings.HasSuffix(token, "\"")
+		return len(token) > 1 && (isSingleQuoted || isDoubleQuoted)
 	}
 
 	tokenString = strings.TrimSpace(tokenString)
@@ -247,7 +249,12 @@ func Parse(tokenString string, options *Options) (Token, error) {
 	// which would result in the parsing being invalid
 
 	openBracketCount, closeBracketCount := 0, 0
-	openQuote := false
+	openSingleQuote := false
+	openDoubleQuote := false
+
+	inQuotes := func() bool {
+		return openSingleQuote || openDoubleQuote
+	}
 
 	args := []interface{}{}
 
@@ -256,13 +263,13 @@ func Parse(tokenString string, options *Options) (Token, error) {
 		bufferString += string(rne)
 		switch rne {
 		case ' ':
-			if !openQuote && openBracketCount == closeBracketCount {
+			if !inQuotes() && openBracketCount == closeBracketCount {
 				// remove whitespace
 				bufferString = strings.TrimSpace(bufferString)
 			}
 			break
 		case '(':
-			if openQuote {
+			if inQuotes() {
 				continue
 			}
 			openBracketCount++
@@ -281,7 +288,7 @@ func Parse(tokenString string, options *Options) (Token, error) {
 			}
 			break
 		case '\'':
-			if openBracketCount != closeBracketCount {
+			if openDoubleQuote || openBracketCount != closeBracketCount {
 				continue
 			}
 
@@ -291,9 +298,9 @@ func Parse(tokenString string, options *Options) (Token, error) {
 				break
 			}
 
-			openQuote = !openQuote
+			openSingleQuote = !openSingleQuote
 
-			if openQuote {
+			if openSingleQuote {
 				// open quote
 				if bufferString != "'" {
 					return nil, getInvalidTokenFormatError(tokenString)
@@ -307,8 +314,35 @@ func Parse(tokenString string, options *Options) (Token, error) {
 				bufferString = ""
 			}
 			break
+		case '"':
+			if openSingleQuote || openBracketCount != closeBracketCount {
+				continue
+			}
+
+			// if last token is escape character, then this is not an open or close
+			if len(bufferString) > 1 && bufferString[len(bufferString)-2] == '\\' {
+				bufferString = bufferString[0:len(bufferString)-2] + "\""
+				break
+			}
+
+			openDoubleQuote = !openDoubleQuote
+
+			if openDoubleQuote {
+				// open quote
+				if bufferString != "\"" {
+					return nil, getInvalidTokenFormatError(tokenString)
+				}
+			} else {
+				// close quote
+				if !isKey(bufferString) {
+					return nil, getInvalidTokenFormatError(tokenString)
+				}
+				args = append(args, bufferString[:])
+				bufferString = ""
+			}
+			break
 		case ':':
-			if openQuote || (openBracketCount != closeBracketCount) {
+			if inQuotes() || (openBracketCount != closeBracketCount) {
 				continue
 			}
 			if arg := bufferString[:len(bufferString)-1]; arg != "" {
@@ -326,7 +360,7 @@ func Parse(tokenString string, options *Options) (Token, error) {
 			bufferString = ""
 			break
 		case ',':
-			if openQuote || (openBracketCount != closeBracketCount) {
+			if inQuotes() || (openBracketCount != closeBracketCount) {
 				continue
 			}
 

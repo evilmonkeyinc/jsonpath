@@ -23,9 +23,9 @@ var dotTests []testData = []testData{
 	{
 		query:         `$.["key"]`,
 		data:          `{ "key": "value", "other": {"key": [{"key": 42}]} }`,
-		expected:      nil,
+		expected:      "value",
 		consensus:     consensusNone,
-		expectedError: "invalid JSONPath query '$.[\"key\"]' invalid token. '[\"key\"]' does not match any token format",
+		expectedError: "",
 	},
 	{
 		query:         `$.[key]`,
