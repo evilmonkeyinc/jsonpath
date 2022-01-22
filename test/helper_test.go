@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/evilmonkeyinc/jsonpath"
@@ -110,6 +111,11 @@ func printConsensusMatrix(writer io.Writer, tests []testData) {
 	fmt.Fprintf(writer, "|query|data|consensus|actual|match|\n")
 	fmt.Fprintf(writer, "|---|---|---|---|---|\n")
 	for _, test := range tests {
+
+		query := test.query
+		// escape | so format doesnt break
+		query = strings.ReplaceAll(query, "|", "\\|")
+
 		expected := test.expected
 		if expected == nil {
 			expected = "null"
@@ -119,7 +125,7 @@ func printConsensusMatrix(writer io.Writer, tests []testData) {
 		}
 
 		if test.consensus == consensusNone {
-			fmt.Fprintf(writer, "|`%s`|`%v`|%s|`%v`|%s|\n", test.query, test.data, "none", expected, ":question:")
+			fmt.Fprintf(writer, "|`%s`|`%v`|%s|`%v`|%s|\n", query, test.data, "none", expected, ":question:")
 			continue
 		}
 
@@ -136,6 +142,6 @@ func printConsensusMatrix(writer io.Writer, tests []testData) {
 			symbol = ":white_check_mark:"
 		}
 
-		fmt.Fprintf(writer, "|`%s`|`%v`|`%v`|`%v`|%s|\n", test.query, test.data, consensus, expected, symbol)
+		fmt.Fprintf(writer, "|`%s`|`%v`|`%v`|`%v`|%s|\n", query, test.data, consensus, expected, symbol)
 	}
 }
