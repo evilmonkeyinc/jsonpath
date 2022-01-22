@@ -139,9 +139,10 @@ func Test_evaluateExpression(t *testing.T) {
 		{
 			input: input{
 				expression: "@]",
+				current:    true,
 			},
 			expected: expected{
-				err: "invalid expression. unexpected token ']' at index 1",
+				err: "invalid expression. eval:1:1: illegal character U+0040 '@'",
 			},
 		},
 		{
@@ -518,6 +519,59 @@ func Test_evaluateExpression(t *testing.T) {
 			},
 			expected: expected{
 				value: "'key\\'s'",
+			},
+		},
+		{
+			input: input{
+				expression: `@.key=="hi@example.com"`,
+				current: map[string]interface{}{
+					"key": "hi@example.com",
+				},
+			},
+			expected: expected{
+				value: true,
+			},
+		},
+		{
+			input: input{
+				expression: `"hi@example.com"==@.key`,
+				current: map[string]interface{}{
+					"key": "hi@example.com",
+				},
+			},
+			expected: expected{
+				value: true,
+			},
+		},
+		{
+			input: input{
+				expression: `$.key=="hi@example.com"`,
+				root: map[string]interface{}{
+					"key": "hi@example.com",
+				},
+			},
+			expected: expected{
+				value: true,
+			},
+		},
+		{
+			input: input{
+				expression: `"hi@example.com"==$.key`,
+				root: map[string]interface{}{
+					"key": "hi@example.com",
+				},
+			},
+			expected: expected{
+				value: true,
+			},
+		},
+		{
+			input: input{
+				expression: `"hi@example.com"==$`,
+				root:       "hi@example.com",
+			},
+			expected: expected{
+				value: true,
 			},
 		},
 	}

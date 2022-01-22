@@ -283,6 +283,23 @@ func Test_FilterToken_Apply(t *testing.T) {
 				},
 			},
 		},
+		{
+			token: &filterToken{
+				expression: `@.key=="hi@example.com"`,
+			},
+			input: input{
+				current: []interface{}{
+					map[string]interface{}{"key": "some"},
+					map[string]interface{}{"key": "value"},
+					map[string]interface{}{"key": "hi@example.com"},
+				},
+			},
+			expected: expected{
+				value: []interface{}{
+					map[string]interface{}{"key": "hi@example.com"},
+				},
+			},
+		},
 	}
 
 	batchTokenTests(t, tests)

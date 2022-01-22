@@ -326,9 +326,9 @@ var filterTests []testData = []testData{
 		expectedError: "",
 	},
 	{
-		query:         `$[?(@.key=="hi@example.com")]`, // TODO: double quotes in filters
+		query:         `$[?(@.key=="hi@example.com")]`,
 		data:          `[ {"key": "some"}, {"key": "value"}, {"key": "hi@example.com"} ]`,
-		expected:      []interface{}{},
+		expected:      []interface{}{map[string]interface{}{"key": "hi@example.com"}},
 		consensus:     []interface{}{map[string]interface{}{"key": "hi@example.com"}},
 		expectedError: "",
 	},
