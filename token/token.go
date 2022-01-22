@@ -3,6 +3,8 @@ package token
 import (
 	"strconv"
 	"strings"
+
+	"github.com/evilmonkeyinc/jsonpath/option"
 )
 
 /** Feature request
@@ -188,7 +190,7 @@ tokenize:
 }
 
 // Parse will parse a single token string and return an actionable token
-func Parse(tokenString string, options *Options) (Token, error) {
+func Parse(tokenString string, options *option.QueryOptions) (Token, error) {
 	isScript := func(token string) bool {
 		return len(token) > 2 && strings.HasPrefix(token, "(") && strings.HasSuffix(token, ")")
 	}

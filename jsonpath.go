@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/evilmonkeyinc/jsonpath/option"
 	"github.com/evilmonkeyinc/jsonpath/token"
 )
 
@@ -40,7 +41,7 @@ func QueryString(queryPath string, jsonData string) (interface{}, error) {
 // JSONPath represents a compiled JSONPath query
 // and exposes functions to query JSON data and objects.
 type JSONPath struct {
-	Options     *token.Options
+	Options     *option.QueryOptions
 	queryString string
 	tokens      []token.Token
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/evilmonkeyinc/jsonpath/option"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,7 +16,7 @@ func Test_newUnionToken(t *testing.T) {
 
 	type input struct {
 		args    []interface{}
-		options *Options
+		options *option.QueryOptions
 	}
 
 	type expected *unionToken
@@ -35,7 +36,7 @@ func Test_newUnionToken(t *testing.T) {
 		},
 		{
 			input: input{
-				options: &Options{},
+				options: &option.QueryOptions{},
 			},
 			expected: &unionToken{
 				allowMap:    false,
@@ -44,7 +45,7 @@ func Test_newUnionToken(t *testing.T) {
 		},
 		{
 			input: input{
-				options: &Options{
+				options: &option.QueryOptions{
 					FailUnionOnInvalidIdentifier: true,
 				},
 			},
@@ -56,7 +57,7 @@ func Test_newUnionToken(t *testing.T) {
 		},
 		{
 			input: input{
-				options: &Options{
+				options: &option.QueryOptions{
 					AllowMapReferenceByIndex:    false,
 					AllowStringReferenceByIndex: false,
 
@@ -71,7 +72,7 @@ func Test_newUnionToken(t *testing.T) {
 		},
 		{
 			input: input{
-				options: &Options{
+				options: &option.QueryOptions{
 					AllowMapReferenceByIndex:    true,
 					AllowStringReferenceByIndex: true,
 
@@ -86,7 +87,7 @@ func Test_newUnionToken(t *testing.T) {
 		},
 		{
 			input: input{
-				options: &Options{
+				options: &option.QueryOptions{
 					AllowMapReferenceByIndex:    true,
 					AllowStringReferenceByIndex: true,
 
@@ -101,7 +102,7 @@ func Test_newUnionToken(t *testing.T) {
 		},
 		{
 			input: input{
-				options: &Options{
+				options: &option.QueryOptions{
 					AllowMapReferenceByIndex:    false,
 					AllowStringReferenceByIndex: false,
 

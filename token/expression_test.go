@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/evilmonkeyinc/jsonpath/option"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -116,7 +117,7 @@ func Test_evaluateExpression(t *testing.T) {
 	type input struct {
 		root, current interface{}
 		expression    string
-		options       *Options
+		options       *option.QueryOptions
 	}
 
 	type expected struct {

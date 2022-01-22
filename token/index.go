@@ -3,9 +3,11 @@ package token
 import (
 	"fmt"
 	"reflect"
+
+	"github.com/evilmonkeyinc/jsonpath/option"
 )
 
-func newIndexToken(index int64, options *Options) *indexToken {
+func newIndexToken(index int64, options *option.QueryOptions) *indexToken {
 	allowMap := false
 	allowString := false
 

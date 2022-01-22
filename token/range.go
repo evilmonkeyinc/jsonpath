@@ -3,9 +3,11 @@ package token
 import (
 	"fmt"
 	"reflect"
+
+	"github.com/evilmonkeyinc/jsonpath/option"
 )
 
-func newRangeToken(from, to, step interface{}, options *Options) *rangeToken {
+func newRangeToken(from, to, step interface{}, options *option.QueryOptions) *rangeToken {
 	allowMap := false
 	allowString := false
 

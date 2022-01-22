@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/evilmonkeyinc/jsonpath/option"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,7 +16,7 @@ func Test_newRangeToken(t *testing.T) {
 
 	type input struct {
 		to, from, step interface{}
-		options        *Options
+		options        *option.QueryOptions
 	}
 
 	type expected *rangeToken
@@ -35,7 +36,7 @@ func Test_newRangeToken(t *testing.T) {
 		},
 		{
 			input: input{
-				options: &Options{},
+				options: &option.QueryOptions{},
 			},
 			expected: &rangeToken{
 				allowMap:    false,
@@ -44,7 +45,7 @@ func Test_newRangeToken(t *testing.T) {
 		},
 		{
 			input: input{
-				options: &Options{
+				options: &option.QueryOptions{
 					AllowMapReferenceByIndex:    false,
 					AllowStringReferenceByIndex: false,
 
@@ -59,7 +60,7 @@ func Test_newRangeToken(t *testing.T) {
 		},
 		{
 			input: input{
-				options: &Options{
+				options: &option.QueryOptions{
 					AllowMapReferenceByIndex:    true,
 					AllowStringReferenceByIndex: true,
 
@@ -74,7 +75,7 @@ func Test_newRangeToken(t *testing.T) {
 		},
 		{
 			input: input{
-				options: &Options{
+				options: &option.QueryOptions{
 					AllowMapReferenceByIndex:    true,
 					AllowStringReferenceByIndex: true,
 
@@ -89,7 +90,7 @@ func Test_newRangeToken(t *testing.T) {
 		},
 		{
 			input: input{
-				options: &Options{
+				options: &option.QueryOptions{
 					AllowMapReferenceByIndex:    false,
 					AllowStringReferenceByIndex: false,
 

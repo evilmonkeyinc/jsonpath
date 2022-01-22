@@ -4,15 +4,17 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+
+	"github.com/evilmonkeyinc/jsonpath/option"
 )
 
-func newFilterToken(expression string, options *Options) *filterToken {
+func newFilterToken(expression string, options *option.QueryOptions) *filterToken {
 	return &filterToken{expression: expression, options: options}
 }
 
 type filterToken struct {
 	expression string
-	options    *Options
+	options    *option.QueryOptions
 }
 
 func (token *filterToken) String() string {

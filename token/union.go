@@ -5,9 +5,11 @@ import (
 	"reflect"
 	"sort"
 	"strings"
+
+	"github.com/evilmonkeyinc/jsonpath/option"
 )
 
-func newUnionToken(arguments []interface{}, options *Options) *unionToken {
+func newUnionToken(arguments []interface{}, options *option.QueryOptions) *unionToken {
 	allowMap := false
 	allowString := false
 	failUnionOnInvalidIdentifier := false

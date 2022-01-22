@@ -8,15 +8,17 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/evilmonkeyinc/jsonpath/option"
 )
 
-func newExpressionToken(expression string, options *Options) *expressionToken {
+func newExpressionToken(expression string, options *option.QueryOptions) *expressionToken {
 	return &expressionToken{expression: expression, options: options}
 }
 
 type expressionToken struct {
 	expression string
-	options    *Options
+	options    *option.QueryOptions
 }
 
 func (token *expressionToken) String() string {
@@ -102,7 +104,7 @@ func getCurrentTokenIndex(expression string) int {
 /*
 1. regex
 */
-func evaluateExpression(root, current interface{}, expression string, options *Options) (interface{}, error) {
+func evaluateExpression(root, current interface{}, expression string, options *option.QueryOptions) (interface{}, error) {
 	if expression == "" {
 		return nil, getInvalidExpressionEmptyError()
 	}

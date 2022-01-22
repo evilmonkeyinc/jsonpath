@@ -3,15 +3,17 @@ package token
 import (
 	"fmt"
 	"reflect"
+
+	"github.com/evilmonkeyinc/jsonpath/option"
 )
 
-func newScriptToken(expression string, options *Options) *scriptToken {
+func newScriptToken(expression string, options *option.QueryOptions) *scriptToken {
 	return &scriptToken{expression: expression, options: options}
 }
 
 type scriptToken struct {
 	expression string
-	options    *Options
+	options    *option.QueryOptions
 }
 
 func (token *scriptToken) String() string {

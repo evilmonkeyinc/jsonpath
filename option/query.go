@@ -1,9 +1,9 @@
-package token
+package option
 
-// Options represents optional functionality for the token parser that can be enabled or disabled.
+// QueryOptions represents optional functionality for the query functions that can be enabled or disabled.
 //
 // The default will be for all optional functionality to be disabled.
-type Options struct {
+type QueryOptions struct {
 	// AllowMapReferenceByIndex allow maps to be referenced by index in any token.
 	AllowMapReferenceByIndex bool
 	// AllowStringReferenceByIndex allow string characters to be referenced by index in any token.
