@@ -108,7 +108,7 @@ This implementation would be closer to the 'Scalar consensus' as it does not alw
 }
 
 func printConsensusMatrix(writer io.Writer, tests []testData) {
-	fmt.Fprintf(writer, "|query|data|consensus|actual|match|\n")
+	fmt.Fprintf(writer, "|match|query|data|consensus|actual|\n")
 	fmt.Fprintf(writer, "|---|---|---|---|---|\n")
 	for _, test := range tests {
 
@@ -125,7 +125,7 @@ func printConsensusMatrix(writer io.Writer, tests []testData) {
 		}
 
 		if test.consensus == consensusNone {
-			fmt.Fprintf(writer, "|`%s`|`%v`|%s|`%v`|%s|\n", query, test.data, "none", expected, ":question:")
+			fmt.Fprintf(writer, "|%s|`%s`|`%v`|%s|`%v`|\n", ":question:", query, test.data, "none", expected)
 			continue
 		}
 
@@ -142,6 +142,6 @@ func printConsensusMatrix(writer io.Writer, tests []testData) {
 			symbol = ":white_check_mark:"
 		}
 
-		fmt.Fprintf(writer, "|`%s`|`%v`|`%v`|`%v`|%s|\n", query, test.data, consensus, expected, symbol)
+		fmt.Fprintf(writer, "|%s|`%s`|`%v`|`%v`|`%v`|\n", symbol, query, test.data, consensus, expected)
 	}
 }
