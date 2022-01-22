@@ -1,6 +1,6 @@
-# cburgmer tests
+# Consensus Tests
 
-This test package has tests detailed by https://cburgmer.github.io/json-path-comparison/ comparison matrix which details the community consensus on the expected response from multiple JSONPath queries
+This test package has tests detailed by https://cburgmer.github.io/json-path-comparison/ comparison matrix which details the community consensus on the expected response from multiple JSONPath queries by various implementations.
 	
 This implementation would be closer to the 'Scalar consensus' as it does not always return an array, but instead can return a single item when that is expected.
 	
