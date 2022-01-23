@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/evilmonkeyinc/jsonpath/option"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,7 +16,7 @@ func Test_newRangeToken(t *testing.T) {
 
 	type input struct {
 		to, from, step interface{}
-		options        *Options
+		options        *option.QueryOptions
 	}
 
 	type expected *rangeToken
@@ -35,7 +36,7 @@ func Test_newRangeToken(t *testing.T) {
 		},
 		{
 			input: input{
-				options: &Options{},
+				options: &option.QueryOptions{},
 			},
 			expected: &rangeToken{
 				allowMap:    false,
@@ -44,7 +45,7 @@ func Test_newRangeToken(t *testing.T) {
 		},
 		{
 			input: input{
-				options: &Options{
+				options: &option.QueryOptions{
 					AllowMapReferenceByIndex:    false,
 					AllowStringReferenceByIndex: false,
 
@@ -59,7 +60,7 @@ func Test_newRangeToken(t *testing.T) {
 		},
 		{
 			input: input{
-				options: &Options{
+				options: &option.QueryOptions{
 					AllowMapReferenceByIndex:    true,
 					AllowStringReferenceByIndex: true,
 
@@ -74,7 +75,7 @@ func Test_newRangeToken(t *testing.T) {
 		},
 		{
 			input: input{
-				options: &Options{
+				options: &option.QueryOptions{
 					AllowMapReferenceByIndex:    true,
 					AllowStringReferenceByIndex: true,
 
@@ -89,7 +90,7 @@ func Test_newRangeToken(t *testing.T) {
 		},
 		{
 			input: input{
-				options: &Options{
+				options: &option.QueryOptions{
 					AllowMapReferenceByIndex:    false,
 					AllowStringReferenceByIndex: false,
 
@@ -384,7 +385,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 		},
 		{
 			token: &rangeToken{
-				from: &expressionToken{expression: ""},
+				from: &expressionToken{expression: "", engine: &testEngine{response: ""}},
 			},
 			input: input{
 				current: []interface{}{
@@ -399,7 +400,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 		},
 		{
 			token: &rangeToken{
-				from: &expressionToken{expression: "'key'"},
+				from: &expressionToken{expression: "'key'", engine: &testEngine{response: "key"}},
 			},
 			input: input{
 				current: []interface{}{
@@ -429,7 +430,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 		},
 		{
 			token: &rangeToken{
-				from: &expressionToken{expression: "@.length-1"},
+				from: &expressionToken{expression: "@.length-1", engine: &testEngine{response: 2}},
 			},
 			input: input{
 				current: []interface{}{
@@ -447,7 +448,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 		{
 			token: &rangeToken{
 				from: 0,
-				to:   &expressionToken{expression: ""},
+				to:   &expressionToken{expression: "", engine: &testEngine{response: ""}},
 			},
 			input: input{
 				current: []interface{}{
@@ -463,7 +464,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 		{
 			token: &rangeToken{
 				from: 0,
-				to:   &expressionToken{expression: "'key'"},
+				to:   &expressionToken{expression: "'key'", engine: &testEngine{response: "key"}},
 			},
 			input: input{
 				current: []interface{}{
@@ -495,7 +496,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 		{
 			token: &rangeToken{
 				from: 0,
-				to:   &expressionToken{expression: "@.length-2"},
+				to:   &expressionToken{expression: "@.length-2", engine: &testEngine{response: 1}},
 			},
 			input: input{
 				current: []interface{}{
@@ -513,7 +514,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 		{
 			token: &rangeToken{
 				from: 0,
-				step: &expressionToken{expression: ""},
+				step: &expressionToken{expression: "", engine: &testEngine{response: ""}},
 			},
 			input: input{
 				current: []interface{}{
@@ -529,7 +530,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 		{
 			token: &rangeToken{
 				from: 0,
-				step: &expressionToken{expression: "'key'"},
+				step: &expressionToken{expression: "'key'", engine: &testEngine{response: "key"}},
 			},
 			input: input{
 				current: []interface{}{
@@ -561,7 +562,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 		{
 			token: &rangeToken{
 				from: 0,
-				step: &expressionToken{expression: "@.length-1"},
+				step: &expressionToken{expression: "@.length-1", engine: &testEngine{response: 2}},
 			},
 			input: input{
 				current: []interface{}{
@@ -694,7 +695,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 		},
 		{
 			token: &rangeToken{
-				from: &expressionToken{expression: "nil"},
+				from: &expressionToken{expression: "nil", engine: &testEngine{response: nil}},
 			},
 			input: input{
 				current: []interface{}{
@@ -711,7 +712,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 		{
 			token: &rangeToken{
 				from: 0,
-				to:   &expressionToken{expression: "nil"},
+				to:   &expressionToken{expression: "nil", engine: &testEngine{response: nil}},
 			},
 			input: input{
 				current: []interface{}{
@@ -729,7 +730,7 @@ func Test_RangeToken_Apply(t *testing.T) {
 			token: &rangeToken{
 				from: 0,
 				to:   1,
-				step: &expressionToken{expression: "nil"},
+				step: &expressionToken{expression: "nil", engine: &testEngine{response: nil}},
 			},
 			input: input{
 				current: []interface{}{

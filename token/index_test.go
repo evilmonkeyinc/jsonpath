@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/evilmonkeyinc/jsonpath/option"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,7 +16,7 @@ func Test_newIndexToken(t *testing.T) {
 
 	type input struct {
 		index   int64
-		options *Options
+		options *option.QueryOptions
 	}
 
 	type expected *indexToken
@@ -38,7 +39,7 @@ func Test_newIndexToken(t *testing.T) {
 		{
 			input: input{
 				index:   0,
-				options: &Options{},
+				options: &option.QueryOptions{},
 			},
 			expected: &indexToken{
 				index:       0,
@@ -49,7 +50,7 @@ func Test_newIndexToken(t *testing.T) {
 		{
 			input: input{
 				index: 0,
-				options: &Options{
+				options: &option.QueryOptions{
 					AllowMapReferenceByIndex:    false,
 					AllowStringReferenceByIndex: false,
 
@@ -66,7 +67,7 @@ func Test_newIndexToken(t *testing.T) {
 		{
 			input: input{
 				index: 0,
-				options: &Options{
+				options: &option.QueryOptions{
 					AllowMapReferenceByIndex:    true,
 					AllowStringReferenceByIndex: true,
 
@@ -83,7 +84,7 @@ func Test_newIndexToken(t *testing.T) {
 		{
 			input: input{
 				index: 0,
-				options: &Options{
+				options: &option.QueryOptions{
 					AllowMapReferenceByIndex:    true,
 					AllowStringReferenceByIndex: true,
 
@@ -100,7 +101,7 @@ func Test_newIndexToken(t *testing.T) {
 		{
 			input: input{
 				index: 0,
-				options: &Options{
+				options: &option.QueryOptions{
 					AllowMapReferenceByIndex:    false,
 					AllowStringReferenceByIndex: false,
 

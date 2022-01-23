@@ -1,6 +1,7 @@
 package token
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -10,7 +11,7 @@ import (
 var _ Token = &filterToken{}
 
 func Test_newFilterToken(t *testing.T) {
-	assert.IsType(t, &filterToken{}, newFilterToken("", nil))
+	assert.IsType(t, &filterToken{}, newFilterToken("", nil, nil))
 }
 
 func Test_FilterToken_String(t *testing.T) {
@@ -40,31 +41,33 @@ func Test_FilterToken_Apply(t *testing.T) {
 
 	tests := []*tokenTest{
 		{
-			token: &filterToken{expression: ""},
-			input: input{
-				current: []interface{}{"one"},
-			},
+			token: &filterToken{},
+			input: input{},
 			expected: expected{
 				err: "invalid expression. is empty",
 			},
 		},
 		{
 			token: &filterToken{
-				expression: "@.isbn",
+				expression: "nil current",
+				engine: &testEngine{
+					compiledExpression: &testCompiledExpression{},
+				},
 			},
-			input: input{
-				current: nil,
-			},
+			input: input{},
 			expected: expected{
 				err: "filter: invalid token target. expected [array map slice] got [nil]",
 			},
 		},
 		{
 			token: &filterToken{
-				expression: "@.isbn",
+				expression: "invalid current",
+				engine: &testEngine{
+					compiledExpression: &testCompiledExpression{},
+				},
 			},
 			input: input{
-				current: "this is a string",
+				current: "string",
 			},
 			expected: expected{
 				err: "filter: invalid token target. expected [array map slice] got [string]",
@@ -72,236 +75,269 @@ func Test_FilterToken_Apply(t *testing.T) {
 		},
 		{
 			token: &filterToken{
-				expression: "@.isbn",
+				expression: "fail compile",
+				engine: &testEngine{
+					err: fmt.Errorf("engine error"),
+				},
 			},
 			input: input{
-				current: []map[string]interface{}{
-					{
-						"isbn": 5,
-						"name": "one",
-					},
-					{
-						"isbn": "",
-						"name": "two",
-					},
-					{
-						"isbn": "string",
-						"name": "three",
-					},
-					{
-						"name": "four",
-					},
-				},
+				current: []interface{}{},
 			},
 			expected: expected{
-				value: []interface{}{
-					map[string]interface{}{
-						"isbn": 5,
-						"name": "one",
-					},
-					map[string]interface{}{
-						"isbn": "string",
-						"name": "three",
-					},
-				},
+				err: "invalid expression. engine error",
 			},
 		},
 		{
 			token: &filterToken{
-				expression: "@.price<10",
+				expression: "empty array",
+				engine: &testEngine{
+					compiledExpression: &testCompiledExpression{},
+				},
 			},
 			input: input{
-				current: []map[string]interface{}{
-					{
-						"price": 5,
-						"name":  "one",
-					},
-					{
-						"price": 9.99,
-						"name":  "two",
-					},
-					{
-						"price": 15,
-						"name":  "three",
-					},
-				},
+				current: []interface{}{},
 			},
 			expected: expected{
-				value: []interface{}{
-					map[string]interface{}{
-						"price": 5,
-						"name":  "one",
-					},
-					map[string]interface{}{
-						"price": 9.99,
-						"name":  "two",
-					},
-				},
+				value: []interface{}{},
 			},
 		},
 		{
 			token: &filterToken{
-				expression: "@.price<$.expensive",
+				expression: "failed evaluate array",
+				engine: &testEngine{
+					compiledExpression: &testCompiledExpression{
+						err: fmt.Errorf("compiled failed"),
+					},
+				},
 			},
 			input: input{
-				root: map[string]interface{}{
-					"expensive": 10,
-				},
-				current: []map[string]interface{}{
-					{
-						"price": 5,
-						"name":  "one",
-					},
-					{
-						"price": 9.99,
-						"name":  "two",
-					},
-					{
-						"price": 15,
-						"name":  "three",
-					},
-				},
+				current: [3]interface{}{1, 2, 3},
 			},
 			expected: expected{
-				value: []interface{}{
-					map[string]interface{}{
-						"price": 5,
-						"name":  "one",
-					},
-					map[string]interface{}{
-						"price": 9.99,
-						"name":  "two",
-					},
-				},
+				value: []interface{}{},
 			},
 		},
 		{
 			token: &filterToken{
-				expression: "@.price<$.expensive",
+				expression: "true evaluate array",
+				engine: &testEngine{
+					compiledExpression: &testCompiledExpression{
+						response: true,
+					},
+				},
 			},
 			input: input{
-				root: map[string]interface{}{
-					"expensive": 10,
-				},
-				current: map[string]interface{}{
-					"one": map[string]interface{}{
-						"price": 5,
-						"name":  "one",
-					},
-					"two": map[string]interface{}{
-						"price": 9.99,
-						"name":  "two",
-					},
-					"three": map[string]interface{}{
-						"price": 15,
-						"name":  "three",
-					},
-					"four": map[string]interface{}{
-						"name": "three",
-					},
-				},
+				current: [3]interface{}{1, 2, 3},
 			},
 			expected: expected{
-				value: []interface{}{
-					map[string]interface{}{
-						"price": 5,
-						"name":  "one",
-					},
-					map[string]interface{}{
-						"price": 9.99,
-						"name":  "two",
-					},
-				},
+				value: []interface{}{1, 2, 3},
 			},
 		},
 		{
 			token: &filterToken{
-				expression: "@.price<$.expensive",
+				expression: "false evaluate array",
+				engine: &testEngine{
+					compiledExpression: &testCompiledExpression{
+						response: false,
+					},
+				},
 			},
 			input: input{
-				root: map[string]interface{}{
-					"expensive": 10,
-				},
-				current: []map[string]interface{}{
-					{
-						"price": 5,
-						"name":  "one",
-					},
-					{
-						"price": 9.99,
-						"name":  "two",
-					},
-					{
-						"price": 15,
-						"name":  "three",
-					},
-				},
-				tokens: []Token{
-					&indexToken{index: 1},
-				},
+				current: [3]interface{}{1, 2, 3},
 			},
 			expected: expected{
-				value: map[string]interface{}{
-					"price": 9.99,
-					"name":  "two",
-				},
+				value: []interface{}{},
 			},
 		},
 		{
 			token: &filterToken{
-				expression: "@.price<$.expensive",
+				expression: "empty string evaluate array",
+				engine: &testEngine{
+					compiledExpression: &testCompiledExpression{
+						response: "",
+					},
+				},
 			},
 			input: input{
-				root: map[string]interface{}{
-					"expensive": 10,
-				},
-				current: map[string]interface{}{
-					"one": map[string]interface{}{
-						"price": 5,
-						"name":  "one",
-					},
-					"two": map[string]interface{}{
-						"price": 9.99,
-						"name":  "two",
-					},
-					"three": map[string]interface{}{
-						"price": 15,
-						"name":  "three",
-					},
-					"four": map[string]interface{}{
-						"name": "three",
-					},
-				},
-				tokens: []Token{
-					&keyToken{key: "name"},
-				},
+				current: [3]interface{}{1, 2, 3},
 			},
 			expected: expected{
-				value: []interface{}{
-					"one",
-					"two",
-				},
+				value: []interface{}{},
 			},
 		},
 		{
 			token: &filterToken{
-				expression: `@.key=="hi@example.com"`,
+				expression: "non-empty string evaluate array",
+				engine: &testEngine{
+					compiledExpression: &testCompiledExpression{
+						response: "add this",
+					},
+				},
+			},
+			input: input{
+				current: [3]interface{}{1, 2, 3},
+			},
+			expected: expected{
+				value: []interface{}{1, 2, 3},
+			},
+		},
+		{
+			token: &filterToken{
+				expression: "other evaluate array",
+				engine: &testEngine{
+					compiledExpression: &testCompiledExpression{
+						response: 3.14,
+					},
+				},
+			},
+			input: input{
+				current: [3]interface{}{1, 2, 3},
+			},
+			expected: expected{
+				value: []interface{}{1, 2, 3},
+			},
+		},
+		{
+			token: &filterToken{
+				expression: "empty map",
+				engine: &testEngine{
+					compiledExpression: &testCompiledExpression{},
+				},
+			},
+			input: input{
+				current: map[string]interface{}{},
+			},
+			expected: expected{
+				value: []interface{}{},
+			},
+		},
+		{
+			token: &filterToken{
+				expression: "failed evaluate map",
+				engine: &testEngine{
+					compiledExpression: &testCompiledExpression{
+						err: fmt.Errorf("compiled failed"),
+					},
+				},
+			},
+			input: input{
+				current: map[string]interface{}{"key": "value"},
+			},
+			expected: expected{
+				value: []interface{}{},
+			},
+		},
+		{
+			token: &filterToken{
+				expression: "true evaluate map",
+				engine: &testEngine{
+					compiledExpression: &testCompiledExpression{
+						response: true,
+					},
+				},
+			},
+			input: input{
+				current: map[string]interface{}{"key": "value"},
+			},
+			expected: expected{
+				value: []interface{}{"value"},
+			},
+		},
+		{
+			token: &filterToken{
+				expression: "false evaluate map",
+				engine: &testEngine{
+					compiledExpression: &testCompiledExpression{
+						response: false,
+					},
+				},
+			},
+			input: input{
+				current: map[string]interface{}{"key": "value"},
+			},
+			expected: expected{
+				value: []interface{}{},
+			},
+		},
+		{
+			token: &filterToken{
+				expression: "empty string evaluate map",
+				engine: &testEngine{
+					compiledExpression: &testCompiledExpression{
+						response: "",
+					},
+				},
+			},
+			input: input{
+				current: map[string]interface{}{"key": "value"},
+			},
+			expected: expected{
+				value: []interface{}{},
+			},
+		},
+		{
+			token: &filterToken{
+				expression: "non-empty string evaluate map",
+				engine: &testEngine{
+					compiledExpression: &testCompiledExpression{
+						response: "add this",
+					},
+				},
+			},
+			input: input{
+				current: map[string]interface{}{"key": "value"},
+			},
+			expected: expected{
+				value: []interface{}{"value"},
+			},
+		},
+		{
+			token: &filterToken{
+				expression: "other evaluate map",
+				engine: &testEngine{
+					compiledExpression: &testCompiledExpression{
+						response: 3.14,
+					},
+				},
+			},
+			input: input{
+				current: map[string]interface{}{"key": "value"},
+			},
+			expected: expected{
+				value: []interface{}{"value"},
+			},
+		},
+		{
+			token: &filterToken{
+				expression: "next is index",
+				engine:     &testEngine{compiledExpression: &testCompiledExpression{response: true}},
+			},
+			input: input{
+				current: []interface{}{1, 2, 3, 4, 5},
+				tokens:  []Token{&indexToken{index: 1}},
+			},
+			expected: expected{
+				value: 2,
+			},
+		},
+		{
+			token: &filterToken{
+				expression: "next is not index",
+				engine:     &testEngine{compiledExpression: &testCompiledExpression{response: true}},
 			},
 			input: input{
 				current: []interface{}{
-					map[string]interface{}{"key": "some"},
-					map[string]interface{}{"key": "value"},
-					map[string]interface{}{"key": "hi@example.com"},
+					map[string]interface{}{"key": "one"},
+					map[string]interface{}{"key": "two"},
+					map[string]interface{}{"key": "three"},
 				},
+				tokens: []Token{&keyToken{key: "key"}},
 			},
 			expected: expected{
-				value: []interface{}{
-					map[string]interface{}{"key": "hi@example.com"},
-				},
+				value: []interface{}{"one", "two", "three"},
 			},
 		},
 	}
 
 	batchTokenTests(t, tests)
-
 }

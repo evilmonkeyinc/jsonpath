@@ -1,6 +1,7 @@
 package token
 
 import (
+	"math"
 	"reflect"
 	"sort"
 	"strings"
@@ -15,6 +16,11 @@ func isInteger(obj interface{}) (int64, bool) {
 	switch objType.Kind() {
 	case reflect.Int, reflect.Int16, reflect.Int32, reflect.Int64:
 		return objVal.Int(), true
+	case reflect.Float32, reflect.Float64:
+		float := objVal.Float()
+		if trunc := math.Trunc(float); trunc == float {
+			return int64(trunc), true
+		}
 	}
 
 	return 0, false

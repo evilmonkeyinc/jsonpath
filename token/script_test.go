@@ -1,6 +1,7 @@
 package token
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -10,7 +11,7 @@ import (
 var _ Token = &scriptToken{}
 
 func Test_newScriptToken(t *testing.T) {
-	assert.IsType(t, &scriptToken{}, newScriptToken("", nil))
+	assert.IsType(t, &scriptToken{}, newScriptToken("", nil, nil))
 }
 
 func Test_ScriptToken_String(t *testing.T) {
@@ -49,16 +50,18 @@ func Test_ScriptToken_Apply(t *testing.T) {
 		},
 		{
 			token: &scriptToken{
-				expression: "length",
+				expression: "engine error",
+				engine:     &testEngine{err: fmt.Errorf("engine error")},
 			},
 			input: input{},
 			expected: expected{
-				err: "invalid expression. eval:1:1: undeclared name: length",
+				err: "invalid expression. engine error",
 			},
 		},
 		{
 			token: &scriptToken{
-				expression: "nil",
+				expression: "nil response",
+				engine:     &testEngine{response: nil},
 			},
 			input: input{},
 			expected: expected{
@@ -67,50 +70,38 @@ func Test_ScriptToken_Apply(t *testing.T) {
 		},
 		{
 			token: &scriptToken{
-				expression: "2*10",
+				expression: "bool response",
+				engine:     &testEngine{response: true},
 			},
-			input: input{
-				root:    nil,
-				current: nil,
-			},
-			expected: expected{
-				err: "index: invalid token target. expected [array slice] got [nil]",
-			},
-		},
-		{
-			token: &scriptToken{
-				expression: "'key'",
-			},
-			input: input{
-				root:    nil,
-				current: nil,
-			},
-			expected: expected{
-				err: "key: invalid token target. expected [map] got [nil]",
-			},
-		},
-		{
-			token: &scriptToken{
-				expression: "true",
-			},
-			input: input{
-				root:    nil,
-				current: nil,
-			},
+			input: input{},
 			expected: expected{
 				err: "unexpected expression result. expected [int string] got [bool]",
 			},
 		},
 		{
 			token: &scriptToken{
-				expression: "@.length-1",
+				expression: "string response",
+				engine:     &testEngine{response: "key"},
 			},
 			input: input{
-				root:    nil,
-				current: []interface{}{"one", "two", "three"},
+				current: map[string]interface{}{
+					"key": "value",
+				},
 			},
 			expected: expected{
-				value: "three",
+				value: "value",
+			},
+		},
+		{
+			token: &scriptToken{
+				expression: "int response",
+				engine:     &testEngine{response: 1},
+			},
+			input: input{
+				current: []string{"one", "two", "three"},
+			},
+			expected: expected{
+				value: "two",
 			},
 		},
 	}

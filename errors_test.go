@@ -35,7 +35,7 @@ func Test_getInvalidJSONData(t *testing.T) {
 	}
 }
 
-func Test_getInvalidJSONPathQuery(t *testing.T) {
+func Test_getInvalidJSONPathSelector(t *testing.T) {
 
 	tests := []struct {
 		input    string
@@ -43,32 +43,32 @@ func Test_getInvalidJSONPathQuery(t *testing.T) {
 	}{
 		{
 			input:    "",
-			expected: "invalid JSONPath query ''",
+			expected: "invalid JSONPath selector ''",
 		},
 		{
 			input:    "test",
-			expected: "invalid JSONPath query 'test'",
+			expected: "invalid JSONPath selector 'test'",
 		},
 		{
 			input:    "other",
-			expected: "invalid JSONPath query 'other'",
+			expected: "invalid JSONPath selector 'other'",
 		},
 	}
 
 	for idx, test := range tests {
 		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
-			actual := getInvalidJSONPathQuery(test.input)
+			actual := getInvalidJSONPathSelector(test.input)
 			assert.EqualError(t, actual, test.expected)
-			assert.True(t, goErr.Is(actual, errors.ErrInvalidJSONPathQuery))
+			assert.True(t, goErr.Is(actual, errors.ErrInvalidJSONPathSelector))
 		})
 	}
 }
 
-func Test_getInvalidJSONPathQueryWithReason(t *testing.T) {
+func Test_getInvalidJSONPathSelectorWithReason(t *testing.T) {
 
 	type input struct {
-		query  string
-		reason error
+		selector string
+		reason   error
 	}
 
 	tests := []struct {
@@ -77,32 +77,32 @@ func Test_getInvalidJSONPathQueryWithReason(t *testing.T) {
 	}{
 		{
 			input: input{
-				query:  "",
-				reason: fmt.Errorf("the reason"),
+				selector: "",
+				reason:   fmt.Errorf("the reason"),
 			},
-			expected: "invalid JSONPath query '' the reason",
+			expected: "invalid JSONPath selector '' the reason",
 		},
 		{
 			input: input{
-				query:  "test",
-				reason: fmt.Errorf("other reason"),
+				selector: "test",
+				reason:   fmt.Errorf("other reason"),
 			},
-			expected: "invalid JSONPath query 'test' other reason",
+			expected: "invalid JSONPath selector 'test' other reason",
 		},
 		{
 			input: input{
-				query:  "other",
-				reason: getInvalidJSONPathQuery("inside"),
+				selector: "other",
+				reason:   getInvalidJSONPathSelector("inside"),
 			},
-			expected: "invalid JSONPath query 'inside'",
+			expected: "invalid JSONPath selector 'inside'",
 		},
 	}
 
 	for idx, test := range tests {
 		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
-			actual := getInvalidJSONPathQueryWithReason(test.input.query, test.input.reason)
+			actual := getInvalidJSONPathSelectorWithReason(test.input.selector, test.input.reason)
 			assert.EqualError(t, actual, test.expected)
-			assert.True(t, goErr.Is(actual, errors.ErrInvalidJSONPathQuery))
+			assert.True(t, goErr.Is(actual, errors.ErrInvalidJSONPathSelector))
 		})
 	}
 }

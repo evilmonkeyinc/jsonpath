@@ -7,7 +7,7 @@ This implementation would be closer to the 'Scalar consensus' as it does not alw
 
 ## Array Test
 
-|match|query|data|consensus|actual|
+|match|selector|data|consensus|actual|
 |---|---|---|---|---|
 |:white_check_mark:|`$[1:3]`|`["first", "second", "third", "forth", "fifth"]`|`["second","third"]`|`["second","third"]`|
 |:white_check_mark:|`$[0:5]`|`["first", "second", "third", "forth", "fifth"]`|`["first","second","third","forth","fifth"]`|`["first","second","third","forth","fifth"]`|
@@ -54,7 +54,7 @@ This implementation would be closer to the 'Scalar consensus' as it does not alw
 
 ## Bracket Test
 
-|match|query|data|consensus|actual|
+|match|selector|data|consensus|actual|
 |---|---|---|---|---|
 |:white_check_mark:|`$['key']`|`{"key": "value"}`|`"value"`|`"value"`|
 |:white_check_mark:|`$['missing']`|`{"key": "value"}`|`nil`|`null`|
@@ -105,7 +105,7 @@ This implementation would be closer to the 'Scalar consensus' as it does not alw
 
 ## Dot Test
 
-|match|query|data|consensus|actual|
+|match|selector|data|consensus|actual|
 |---|---|---|---|---|
 |:no_entry:|`@.a`|`{"a": 1}`|`nil`|`1`|
 |:white_check_mark:|`$.['key']`|`{ "key": "value", "other": {"key": [{"key": 42}]} }`|`"value"`|`"value"`|
@@ -162,7 +162,7 @@ This implementation would be closer to the 'Scalar consensus' as it does not alw
 
 ## Filter Test
 
-|match|query|data|consensus|actual|
+|match|selector|data|consensus|actual|
 |---|---|---|---|---|
 |:question:|`$[?(@.key)]`|`{"key": 42, "another": {"key": 1}}`|none|`[{"key":1}]`|
 |:question:|`$..*[?(@.id>2)]`|`[ { "complext": { "one": [ { "name": "first", "id": 1 }, { "name": "next", "id": 2 }, { "name": "another", "id": 3 }, { "name": "more", "id": 4 } ], "more": { "name": "next to last", "id": 5 } } }, { "name": "last", "id": 6 } ]`|none|`[[],[],[{"id":5,"name":"next to last"}],[{"id":3,"name":"another"},{"id":4,"name":"more"}],[],[],[],[],[]]`|
@@ -179,8 +179,8 @@ This implementation would be closer to the 'Scalar consensus' as it does not alw
 |:question:|`$[?(@[-1]==2)]`|`[[2, 3], ["a"], [0, 2], [2]]`|none|`[[0,2],[2]]`|
 |:white_check_mark:|`$[?(@[1]=='b')]`|`[["a", "b"], ["x", "y"]]`|`[["a","b"]]`|`[["a","b"]]`|
 |:question:|`$[?(@[1]=='b')]`|`{"1": ["a", "b"], "2": ["x", "y"]}`|none|`[["a","b"]]`|
-|:question:|`$[?(@)]`|`[ "some value", null, "value", 0, 1, -1, "", [], {}, false, true ]`|none|`["some value","value",0,1,-1,true]`|
-|:question:|`$[?(@.a && (@.b \|\| @.c))]`|`[ { "a": true }, { "a": true, "b": true }, { "a": true, "b": true, "c": true }, { "b": true, "c": true }, { "a": true, "c": true }, { "c": true }, { "b": true } ]`|none|`[]`|
+|:question:|`$[?(@)]`|`[ "some value", null, "value", 0, 1, -1, "", [], {}, false, true ]`|none|`["some value","value",1,-1,true]`|
+|:question:|`$[?(@.a && (@.b \|\| @.c))]`|`[ { "a": true }, { "a": true, "b": true }, { "a": true, "b": true, "c": true }, { "b": true, "c": true }, { "a": true, "c": true }, { "c": true }, { "b": true } ]`|none|`[{"a":true,"b":true,"c":true}]`|
 |:question:|`[?(@.a && @.b \|\| @.c)]`|`[ { "a": true, "b": true }, { "a": true, "b": true, "c": true }, { "b": true, "c": true }, { "a": true, "c": true }, { "a": true }, { "b": true }, { "c": true }, { "d": true }, {} ]`|none|`null`|
 |:question:|`$[?(@.key/10==5)]`|`[{"key": 60}, {"key": 50}, {"key": 10}, {"key": -50}, {"key/10": 5}]`|none|`[{"key":50}]`|
 |:question:|`$[?(@.key-dash == 'value')]`|`[ { "key-dash": "value" } ]`|none|`[]`|
@@ -188,67 +188,67 @@ This implementation would be closer to the 'Scalar consensus' as it does not alw
 |:question:|`$[?(@.2 == 'third')]`|`[["first", "second", "third", "forth", "fifth"]] `|none|`[]`|
 |:white_check_mark:|`$[?()]`|`[1, {"key": 42}, "value", null]`|`nil`|`null`|
 |:question:|`$[?(@.key==42)]`|`[ {"key": 0}, {"key": 42}, {"key": -1}, {"key": 1}, {"key": 41}, {"key": 43}, {"key": 42.0001}, {"key": 41.9999}, {"key": 100}, {"key": "some"}, {"key": "42"}, {"key": null}, {"key": 420}, {"key": ""}, {"key": {}}, {"key": []}, {"key": [42]}, {"key": {"key": 42}}, {"key": {"some": 42}}, {"some": "value"} ]`|none|`[{"key":42}]`|
-|:no_entry:|`$[?(@==42)]`|`[ 0, 42, -1, 41, 43, 42.0001, 41.9999, null, 100 ]`|`[42]`|`[]`|
+|:white_check_mark:|`$[?(@==42)]`|`[ 0, 42, -1, 41, 43, 42.0001, 41.9999, null, 100 ]`|`[42]`|`[42]`|
 |:white_check_mark:|`$[?(@.key==43)]`|`[{"key": 42}]`|`[]`|`[]`|
 |:question:|`$[?(@.key==42)]`|`{ "a": {"key": 0}, "b": {"key": 42}, "c": {"key": -1}, "d": {"key": 41}, "e": {"key": 43}, "f": {"key": 42.0001}, "g": {"key": 41.9999}, "h": {"key": 100}, "i": {"some": "value"} }`|none|`[{"key":42}]`|
 |:question:|`$[?(@.id==2)]`|`{"id": 2}`|none|`[]`|
-|:question:|`$[?(@.d==["v1","v2"])]`|`[ { "d": [ "v1", "v2" ] }, { "d": [ "a", "b" ] }, { "d": "v1" }, { "d": "v2" }, { "d": {} }, { "d": [] }, { "d": null }, { "d": -1 }, { "d": 0 }, { "d": 1 }, { "d": "['v1','v2']" }, { "d": "['v1', 'v2']" }, { "d": "v1,v2" }, { "d": "[\"v1\", \"v2\"]" }, { "d": "[\"v1\",\"v2\"]" } ]`|none|`[]`|
-|:question:|`$[?(@[0:1]==[1])]`|`[[1, 2, 3], [1], [2, 3], 1, 2]`|none|`[]`|
-|:question:|`$[?(@.*==[1,2])]`|`[[1,2], [2,3], [1], [2], [1, 2, 3], 1, 2, 3]`|none|`[]`|
+|:question:|`$[?(@.d==["v1","v2"])]`|`[ { "d": [ "v1", "v2" ] }, { "d": [ "a", "b" ] }, { "d": "v1" }, { "d": "v2" }, { "d": {} }, { "d": [] }, { "d": null }, { "d": -1 }, { "d": 0 }, { "d": 1 }, { "d": "['v1','v2']" }, { "d": "['v1', 'v2']" }, { "d": "v1,v2" }, { "d": "[\"v1\", \"v2\"]" }, { "d": "[\"v1\",\"v2\"]" } ]`|none|`[{"d":["v1","v2"]}]`|
+|:question:|`$[?(@[0:1]==[1])]`|`[[1, 2, 3], [1], [2, 3], 1, 2]`|none|`[[1,2,3],[1]]`|
+|:question:|`$[?(@.*==[1,2])]`|`[[1,2], [2,3], [1], [2], [1, 2, 3], 1, 2, 3]`|none|`[[1,2]]`|
 |:question:|`$[?(@.d==['v1','v2'])]`|`[ { "d": [ "v1", "v2" ] }, { "d": [ "a", "b" ] }, { "d": "v1" }, { "d": "v2" }, { "d": {} }, { "d": [] }, { "d": null }, { "d": -1 }, { "d": 0 }, { "d": 1 }, { "d": "['v1','v2']" }, { "d": "['v1', 'v2']" }, { "d": "v1,v2" }, { "d": "[\"v1\", \"v2\"]" }, { "d": "[\"v1\",\"v2\"]" } ]`|none|`[]`|
 |:question:|`$[?((@.key<44)==false)]`|`[{"key": 42}, {"key": 43}, {"key": 44}]`|none|`[{"key":44}]`|
 |:question:|`$[?(@.key==false)]`|`[ { "some": "some value" }, { "key": true }, { "key": false }, { "key": null }, { "key": "value" }, { "key": "" }, { "key": 0 }, { "key": 1 }, { "key": -1 }, { "key": 42 }, { "key": {} }, { "key": [] } ]`|none|`[{"key":false}]`|
-|:question:|`$[?(@.key==null)]`|`[ { "some": "some value" }, { "key": true }, { "key": false }, { "key": null }, { "key": "value" }, { "key": "" }, { "key": 0 }, { "key": 1 }, { "key": -1 }, { "key": 42 }, { "key": {} }, { "key": [] } ]`|none|`[]`|
+|:question:|`$[?(@.key==null)]`|`[ { "some": "some value" }, { "key": true }, { "key": false }, { "key": null }, { "key": "value" }, { "key": "" }, { "key": 0 }, { "key": 1 }, { "key": -1 }, { "key": 42 }, { "key": {} }, { "key": [] } ]`|none|`[{"key":null}]`|
 |:question:|`$[?(@[0:1]==1)]`|`[[1, 2, 3], [1], [2, 3], 1, 2]`|none|`[]`|
 |:question:|`$[?(@[*]==2)]`|`[[1,2], [2,3], [1], [2], [1, 2, 3], 1, 2, 3]`|none|`[]`|
 |:question:|`$[?(@.*==2)]`|`[[1,2], [2,3], [1], [2], [1, 2, 3], 1, 2, 3]`|none|`[]`|
 |:question:|`$[?(@.key==-0.123e2)]`|`[{"key": -12.3}, {"key": -0.123}, {"key": -12}, {"key": 12.3}, {"key": 2}, {"key": "-0.123e2"}]`|none|`[{"key":-12.3}]`|
-|:question:|`$[?(@.key==010)]`|`[{"key": "010"}, {"key": "10"}, {"key": 10}, {"key": 0}, {"key": 8}]`|none|`[{"key":8}]`|
-|:question:|`$[?(@.d=={"k":"v"})]`|`[ { "d": { "k": "v" } }, { "d": { "a": "b" } }, { "d": "k" }, { "d": "v" }, { "d": {} }, { "d": [] }, { "d": null }, { "d": -1 }, { "d": 0 }, { "d": 1 }, { "d": "[object Object]" }, { "d": "{\"k\": \"v\"}" }, { "d": "{\"k\":\"v\"}" }, "v" ]`|none|`[]`|
+|:question:|`$[?(@.key==010)]`|`[{"key": "010"}, {"key": "10"}, {"key": 10}, {"key": 0}, {"key": 8}]`|none|`[{"key":10}]`|
+|:question:|`$[?(@.d=={"k":"v"})]`|`[ { "d": { "k": "v" } }, { "d": { "a": "b" } }, { "d": "k" }, { "d": "v" }, { "d": {} }, { "d": [] }, { "d": null }, { "d": -1 }, { "d": 0 }, { "d": 1 }, { "d": "[object Object]" }, { "d": "{\"k\": \"v\"}" }, { "d": "{\"k\":\"v\"}" }, "v" ]`|none|`[{"d":{"k":"v"}}]`|
 |:white_check_mark:|`$[?(@.key=="value")]`|`[ {"key": "some"}, {"key": "value"}, {"key": null}, {"key": 0}, {"key": 1}, {"key": -1}, {"key": ""}, {"key": {}}, {"key": []}, {"key": "valuemore"}, {"key": "morevalue"}, {"key": ["value"]}, {"key": {"some": "value"}}, {"key": {"key": "value"}}, {"some": "value"} ]`|`[{"key":"value"}]`|`[{"key":"value"}]`|
 |:white_check_mark:|`$[?(@.key=="Motörhead")]`|`[ {"key": "something"}, {"key": "Mot\u00f6rhead"}, {"key": "mot\u00f6rhead"}, {"key": "Motorhead"}, {"key": "Motoo\u0308rhead"}, {"key": "motoo\u0308rhead"} ]`|`[{"key":"Motörhead"}]`|`[{"key":"Motörhead"}]`|
 |:white_check_mark:|`$[?(@.key=="hi@example.com")]`|`[ {"key": "some"}, {"key": "value"}, {"key": "hi@example.com"} ]`|`[{"key":"hi@example.com"}]`|`[{"key":"hi@example.com"}]`|
 |:white_check_mark:|`$[?(@.key=="some.value")]`|`[ {"key": "some"}, {"key": "value"}, {"key": "some.value"} ]`|`[{"key":"some.value"}]`|`[{"key":"some.value"}]`|
 |:white_check_mark:|`$[?(@.key=='value')]`|`[ {"key": "some"}, {"key": "value"} ]`|`[{"key":"value"}]`|`[{"key":"value"}]`|
-|:question:|`$[?(@.key=="Mot\u00f6rhead")]`|`[ {"key": "something"}, {"key": "Mot\u00f6rhead"}, {"key": "mot\u00f6rhead"}, {"key": "Motorhead"}, {"key": "Motoo\u0308rhead"}, {"key": "motoo\u0308rhead"} ]`|none|`[{"key":"Motörhead"}]`|
+|:question:|`$[?(@.key=="Mot\u00f6rhead")]`|`[ {"key": "something"}, {"key": "Mot\u00f6rhead"}, {"key": "mot\u00f6rhead"}, {"key": "Motorhead"}, {"key": "Motoo\u0308rhead"}, {"key": "motoo\u0308rhead"} ]`|none|`[]`|
 |:question:|`$[?(@.key==true)]`|`[ { "some": "some value" }, { "key": true }, { "key": false }, { "key": null }, { "key": "value" }, { "key": "" }, { "key": 0 }, { "key": 1 }, { "key": -1 }, { "key": 42 }, { "key": {} }, { "key": [] } ]`|none|`[{"key":true}]`|
-|:question:|`$[?(@.key1==@.key2)]`|`[ {"key1": 10, "key2": 10}, {"key1": 42, "key2": 50}, {"key1": 10}, {"key2": 10}, {}, {"key1": null, "key2": null}, {"key1": null}, {"key2": null}, {"key1": 0, "key2": 0}, {"key1": 0}, {"key2": 0}, {"key1": -1, "key2": -1}, {"key1": "", "key2": ""}, {"key1": false, "key2": false}, {"key1": false}, {"key2": false}, {"key1": true, "key2": true}, {"key1": [], "key2": []}, {"key1": {}, "key2": {}}, {"key1": {"a": 1, "b": 2}, "key2": {"b": 2, "a": 1}} ]`|none|`[{"key1":10,"key2":10},{"key1":0,"key2":0},{"key1":-1,"key2":-1},{"key1":"","key2":""},{"key1":false,"key2":false},{"key1":true,"key2":true}]`|
+|:question:|`$[?(@.key1==@.key2)]`|`[ {"key1": 10, "key2": 10}, {"key1": 42, "key2": 50}, {"key1": 10}, {"key2": 10}, {}, {"key1": null, "key2": null}, {"key1": null}, {"key2": null}, {"key1": 0, "key2": 0}, {"key1": 0}, {"key2": 0}, {"key1": -1, "key2": -1}, {"key1": "", "key2": ""}, {"key1": false, "key2": false}, {"key1": false}, {"key2": false}, {"key1": true, "key2": true}, {"key1": [], "key2": []}, {"key1": {}, "key2": {}}, {"key1": {"a": 1, "b": 2}, "key2": {"b": 2, "a": 1}} ]`|none|`[{"key1":10,"key2":10},{"key1":null,"key2":null},{"key1":0,"key2":0},{"key1":-1,"key2":-1},{"key1":"","key2":""},{"key1":false,"key2":false},{"key1":true,"key2":true},{"key1":[],"key2":[]},{"key1":{},"key2":{}},{"key1":{"a":1,"b":2},"key2":{"a":1,"b":2}}]`|
 |:question:|`$.items[?(@.key==$.value)]`|`{"value": 42, "items": [{"key": 10}, {"key": 42}, {"key": 50}]}`|none|`[{"key":42}]`|
 |:question:|`$[?(@.key>42)]`|`[ {"key": 0}, {"key": 42}, {"key": -1}, {"key": 41}, {"key": 43}, {"key": 42.0001}, {"key": 41.9999}, {"key": 100}, {"key": "43"}, {"key": "42"}, {"key": "41"}, {"key": "value"}, {"some": "value"} ]`|none|`[{"key":43},{"key":42.0001},{"key":100}]`|
 |:question:|`$[?(@.key>=42)]`|`[ {"key": 0}, {"key": 42}, {"key": -1}, {"key": 41}, {"key": 43}, {"key": 42.0001}, {"key": 41.9999}, {"key": 100}, {"key": "43"}, {"key": "42"}, {"key": "41"}, {"key": "value"}, {"some": "value"} ]`|none|`[{"key":42},{"key":43},{"key":42.0001},{"key":100}]`|
 |:no_entry:|`$[?(@.d in [2, 3])]`|`[{"d": 1}, {"d": 2}, {"d": 1}, {"d": 3}, {"d": 4}]`|`nil`|`[]`|
-|:no_entry:|`$[?(2 in @.d)]`|`[{"d": [1, 2, 3]}, {"d": [2]}, {"d": [1]}, {"d": [3, 4]}, {"d": [4, 2]}]`|`nil`|`[]`|
+|:white_check_mark:|`$[?(2 in @.d)]`|`[{"d": [1, 2, 3]}, {"d": [2]}, {"d": [1]}, {"d": [3, 4]}, {"d": [4, 2]}]`|`nil`|`null`|
 |:question:|`$[?(@.key<42)]`|`[ {"key": 0}, {"key": 42}, {"key": -1}, {"key": 41}, {"key": 43}, {"key": 42.0001}, {"key": 41.9999}, {"key": 100}, {"key": "43"}, {"key": "42"}, {"key": "41"}, {"key": "value"}, {"some": "value"} ]`|none|`[{"key":0},{"key":-1},{"key":41},{"key":41.9999}]`|
 |:question:|`$[?(@.key<=42)]`|`[ {"key": 0}, {"key": 42}, {"key": -1}, {"key": 41}, {"key": 43}, {"key": 42.0001}, {"key": 41.9999}, {"key": 100}, {"key": "43"}, {"key": "42"}, {"key": "41"}, {"key": "value"}, {"some": "value"} ]`|none|`[{"key":0},{"key":42},{"key":-1},{"key":41},{"key":41.9999}]`|
 |:question:|`$[?(@.key*2==100)]`|`[{"key": 60}, {"key": 50}, {"key": 10}, {"key": -50}, {"key*2": 100}]`|none|`[{"key":50}]`|
-|:question:|`$[?(!(@.key==42))]`|`[ {"key": 0}, {"key": 42}, {"key": -1}, {"key": 41}, {"key": 43}, {"key": 42.0001}, {"key": 41.9999}, {"key": 100}, {"key": "43"}, {"key": "42"}, {"key": "41"}, {"key": "value"}, {"some": "value"} ]`|none|`[{"key":0},{"key":-1},{"key":41},{"key":43},{"key":42.0001},{"key":41.9999},{"key":100}]`|
-|:question:|`$[?(!(@.key<42))]`|`[ {"key": 0}, {"key": 42}, {"key": -1}, {"key": 41}, {"key": 43}, {"key": 42.0001}, {"key": 41.9999}, {"key": 100}, {"key": "43"}, {"key": "42"}, {"key": "41"}, {"key": "value"}, {"some": "value"} ]`|none|`[{"key":42},{"key":43},{"key":42.0001},{"key":100}]`|
-|:question:|`$[?(!@.key)]`|`[ { "some": "some value" }, { "key": true }, { "key": false }, { "key": null }, { "key": "value" }, { "key": "" }, { "key": 0 }, { "key": 1 }, { "key": -1 }, { "key": 42 }, { "key": {} }, { "key": [] } ]`|none|`[{"key":false}]`|
-|:question:|`$[?(@.key!=42)]`|`[ {"key": 0}, {"key": 42}, {"key": -1}, {"key": 1}, {"key": 41}, {"key": 43}, {"key": 42.0001}, {"key": 41.9999}, {"key": 100}, {"key": "some"}, {"key": "42"}, {"key": null}, {"key": 420}, {"key": ""}, {"key": {}}, {"key": []}, {"key": [42]}, {"key": {"key": 42}}, {"key": {"some": 42}}, {"some": "value"} ]`|none|`[{"key":0},{"key":-1},{"key":1},{"key":41},{"key":43},{"key":42.0001},{"key":41.9999},{"key":100},{"key":420}]`|
+|:question:|`$[?(!(@.key==42))]`|`[ {"key": 0}, {"key": 42}, {"key": -1}, {"key": 41}, {"key": 43}, {"key": 42.0001}, {"key": 41.9999}, {"key": 100}, {"key": "43"}, {"key": "42"}, {"key": "41"}, {"key": "value"}, {"some": "value"} ]`|none|`[{"key":0},{"key":42},{"key":-1},{"key":41},{"key":43},{"key":42.0001},{"key":41.9999},{"key":100},{"key":"43"},{"key":"42"},{"key":"41"},{"key":"value"},{"some":"value"}]`|
+|:question:|`$[?(!(@.key<42))]`|`[ {"key": 0}, {"key": 42}, {"key": -1}, {"key": 41}, {"key": 43}, {"key": 42.0001}, {"key": 41.9999}, {"key": 100}, {"key": "43"}, {"key": "42"}, {"key": "41"}, {"key": "value"}, {"some": "value"} ]`|none|`[{"key":0},{"key":42},{"key":-1},{"key":41},{"key":43},{"key":42.0001},{"key":41.9999},{"key":100},{"key":"43"},{"key":"42"},{"key":"41"},{"key":"value"},{"some":"value"}]`|
+|:question:|`$[?(!@.key)]`|`[ { "some": "some value" }, { "key": true }, { "key": false }, { "key": null }, { "key": "value" }, { "key": "" }, { "key": 0 }, { "key": 1 }, { "key": -1 }, { "key": 42 }, { "key": {} }, { "key": [] } ]`|none|`null`|
+|:question:|`$[?(@.key!=42)]`|`[ {"key": 0}, {"key": 42}, {"key": -1}, {"key": 1}, {"key": 41}, {"key": 43}, {"key": 42.0001}, {"key": 41.9999}, {"key": 100}, {"key": "some"}, {"key": "42"}, {"key": null}, {"key": 420}, {"key": ""}, {"key": {}}, {"key": []}, {"key": [42]}, {"key": {"key": 42}}, {"key": {"some": 42}}, {"some": "value"} ]`|none|`[{"key":0},{"key":-1},{"key":1},{"key":41},{"key":43},{"key":42.0001},{"key":41.9999},{"key":100},{"key":"some"},{"key":"42"},{"key":null},{"key":420},{"key":""},{"key":{}},{"key":[]},{"key":[42]},{"key":{"key":42}},{"key":{"some":42}}]`|
 |:no_entry:|`$[*].bookmarks[?(@.page == 45)]^^^`|`[ { "title": "Sayings of the Century", "bookmarks": [{ "page": 40 }] }, { "title": "Sword of Honour", "bookmarks": [ { "page": 35 }, { "page": 45 } ] }, { "title": "Moby Dick", "bookmarks": [ { "page": 3035 }, { "page": 45 } ] } ]`|`nil`|`[[],[],[]]`|
 |:question:|`$[?(@.name=~/hello.*/)]`|`[ {"name": "hullo world"}, {"name": "hello world"}, {"name": "yes hello world"}, {"name": "HELLO WORLD"}, {"name": "good bye"} ]`|none|`[]`|
-|:question:|`$[?(@.name=~/@.pattern/)]`|`[ {"name": "hullo world"}, {"name": "hello world"}, {"name": "yes hello world"}, {"name": "HELLO WORLD"}, {"name": "good bye"}, {"pattern": "hello.*"} ]`|none|`[]`|
+|:question:|`$[?(@.name=~/@.pattern/)]`|`[ {"name": "hullo world"}, {"name": "hello world"}, {"name": "yes hello world"}, {"name": "HELLO WORLD"}, {"name": "good bye"}, {"pattern": "hello.*"} ]`|none|`null`|
 |:question:|`$[?(@[*]>=4)]`|`[[1,2],[3,4],[5,6]]`|none|`[]`|
 |:question:|`$.x[?(@[*]>=$.y[*])]`|`{"x":[[1,2],[3,4],[5,6]],"y":[3,4,5]}`|none|`[]`|
 |:no_entry:|`$[?(@.key=42)]`|`[ {"key": 0}, {"key": 42}, {"key": -1}, {"key": 1}, {"key": 41}, {"key": 43}, {"key": 42.0001}, {"key": 41.9999}, {"key": 100}, {"key": "some"}, {"key": "42"}, {"key": null}, {"key": 420}, {"key": ""}, {"key": {}}, {"key": []}, {"key": [42]}, {"key": {"key": 42}}, {"key": {"some": 42}}, {"some": "value"} ]`|`nil`|`[]`|
-|:question:|`$[?(@.a[?(@.price>10)])]`|`[ { "a": [{"price": 1}, {"price": 3}] }, { "a": [{"price": 11}] }, { "a": [{"price": 8}, {"price": 12}, {"price": 3}] }, { "a": [] } ]`|none|`[]`|
+|:question:|`$[?(@.a[?(@.price>10)])]`|`[ { "a": [{"price": 1}, {"price": 3}] }, { "a": [{"price": 11}] }, { "a": [{"price": 8}, {"price": 12}, {"price": 3}] }, { "a": [] } ]`|none|`[{"a":[{"price":11}]},{"a":[{"price":8},{"price":12},{"price":3}]}]`|
 |:white_check_mark:|`$[?(@.address.city=='Berlin')]`|`[ { "address": { "city": "Berlin" } }, { "address": { "city": "London" } } ]`|`[{"address":{"city":"Berlin"}}]`|`[{"address":{"city":"Berlin"}}]`|
 |:question:|`$[?(@.key-50==-100)]`|`[{"key": 60}, {"key": 50}, {"key": 10}, {"key": -50}, {"key-50": -100}]`|none|`[{"key":-50}]`|
 |:question:|`$[?(1==1)]`|`[1, 3, "nice", true, null, false, {}, [], -1, 0, ""]`|none|`[1,3,"nice",true,null,false,{},[],-1,0,""]`|
 |:question:|`$[?(@.key===42)]`|`[ {"key": 0}, {"key": 42}, {"key": -1}, {"key": 1}, {"key": 41}, {"key": 43}, {"key": 42.0001}, {"key": 41.9999}, {"key": 100}, {"key": "some"}, {"key": "42"}, {"key": null}, {"key": 420}, {"key": ""}, {"key": {}}, {"key": []}, {"key": [42]}, {"key": {"key": 42}}, {"key": {"some": 42}}, {"some": "value"} ]`|none|`[]`|
-|:question:|`$[?(@.key)]`|`[ { "some": "some value" }, { "key": true }, { "key": false }, { "key": null }, { "key": "value" }, { "key": "" }, { "key": 0 }, { "key": 1 }, { "key": -1 }, { "key": 42 }, { "key": {} }, { "key": [] } ]`|none|`[{"key":true},{"key":"value"},{"key":0},{"key":1},{"key":-1},{"key":42}]`|
+|:question:|`$[?(@.key)]`|`[ { "some": "some value" }, { "key": true }, { "key": false }, { "key": null }, { "key": "value" }, { "key": "" }, { "key": 0 }, { "key": 1 }, { "key": -1 }, { "key": 42 }, { "key": {} }, { "key": [] } ]`|none|`[{"key":true},{"key":"value"},{"key":1},{"key":-1},{"key":42}]`|
 |:question:|`$.*[?(@.key)]`|`[ { "some": "some value" }, { "key": "value" } ]`|none|`[[],[]]`|
-|:question:|`$..[?(@.id)]`|`{"id": 2, "more": [{"id": 2}, {"more": {"id": 2}}, {"id": {"id": 2}}, [{"id": 2}]]}`|none|`[{"id":2},{"id":2},{"id":2},{"id":2}]`|
+|:question:|`$..[?(@.id)]`|`{"id": 2, "more": [{"id": 2}, {"more": {"id": 2}}, {"id": {"id": 2}}, [{"id": 2}]]}`|none|`[{"id":2},{"id":{"id":2}},{"id":2},{"id":2},{"id":2}]`|
 |:question:|`$[?(false)]`|`[1, 3, "nice", true, null, false, {}, [], -1, 0, ""]`|none|`[]`|
-|:question:|`$[?(@..child)]`|`[{"key": [{"child": 1}, {"child": 2}]}, {"key": [{"child": 2}]}, {"key": [{}]}, {"key": [{"something": 42}]}, {}]`|none|`[]`|
+|:question:|`$[?(@..child)]`|`[{"key": [{"child": 1}, {"child": 2}]}, {"key": [{"child": 2}]}, {"key": [{}]}, {"key": [{"something": 42}]}, {}]`|none|`[{"key":[{"child":1},{"child":2}]},{"key":[{"child":2}]}]`|
 |:question:|`$[?(null)]`|`[1, 3, "nice", true, null, false, {}, [], -1, 0, ""]`|none|`[]`|
 |:question:|`$[?(true)]`|`[1, 3, "nice", true, null, false, {}, [], -1, 0, ""]`|none|`[1,3,"nice",true,null,false,{},[],-1,0,""]`|
 |:question:|`$[?@.key==42]`|`[ {"key": 0}, {"key": 42}, {"key": -1}, {"key": 1}, {"key": 41}, {"key": 43}, {"key": 42.0001}, {"key": 41.9999}, {"key": 100}, {"key": "some"}, {"key": "42"}, {"key": null}, {"key": 420}, {"key": ""}, {"key": {}}, {"key": []}, {"key": [42]}, {"key": {"key": 42}}, {"key": {"some": 42}}, {"some": "value"} ]`|none|`null`|
-|:question:|`$[?(@.key)]`|`[ { "some": "some value" }, { "key": true }, { "key": false }, { "key": null }, { "key": "value" }, { "key": "" }, { "key": 0 }, { "key": 1 }, { "key": -1 }, { "key": 42 }, { "key": {} }, { "key": [] } ]`|none|`[{"key":true},{"key":"value"},{"key":0},{"key":1},{"key":-1},{"key":42}]`|
+|:question:|`$[?(@.key)]`|`[ { "some": "some value" }, { "key": true }, { "key": false }, { "key": null }, { "key": "value" }, { "key": "" }, { "key": 0 }, { "key": 1 }, { "key": -1 }, { "key": 42 }, { "key": {} }, { "key": [] } ]`|none|`[{"key":true},{"key":"value"},{"key":1},{"key":-1},{"key":42}]`|
 
 ## Misc Test
 
-|match|query|data|consensus|actual|
+|match|selector|data|consensus|actual|
 |---|---|---|---|---|
 |:white_check_mark:|``|`{"a": 42, "": 21}`|`nil`|`null`|
 |:question:|`$.data.sum()`|`{"data": [1,2,3,4]}`|none|`null`|
@@ -263,12 +263,12 @@ This implementation would be closer to the 'Scalar consensus' as it does not alw
 
 ## Union Test
 
-|match|query|data|consensus|actual|
+|match|selector|data|consensus|actual|
 |---|---|---|---|---|
 |:white_check_mark:|`$[0,1]`|`["first", "second", "third"]`|`["first","second"]`|`["first","second"]`|
 |:white_check_mark:|`$[0,0]`|`["a"]`|`["a","a"]`|`["a","a"]`|
 |:white_check_mark:|`$['a','a']`|`{"a":1}`|`[1,1]`|`[1,1]`|
-|:question:|`$[?(@.key<3),?(@.key>6)]`|`[{"key": 1}, {"key": 8}, {"key": 3}, {"key": 10}, {"key": 7}, {"key": 2}, {"key": 6}, {"key": 4}]`|none|`[]`|
+|:question:|`$[?(@.key<3),?(@.key>6)]`|`[{"key": 1}, {"key": 8}, {"key": 3}, {"key": 10}, {"key": 7}, {"key": 2}, {"key": 6}, {"key": 4}]`|none|`null`|
 |:white_check_mark:|`$['key','another']`|`{ "key": "value", "another": "entry" }`|`["value","entry"]`|`["value","entry"]`|
 |:white_check_mark:|`$['missing','key']`|`{ "key": "value", "another": "entry" }`|`["value"]`|`["value"]`|
 |:no_entry:|`$[:]['c','d']`|`[{"c":"cc1","d":"dd1","e":"ee1"},{"c":"cc2","d":"dd2","e":"ee2"}]`|`["cc1","dd1","cc2","dd2"]`|`[["cc1","dd1"],["cc2","dd2"]]`|

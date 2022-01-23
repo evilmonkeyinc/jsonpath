@@ -25,10 +25,10 @@ import (
 )
 
 func main() {
-	query := os.Args[1]
+	selector := os.Args[1]
 	data := os.Args[2]
 
-	result, err := jsonpath.QueryString(query, data)
+	result, err := jsonpath.QueryString(selector, data)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -44,31 +44,31 @@ The following functions are exported to support the functionality
 
 ### Compile
 
-Will parse a JSONPath query and return a JSONPath object that can be used to query multiple JSON data objects or strings
+Will parse a JSONPath selector and return a Selector object that can be used to query multiple JSON data objects or strings
 
 ### Query
 
-Will compile a JSONPath query and will query the supplied JSON data in any various formats.
+Will compile a JSONPath selector and will query the supplied JSON data in any various formats.
 
 The parser can support querying struct types, and will use the `json` tags for struct fields if they are present, if not it will use the names as they appear in the golang code.
 
 ### QueryString
 
-Will compile a JSONPath query and will query the supplied JSON data. 
+Will compile a JSONPath selector and will query the supplied JSON data. 
 
 QueryString can support a JSON array or object strings, and will unmarshal them to `[]interface{}` or `map[string]interface{}` using the standard `encoding/json` package unmarshal functions.
 
 ## Types
 
-### JSONPath
+### Selector
 
 This object is returned by the `Compile` function.
 
-The JSONPath struct represents a reusable compiled JSONPath query which supports the `Query`, and `QueryString` functions as detailed above.
+The Selector struct represents a reusable compiled JSONPath selector which supports the `Query`, and `QueryString` functions as detailed above.
 
 ### Options
 
-Part of the JSONPath object, Options allows you to specify what additional functionality, if any, that you want to enable while querying data.
+Part of the Selector object, Options allows you to specify what additional functionality, if any, that you want to enable while querying data.
 
 You are able to enable index referencing support for maps for all tokens using `AllowMapReferenceByIndex` or use enable it for each token type individually.
 
@@ -95,7 +95,7 @@ You are able to enable index referencing support for strings for all tokens usin
 
 represents the data object being queried 
 
-this should always be the first token in a query. It is also possible to use the root symbol in scripts and filters, for example `$.store.book[?(@.category == $.onSaleCategory)]` would allow you to filter the elements i the book array based on its `category` value compared to the `onSaleCategory` value on the root object.
+this should always be the first token in a selector. It is also possible to use the root symbol in scripts and filters, for example `$.store.book[?(@.category == $.onSaleCategory)]` would allow you to filter the elements i the book array based on its `category` value compared to the `onSaleCategory` value on the root object.
 
 ### Child
 
@@ -190,7 +190,7 @@ If used with a map that has a key `length` it will return the corresponding valu
 
 ### Subscript, Union, and Range with maps and strings
 
-Using the Compile() function, and modifying the JSONPath Options, it is possible to use a map or a string in place of an array with the subscript `[1]` union `[1,2,3]` and range `[0:3]` operations. 
+Using the Compile() function, and modifying the Selector Options, it is possible to use a map or a string in place of an array with the subscript `[1]` union `[1,2,3]` and range `[0:3]` operations. 
 
 For maps, the keys will be sorted into alphabetical order and they will be used to determine the index order. For example, if you had a map with strings `a` and `b`, regardless of the order, `a` would be the `0` index, and `b` the `1` index.
 

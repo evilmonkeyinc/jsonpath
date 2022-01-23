@@ -19,7 +19,7 @@ import (
 const consensusNone string = "none"
 
 type testData struct {
-	query         string
+	selector      string
 	data          string
 	expected      interface{}
 	consensus     interface{}
@@ -29,21 +29,21 @@ type testData struct {
 func batchTest(t *testing.T, tests []testData) {
 	for idx, test := range tests {
 		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
-			actual, err := jsonpath.QueryString(test.query, test.data)
+			actual, err := jsonpath.QueryString(test.selector, test.data)
 			if test.expectedError == "" {
-				assert.Nil(t, err, fmt.Sprintf("%s error should be nil", test.query))
+				assert.Nil(t, err, fmt.Sprintf("%s error should be nil", test.selector))
 			} else {
-				assert.EqualError(t, err, test.expectedError, fmt.Sprintf("%s invalid error", test.query))
+				assert.EqualError(t, err, test.expectedError, fmt.Sprintf("%s invalid error", test.selector))
 			}
 
 			if expectedArray, ok := test.expected.([]interface{}); ok {
 				actualArray, ok := actual.([]interface{})
 				assert.True(t, ok, "expected array response")
 				if ok {
-					assert.ElementsMatch(t, expectedArray, actualArray, fmt.Sprintf("%s unexpected value", test.query))
+					assert.ElementsMatch(t, expectedArray, actualArray, fmt.Sprintf("%s unexpected value", test.selector))
 				}
 			} else {
-				assert.EqualValues(t, test.expected, actual, fmt.Sprintf("%s unexpected value", test.query))
+				assert.EqualValues(t, test.expected, actual, fmt.Sprintf("%s unexpected value", test.selector))
 			}
 		})
 	}
@@ -108,13 +108,13 @@ This implementation would be closer to the 'Scalar consensus' as it does not alw
 }
 
 func printConsensusMatrix(writer io.Writer, tests []testData) {
-	fmt.Fprintf(writer, "|match|query|data|consensus|actual|\n")
+	fmt.Fprintf(writer, "|match|selector|data|consensus|actual|\n")
 	fmt.Fprintf(writer, "|---|---|---|---|---|\n")
 	for _, test := range tests {
 
-		query := test.query
+		selector := test.selector
 		// escape | so format doesnt break
-		query = strings.ReplaceAll(query, "|", "\\|")
+		selector = strings.ReplaceAll(selector, "|", "\\|")
 
 		expected := test.expected
 		if expected == nil {
@@ -125,7 +125,7 @@ func printConsensusMatrix(writer io.Writer, tests []testData) {
 		}
 
 		if test.consensus == consensusNone {
-			fmt.Fprintf(writer, "|%s|`%s`|`%v`|%s|`%v`|\n", ":question:", query, test.data, "none", expected)
+			fmt.Fprintf(writer, "|%s|`%s`|`%v`|%s|`%v`|\n", ":question:", selector, test.data, "none", expected)
 			continue
 		}
 
@@ -142,6 +142,6 @@ func printConsensusMatrix(writer io.Writer, tests []testData) {
 			symbol = ":white_check_mark:"
 		}
 
-		fmt.Fprintf(writer, "|%s|`%s`|`%v`|`%v`|`%v`|\n", symbol, query, test.data, consensus, expected)
+		fmt.Fprintf(writer, "|%s|`%s`|`%v`|`%v`|`%v`|\n", symbol, selector, test.data, consensus, expected)
 	}
 }
