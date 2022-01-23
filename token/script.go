@@ -5,14 +5,16 @@ import (
 	"reflect"
 
 	"github.com/evilmonkeyinc/jsonpath/option"
+	"github.com/evilmonkeyinc/jsonpath/script"
 )
 
-func newScriptToken(expression string, options *option.QueryOptions) *scriptToken {
-	return &scriptToken{expression: expression, options: options}
+func newScriptToken(expression string, engine script.Engine, options *option.QueryOptions) *scriptToken {
+	return &scriptToken{expression: expression, engine: engine, options: options}
 }
 
 type scriptToken struct {
 	expression string
+	engine     script.Engine
 	options    *option.QueryOptions
 }
 
@@ -29,7 +31,7 @@ func (token *scriptToken) Apply(root, current interface{}, next []Token) (interf
 		return nil, getInvalidExpressionEmptyError()
 	}
 
-	value, err := evaluateExpression(root, current, token.expression, token.options)
+	value, err := token.engine.Evaluate(root, current, token.expression, token.options)
 	if err != nil {
 		return nil, getInvalidExpressionError(err)
 	}

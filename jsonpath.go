@@ -7,47 +7,58 @@ import (
 	"strings"
 
 	"github.com/evilmonkeyinc/jsonpath/option"
+	"github.com/evilmonkeyinc/jsonpath/script"
+	"github.com/evilmonkeyinc/jsonpath/script/standard"
 	"github.com/evilmonkeyinc/jsonpath/token"
 )
 
-// Compile compile the JSON path query
-func Compile(queryPath string) (*JSONPath, error) {
-	jsonPath := &JSONPath{}
-	if err := jsonPath.compile(queryPath); err != nil {
-		return nil, getInvalidJSONPathQueryWithReason(queryPath, err)
+// Compile will compile the JSONPath selector
+func Compile(selector string) (*Selector, error) {
+	engine := new(standard.ScriptEngine)
+
+	if selector == "$[?(@.key<3),?(@.key>6)]" {
+		// TODO
+		selector = "$[?(@.key<3),?(@.key>6)]"
+	}
+
+	jsonPath := &Selector{}
+	if err := jsonPath.compile(selector, engine); err != nil {
+		return nil, getInvalidJSONPathSelectorWithReason(selector, err)
 	}
 
 	return jsonPath, nil
 }
 
-// Query will return the result of the JSONPath query applied against the specified JSON data.
-func Query(queryPath string, jsonData interface{}) (interface{}, error) {
-	jsonPath, err := Compile(queryPath)
+// Query will return the result of the JSONPath selector applied against the specified JSON data.
+func Query(selector string, jsonData interface{}) (interface{}, error) {
+	jsonPath, err := Compile(selector)
 	if err != nil {
-		return nil, getInvalidJSONPathQueryWithReason(queryPath, err)
+		return nil, getInvalidJSONPathSelectorWithReason(selector, err)
 	}
 	return jsonPath.Query(jsonData)
 }
 
-// QueryString will return the result of the JSONPath query applied against the specified JSON data.
-func QueryString(queryPath string, jsonData string) (interface{}, error) {
-	jsonPath, err := Compile(queryPath)
+// QueryString will return the result of the JSONPath selector applied against the specified JSON data.
+func QueryString(selector string, jsonData string) (interface{}, error) {
+
+	jsonPath, err := Compile(selector)
 	if err != nil {
-		return nil, getInvalidJSONPathQueryWithReason(queryPath, err)
+		return nil, getInvalidJSONPathSelectorWithReason(selector, err)
 	}
 	return jsonPath.QueryString(jsonData)
 }
 
-// JSONPath represents a compiled JSONPath query
+// Selector represents a compiled JSONPath selector
 // and exposes functions to query JSON data and objects.
-type JSONPath struct {
-	Options     *option.QueryOptions
-	queryString string
-	tokens      []token.Token
+type Selector struct {
+	Options  *option.QueryOptions
+	engine   script.Engine
+	tokens   []token.Token
+	selector string
 }
 
-// String returns the compiled query string representation
-func (query *JSONPath) String() string {
+// String returns the compiled selector string representation
+func (query *Selector) String() string {
 	jsonPath := ""
 	for _, token := range query.tokens {
 		jsonPath += fmt.Sprintf("%s", token)
@@ -55,17 +66,18 @@ func (query *JSONPath) String() string {
 	return jsonPath
 }
 
-func (query *JSONPath) compile(queryString string) error {
-	query.queryString = queryString
+func (query *Selector) compile(selector string, engine script.Engine) error {
+	query.engine = engine
+	query.selector = selector
 
-	tokenStrings, err := token.Tokenize(queryString)
+	tokenStrings, err := token.Tokenize(selector)
 	if err != nil {
 		return err
 	}
 
 	tokens := make([]token.Token, len(tokenStrings))
 	for idx, tokenString := range tokenStrings {
-		token, err := token.Parse(tokenString, query.Options)
+		token, err := token.Parse(tokenString, query.engine, query.Options)
 		if err != nil {
 			return err
 		}
@@ -77,9 +89,9 @@ func (query *JSONPath) compile(queryString string) error {
 }
 
 // Query will return the result of the JSONPath query applied against the specified JSON data.
-func (query *JSONPath) Query(root interface{}) (interface{}, error) {
+func (query *Selector) Query(root interface{}) (interface{}, error) {
 	if len(query.tokens) == 0 {
-		return nil, getInvalidJSONPathQuery(query.queryString)
+		return nil, getInvalidJSONPathSelector(query.selector)
 	}
 
 	tokens := make([]token.Token, 0)
@@ -95,7 +107,7 @@ func (query *JSONPath) Query(root interface{}) (interface{}, error) {
 }
 
 // QueryString will return the result of the JSONPath query applied against the specified JSON data.
-func (query *JSONPath) QueryString(jsonData string) (interface{}, error) {
+func (query *Selector) QueryString(jsonData string) (interface{}, error) {
 	jsonData = strings.TrimSpace(jsonData)
 	if jsonData == "" {
 		return nil, getInvalidJSONData(errDataIsUnexpectedTypeOrNil)

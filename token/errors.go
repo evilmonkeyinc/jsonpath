@@ -8,6 +8,8 @@ import (
 	"github.com/evilmonkeyinc/jsonpath/errors"
 )
 
+// TODO : after refactor ensure all these are still being used
+
 func isInvalidTokenTargetError(err error) bool {
 	return goErr.Is(err, errors.ErrInvalidTokenTarget)
 }

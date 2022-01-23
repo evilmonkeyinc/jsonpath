@@ -140,7 +140,7 @@ func Test_UnionToken_String(t *testing.T) {
 			expected: "[1,3,4]",
 		},
 		{
-			input:    &unionToken{arguments: []interface{}{1, &expressionToken{expression: "4%2"}, "last"}},
+			input:    &unionToken{arguments: []interface{}{1, &expressionToken{expression: "4%2", engine: &testEngine{response: 0}}, "last"}},
 			expected: "[1,(4%2),'last']",
 		},
 	}
@@ -167,7 +167,7 @@ func Test_UnionToken_Apply(t *testing.T) {
 		{
 			token: &unionToken{
 				arguments: []interface{}{
-					&expressionToken{expression: "nil"},
+					&expressionToken{expression: "nil", engine: &testEngine{response: nil}},
 				},
 			},
 			input: input{
@@ -204,7 +204,7 @@ func Test_UnionToken_Apply(t *testing.T) {
 				arguments: []interface{}{3.14},
 			},
 			input: input{
-				current: []interface{}{},
+				current: []interface{}{1, 2, 3, 4, 5},
 			},
 			expected: expected{
 				err: "union: invalid token argument. expected [int string] got [float64]",
@@ -213,9 +213,7 @@ func Test_UnionToken_Apply(t *testing.T) {
 		{
 			token: &unionToken{
 				arguments: []interface{}{
-					&expressionToken{
-						expression: "",
-					},
+					&expressionToken{expression: "", engine: &testEngine{response: ""}},
 					"one",
 				},
 			},
@@ -229,9 +227,7 @@ func Test_UnionToken_Apply(t *testing.T) {
 		{
 			token: &unionToken{
 				arguments: []interface{}{
-					&expressionToken{
-						expression: "1+1",
-					},
+					&expressionToken{expression: "1+1", engine: &testEngine{response: 2}},
 					"one",
 				},
 			},
@@ -245,9 +241,7 @@ func Test_UnionToken_Apply(t *testing.T) {
 		{
 			token: &unionToken{
 				arguments: []interface{}{
-					&expressionToken{
-						expression: "1+1",
-					},
+					&expressionToken{expression: "1+1", engine: &testEngine{response: 2}},
 					3,
 				},
 			},

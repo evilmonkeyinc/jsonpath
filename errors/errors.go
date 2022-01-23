@@ -7,8 +7,8 @@ import (
 var (
 	// ErrInvalidExpression returned when an expression is invalid
 	ErrInvalidExpression error = fmt.Errorf("invalid expression")
-	// ErrInvalidJSONPathQuery returned when the JSONPath query is invalid
-	ErrInvalidJSONPathQuery error = fmt.Errorf("invalid JSONPath query")
+	// ErrInvalidJSONPathSelector returned when the JSONPath selector is invalid
+	ErrInvalidJSONPathSelector error = fmt.Errorf("invalid JSONPath selector")
 	// ErrInvalidJSONData returned when the JSON data is invalid
 	ErrInvalidJSONData error = fmt.Errorf("invalid data")
 	// ErrInvalidToken returned when a token is invalid

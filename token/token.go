@@ -5,33 +5,28 @@ import (
 	"strings"
 
 	"github.com/evilmonkeyinc/jsonpath/option"
+	"github.com/evilmonkeyinc/jsonpath/script"
 )
 
 /** Feature request
 support double quotes in keys?
 **/
 
-// Token represents a component of a JSON Path query
+// Token represents a component of a JSON Path selector
 type Token interface {
 	Apply(root, current interface{}, next []Token) (interface{}, error)
 	Type() string
 	String() string
 }
 
-// Tokenize converts a JSON Path query to a collection of parsable tokens
-func Tokenize(query string) ([]string, error) {
-	tokens, _, err := tokenize(query, false)
-	return tokens, err
-}
-
-func tokenize(query string, allowRemainder bool) ([]string, string, error) {
-	if query == "" {
-		return nil, query, getUnexpectedTokenError("", 0)
+// Tokenize converts a JSON Path selector to a collection of parsable tokens
+func Tokenize(selector string) ([]string, error) {
+	if selector == "" {
+		return nil, getUnexpectedTokenError("", 0)
 	}
 
 	tokens := []string{}
 	tokenString := ""
-	remainder := query
 
 	quoteCount := 0
 	openScriptBracket := 0
@@ -39,8 +34,7 @@ func tokenize(query string, allowRemainder bool) ([]string, string, error) {
 	openSubscriptBracket := 0
 	closeSubscriptBracket := 0
 
-tokenize:
-	for idx, rne := range query {
+	for idx, rne := range selector {
 
 		if tokenString == "" {
 			quoteCount = 0
@@ -66,16 +60,15 @@ tokenize:
 		}
 
 		tokenString += string(rne)
-		remainder = remainder[1:]
 
 		if idx == 0 {
 			if tokenString != "$" && tokenString != "@" {
-				return nil, "", getUnexpectedTokenError(string(rne), idx)
+				return nil, getUnexpectedTokenError(string(rne), idx)
 			}
 
-			if len(query) > 1 {
-				if next := query[1]; next != '.' && next != '[' {
-					return nil, "", getUnexpectedTokenError(string(next), idx+1)
+			if len(selector) > 1 {
+				if next := selector[1]; next != '.' && next != '[' {
+					return nil, getUnexpectedTokenError(string(next), idx+1)
 				}
 			}
 
@@ -154,26 +147,6 @@ tokenize:
 
 			tokenString = "."
 			continue
-		} else if allowRemainder {
-			// check for script operators outside of subscript
-			switch rne {
-			case '*':
-				// '*' is an operator if it is part of a larger token
-				// '*' is a wildcard if by self or with proceding '.'
-				if tokenString == ".*" || tokenString == "*" {
-					continue
-				}
-				fallthrough
-			case '-', '+', '/', '%', '>', '<', '=', '!':
-				// strip operator and break tokenize loop
-				tokenString = tokenString[0 : len(tokenString)-1]
-				remainder = query[idx:]
-
-				break tokenize
-			default:
-				// not a script operator
-				continue
-			}
 		}
 	}
 
@@ -186,11 +159,11 @@ tokenize:
 		tokens = append(tokens, tokenString[:])
 	}
 
-	return tokens, remainder, nil
+	return tokens, nil
 }
 
 // Parse will parse a single token string and return an actionable token
-func Parse(tokenString string, options *option.QueryOptions) (Token, error) {
+func Parse(tokenString string, engine script.Engine, options *option.QueryOptions) (Token, error) {
 	isScript := func(token string) bool {
 		return len(token) > 2 && strings.HasPrefix(token, "(") && strings.HasSuffix(token, ")")
 	}
@@ -244,7 +217,7 @@ func Parse(tokenString string, options *option.QueryOptions) (Token, error) {
 		if !strings.HasPrefix(subscript, "?(") || !strings.HasSuffix(subscript, ")") {
 			return nil, getInvalidTokenFormatError(tokenString)
 		}
-		return newFilterToken(strings.TrimSpace(subscript[2:len(subscript)-1]), options), nil
+		return newFilterToken(strings.TrimSpace(subscript[2:len(subscript)-1]), engine, options), nil
 	}
 
 	// from this point we have the chance of things being nested or wrapped
@@ -395,7 +368,7 @@ func Parse(tokenString string, options *option.QueryOptions) (Token, error) {
 			if isKey(strArg) {
 				return newKeyToken(strArg[1 : len(strArg)-1]), nil
 			} else if isScript(strArg) {
-				return newScriptToken(strArg[1:len(strArg)-1], options), nil
+				return newScriptToken(strArg[1:len(strArg)-1], engine, options), nil
 			}
 		} else if intArg, ok := isInteger(arg); ok {
 			return newIndexToken(intArg, options), nil
@@ -444,7 +417,7 @@ func Parse(tokenString string, options *option.QueryOptions) (Token, error) {
 		for idx, arg := range args {
 			if strArg, ok := arg.(string); ok {
 				if isScript(strArg) {
-					arg = newExpressionToken(strArg[1:len(strArg)-1], options)
+					arg = newExpressionToken(strArg[1:len(strArg)-1], engine, options)
 					args[idx] = arg
 					continue
 				} else if isKey(strArg) {
@@ -478,19 +451,19 @@ func Parse(tokenString string, options *option.QueryOptions) (Token, error) {
 			if !isScript(strFrom) {
 				return nil, getInvalidExpressionFormatError(strFrom)
 			}
-			from = newExpressionToken(strFrom[1:len(strFrom)-1], options)
+			from = newExpressionToken(strFrom[1:len(strFrom)-1], engine, options)
 		}
 		if strTo, ok := to.(string); ok {
 			if !isScript(strTo) {
 				return nil, getInvalidExpressionFormatError(strTo)
 			}
-			to = newExpressionToken(strTo[1:len(strTo)-1], options)
+			to = newExpressionToken(strTo[1:len(strTo)-1], engine, options)
 		}
 		if strStep, ok := step.(string); ok {
 			if !isScript(strStep) {
 				return nil, getInvalidExpressionFormatError(strStep)
 			}
-			step = newExpressionToken(strStep[1:len(strStep)-1], options)
+			step = newExpressionToken(strStep[1:len(strStep)-1], engine, options)
 		}
 
 		return newRangeToken(from, to, step, options), nil

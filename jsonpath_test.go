@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/evilmonkeyinc/jsonpath/script"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -109,12 +110,12 @@ func Test_SpecificationTests(t *testing.T) {
 
 	tests := []struct {
 		name     string
-		query    string
+		selector string
 		expected expected
 	}{
 		{
-			name:  "the authors of all books in the store",
-			query: "$.store.book[*].author",
+			name:     "the authors of all books in the store",
+			selector: "$.store.book[*].author",
 			expected: expected{
 				target: []interface{}{
 					"Nigel Rees",
@@ -125,8 +126,8 @@ func Test_SpecificationTests(t *testing.T) {
 			},
 		},
 		{
-			name:  "all authors",
-			query: "$..author",
+			name:     "all authors",
+			selector: "$..author",
 			expected: expected{
 				target: []interface{}{
 					"Nigel Rees",
@@ -137,8 +138,8 @@ func Test_SpecificationTests(t *testing.T) {
 			},
 		},
 		{
-			name:  "all things in store, which are some books and a red bicycle.",
-			query: "$.store.*",
+			name:     "all things in store, which are some books and a red bicycle.",
+			selector: "$.store.*",
 			expected: expected{
 				target: []interface{}{
 					[]interface{}{
@@ -177,8 +178,8 @@ func Test_SpecificationTests(t *testing.T) {
 			},
 		},
 		{
-			name:  "the price of everything in the store.",
-			query: "$.store..price",
+			name:     "the price of everything in the store.",
+			selector: "$.store..price",
 			expected: expected{
 				target: []interface{}{
 					8.95,
@@ -190,8 +191,8 @@ func Test_SpecificationTests(t *testing.T) {
 			},
 		},
 		{
-			name:  "the third book",
-			query: "$..book[2]",
+			name:     "the third book",
+			selector: "$..book[2]",
 			expected: expected{
 				target: []interface{}{
 					map[string]interface{}{
@@ -205,8 +206,8 @@ func Test_SpecificationTests(t *testing.T) {
 			},
 		},
 		{
-			name:  "the last book in order.",
-			query: "$..book[(@.length-1)]",
+			name:     "the last book in order.",
+			selector: "$..book[(@.length-1)]",
 			expected: expected{
 				target: []interface{}{
 					map[string]interface{}{
@@ -220,8 +221,8 @@ func Test_SpecificationTests(t *testing.T) {
 			},
 		},
 		{
-			name:  "the last book in order alt.",
-			query: "$..book[-1:]",
+			name:     "the last book in order alt.",
+			selector: "$..book[-1:]",
 			expected: expected{
 				target: []interface{}{
 					map[string]interface{}{
@@ -235,8 +236,8 @@ func Test_SpecificationTests(t *testing.T) {
 			},
 		},
 		{
-			name:  "the first two books",
-			query: "$..book[0,1]",
+			name:     "the first two books",
+			selector: "$..book[0,1]",
 			expected: expected{
 				target: []interface{}{
 					map[string]interface{}{
@@ -255,8 +256,8 @@ func Test_SpecificationTests(t *testing.T) {
 			},
 		},
 		{
-			name:  "the first two books alt",
-			query: "$..book[:2]",
+			name:     "the first two books alt",
+			selector: "$..book[:2]",
 			expected: expected{
 				target: []interface{}{
 					map[string]interface{}{
@@ -275,8 +276,8 @@ func Test_SpecificationTests(t *testing.T) {
 			},
 		},
 		{
-			name:  "filter all books with isbn number",
-			query: "$..book[?(@.isbn)]",
+			name:     "filter all books with isbn number",
+			selector: "$..book[?(@.isbn)]",
 			expected: expected{
 				target: []interface{}{
 					map[string]interface{}{
@@ -297,8 +298,8 @@ func Test_SpecificationTests(t *testing.T) {
 			},
 		},
 		{
-			name:  "filter all books cheapier than 10",
-			query: "$..book[?(@.price<10)]",
+			name:     "filter all books cheapier than 10",
+			selector: "$..book[?(@.price<10)]",
 			expected: expected{
 				target: []interface{}{
 					map[string]interface{}{
@@ -318,8 +319,8 @@ func Test_SpecificationTests(t *testing.T) {
 			},
 		},
 		{
-			name:  "filter all books that are not expensive",
-			query: "$..book[?(@.price<$.expensive)]",
+			name:     "filter all books that are not expensive",
+			selector: "$..book[?(@.price<$.expensive)]",
 			expected: expected{
 				target: []interface{}{
 					map[string]interface{}{
@@ -339,8 +340,8 @@ func Test_SpecificationTests(t *testing.T) {
 			},
 		},
 		{
-			name:  "All members of JSON structure.",
-			query: "$..*",
+			name:     "All members of JSON structure.",
+			selector: "$..*",
 			expected: expected{
 				target: []interface{}{
 					map[string]interface{}{
@@ -463,9 +464,9 @@ func Test_SpecificationTests(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			actual, actualErr := QueryString(test.query, sampleDataString)
-			assert.ElementsMatch(t, test.expected.target, actual, fmt.Sprintf("'%s' invalid result", test.query))
-			assert.Equal(t, test.expected.err, actualErr, fmt.Sprintf("'%s' invalid error", test.query))
+			actual, actualErr := QueryString(test.selector, sampleDataString)
+			assert.ElementsMatch(t, test.expected.target, actual, fmt.Sprintf("'%s' invalid result", test.selector))
+			assert.Equal(t, test.expected.err, actualErr, fmt.Sprintf("'%s' invalid error", test.selector))
 		})
 	}
 }
@@ -473,7 +474,7 @@ func Test_SpecificationTests(t *testing.T) {
 func Test_Compile(t *testing.T) {
 
 	type input struct {
-		queryPath string
+		selector string
 	}
 
 	type expected struct {
@@ -487,15 +488,15 @@ func Test_Compile(t *testing.T) {
 	}{
 		{
 			input: input{
-				queryPath: "",
+				selector: "",
 			},
 			expected: expected{
-				err: "invalid JSONPath query '' unexpected token '' at index 0",
+				err: "invalid JSONPath selector '' unexpected token '' at index 0",
 			},
 		},
 		{
 			input: input{
-				queryPath: "@.[1, 2]",
+				selector: "@.[1, 2]",
 			},
 			expected: expected{
 				tokens: 2,
@@ -503,7 +504,7 @@ func Test_Compile(t *testing.T) {
 		},
 		{
 			input: input{
-				queryPath: "@.length<1",
+				selector: "@.length<1",
 			},
 			expected: expected{
 				tokens: 2,
@@ -513,18 +514,18 @@ func Test_Compile(t *testing.T) {
 
 	for idx, test := range tests {
 		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
-			jsonPath, err := Compile(test.input.queryPath)
+			selector, err := Compile(test.input.selector)
 			if test.expected.err != "" {
-				assert.Nil(t, jsonPath)
+				assert.Nil(t, selector)
 				assert.EqualError(t, err, test.expected.err)
 				return
 			}
 
 			assert.Nil(t, err)
-			assert.NotNil(t, jsonPath)
+			assert.NotNil(t, selector)
 
-			assert.Equal(t, test.input.queryPath, jsonPath.queryString)
-			assert.Len(t, jsonPath.tokens, test.expected.tokens)
+			assert.Equal(t, test.input.selector, selector.selector)
+			assert.Len(t, selector.tokens, test.expected.tokens)
 		})
 	}
 
@@ -533,8 +534,8 @@ func Test_Compile(t *testing.T) {
 func Test_QueryString(t *testing.T) {
 
 	type input struct {
-		queryString string
-		jsonData    string
+		selector string
+		jsonData string
 	}
 
 	type expected struct {
@@ -548,7 +549,7 @@ func Test_QueryString(t *testing.T) {
 	}{
 		{
 			input: input{
-				queryString: "$.expensive",
+				selector: "$.expensive",
 			},
 			expected: expected{
 				err: "invalid data. unexpected type or nil",
@@ -556,18 +557,18 @@ func Test_QueryString(t *testing.T) {
 		},
 		{
 			input: input{
-				queryString: "invalid",
-				jsonData:    "{}",
+				selector: "invalid",
+				jsonData: "{}",
 			},
 			expected: expected{
-				err: "invalid JSONPath query 'invalid' unexpected token 'i' at index 0",
+				err: "invalid JSONPath selector 'invalid' unexpected token 'i' at index 0",
 			},
 		},
 		{
 			input: input{
 
-				queryString: "$.expensive",
-				jsonData:    "{}",
+				selector: "$.expensive",
+				jsonData: "{}",
 			},
 			expected: expected{
 				err: "key: invalid token key 'expensive' not found",
@@ -575,8 +576,8 @@ func Test_QueryString(t *testing.T) {
 		},
 		{
 			input: input{
-				queryString: "$.expensive",
-				jsonData:    `{"expensive": "test"}`,
+				selector: "$.expensive",
+				jsonData: `{"expensive": "test"}`,
 			},
 			expected: expected{
 				value: "test",
@@ -584,8 +585,8 @@ func Test_QueryString(t *testing.T) {
 		},
 		{
 			input: input{
-				queryString: "$.expensive",
-				jsonData:    sampleDataString,
+				selector: "$.expensive",
+				jsonData: sampleDataString,
 			},
 			expected: expected{
 				value: int64(10),
@@ -593,8 +594,8 @@ func Test_QueryString(t *testing.T) {
 		},
 		{
 			input: input{
-				queryString: "$..author",
-				jsonData:    sampleDataString,
+				selector: "$..author",
+				jsonData: sampleDataString,
 			},
 			expected: expected{
 				value: []interface{}{
@@ -607,8 +608,8 @@ func Test_QueryString(t *testing.T) {
 		},
 		{
 			input: input{
-				queryString: "$.store.book.length",
-				jsonData:    sampleDataString,
+				selector: "$.store.book.length",
+				jsonData: sampleDataString,
 			},
 			expected: expected{
 				value: int64(4),
@@ -616,8 +617,8 @@ func Test_QueryString(t *testing.T) {
 		},
 		{
 			input: input{
-				queryString: "$..book.length",
-				jsonData:    sampleDataString,
+				selector: "$..book.length",
+				jsonData: sampleDataString,
 			},
 			expected: expected{
 				value: []interface{}{
@@ -627,8 +628,8 @@ func Test_QueryString(t *testing.T) {
 		},
 		{
 			input: input{
-				queryString: "$.length",
-				jsonData:    `[1,2,3]`,
+				selector: "$.length",
+				jsonData: `[1,2,3]`,
 			},
 			expected: expected{
 				value: int64(3),
@@ -636,8 +637,8 @@ func Test_QueryString(t *testing.T) {
 		},
 		{
 			input: input{
-				queryString: "$.length",
-				jsonData:    `[1,2,]`,
+				selector: "$.length",
+				jsonData: `[1,2,]`,
 			},
 			expected: expected{
 				err: "invalid data. invalid character ']' looking for beginning of value",
@@ -647,7 +648,7 @@ func Test_QueryString(t *testing.T) {
 
 	for idx, test := range tests {
 		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
-			value, err := QueryString(test.input.queryString, test.input.jsonData)
+			value, err := QueryString(test.input.selector, test.input.jsonData)
 
 			if test.expected.err != "" {
 				assert.EqualError(t, err, test.expected.err)
@@ -667,8 +668,8 @@ func Test_QueryString(t *testing.T) {
 func Test_Query(t *testing.T) {
 
 	type input struct {
-		queryString string
-		jsonData    interface{}
+		selector string
+		jsonData interface{}
 	}
 
 	type expected struct {
@@ -682,7 +683,7 @@ func Test_Query(t *testing.T) {
 	}{
 		{
 			input: input{
-				queryString: "$.expensive",
+				selector: "$.expensive",
 			},
 			expected: expected{
 				err: "key: invalid token target. expected [map] got [nil]",
@@ -690,18 +691,18 @@ func Test_Query(t *testing.T) {
 		},
 		{
 			input: input{
-				queryString: "invalid",
-				jsonData:    &sampleData{},
+				selector: "invalid",
+				jsonData: &sampleData{},
 			},
 			expected: expected{
-				err: "invalid JSONPath query 'invalid' unexpected token 'i' at index 0",
+				err: "invalid JSONPath selector 'invalid' unexpected token 'i' at index 0",
 			},
 		},
 		{
 			input: input{
 
-				queryString: "$.expensive",
-				jsonData:    &storeData{},
+				selector: "$.expensive",
+				jsonData: &storeData{},
 			},
 			expected: expected{
 				err: "key: invalid token key 'expensive' not found",
@@ -709,8 +710,8 @@ func Test_Query(t *testing.T) {
 		},
 		{
 			input: input{
-				queryString: "$.expensive",
-				jsonData:    &sampleData{Expensive: 15},
+				selector: "$.expensive",
+				jsonData: &sampleData{Expensive: 15},
 			},
 			expected: expected{
 				value: float64(15),
@@ -718,8 +719,8 @@ func Test_Query(t *testing.T) {
 		},
 		{
 			input: input{
-				queryString: "$.expensive",
-				jsonData:    sampleDataObject,
+				selector: "$.expensive",
+				jsonData: sampleDataObject,
 			},
 			expected: expected{
 				value: float64(10),
@@ -727,8 +728,8 @@ func Test_Query(t *testing.T) {
 		},
 		{
 			input: input{
-				queryString: "$..author",
-				jsonData:    sampleDataObject,
+				selector: "$..author",
+				jsonData: sampleDataObject,
 			},
 			expected: expected{
 				value: []interface{}{
@@ -741,8 +742,8 @@ func Test_Query(t *testing.T) {
 		},
 		{
 			input: input{
-				queryString: "$.store.book.length",
-				jsonData:    sampleDataObject,
+				selector: "$.store.book.length",
+				jsonData: sampleDataObject,
 			},
 			expected: expected{
 				value: int64(4),
@@ -750,8 +751,8 @@ func Test_Query(t *testing.T) {
 		},
 		{
 			input: input{
-				queryString: "$..book.length",
-				jsonData:    sampleDataObject,
+				selector: "$..book.length",
+				jsonData: sampleDataObject,
 			},
 			expected: expected{
 				value: []interface{}{
@@ -763,7 +764,7 @@ func Test_Query(t *testing.T) {
 
 	for idx, test := range tests {
 		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
-			value, err := Query(test.input.queryString, test.input.jsonData)
+			value, err := Query(test.input.selector, test.input.jsonData)
 
 			if test.expected.err != "" {
 				assert.EqualError(t, err, test.expected.err)
@@ -780,7 +781,7 @@ func Test_Query(t *testing.T) {
 	}
 }
 
-func Test_JSONPath_String(t *testing.T) {
+func Test_Selector_String(t *testing.T) {
 
 	tests := []struct {
 		input    string
@@ -849,7 +850,12 @@ func Test_JSONPath_String(t *testing.T) {
 
 }
 
-func Test_JSONPath_compile(t *testing.T) {
+func Test_Selector_compile(t *testing.T) {
+
+	type input struct {
+		selector string
+		engine   script.Engine
+	}
 
 	type expected struct {
 		err    string
@@ -857,23 +863,29 @@ func Test_JSONPath_compile(t *testing.T) {
 	}
 
 	tests := []struct {
-		input    string
+		input    input
 		expected expected
 	}{
 		{
-			input: "",
+			input: input{
+				selector: "",
+			},
 			expected: expected{
 				err: "unexpected token '' at index 0",
 			},
 		},
 		{
-			input: "@.[1,(]",
+			input: input{
+				selector: "@.[1,(]",
+			},
 			expected: expected{
 				err: "invalid token. '[1,(]' does not match any token format",
 			},
 		},
 		{
-			input: "@.length<1",
+			input: input{
+				selector: "@.length<1",
+			},
 			expected: expected{
 				tokens: 2,
 			},
@@ -882,20 +894,20 @@ func Test_JSONPath_compile(t *testing.T) {
 
 	for idx, test := range tests {
 		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
-			jsonPath := &JSONPath{}
-			actual := jsonPath.compile(test.input)
+			selector := &Selector{}
+			actual := selector.compile(test.input.selector, test.input.engine)
 			if test.expected.err == "" {
 				assert.Nil(t, actual)
 			} else {
 				assert.EqualError(t, actual, test.expected.err)
 			}
 
-			assert.Len(t, jsonPath.tokens, test.expected.tokens)
+			assert.Len(t, selector.tokens, test.expected.tokens)
 		})
 	}
 }
 
-func Test_JSONPath_QueryString(t *testing.T) {
+func Test_Selector_QueryString(t *testing.T) {
 
 	sampleQuery, _ := Compile("$.expensive")
 	altSampleQuery, _ := Compile("$..author")
@@ -903,7 +915,7 @@ func Test_JSONPath_QueryString(t *testing.T) {
 	rootQuery, _ := Compile("$")
 
 	type input struct {
-		jsonPath *JSONPath
+		selector *Selector
 		jsonData string
 	}
 
@@ -918,7 +930,7 @@ func Test_JSONPath_QueryString(t *testing.T) {
 	}{
 		{
 			input: input{
-				jsonPath: sampleQuery,
+				selector: sampleQuery,
 			},
 			expected: expected{
 				err: "invalid data. unexpected type or nil",
@@ -926,7 +938,7 @@ func Test_JSONPath_QueryString(t *testing.T) {
 		},
 		{
 			input: input{
-				jsonPath: rootQuery,
+				selector: rootQuery,
 				jsonData: "42",
 			},
 			expected: expected{
@@ -935,7 +947,7 @@ func Test_JSONPath_QueryString(t *testing.T) {
 		},
 		{
 			input: input{
-				jsonPath: rootQuery,
+				selector: rootQuery,
 				jsonData: "3.14",
 			},
 			expected: expected{
@@ -944,7 +956,7 @@ func Test_JSONPath_QueryString(t *testing.T) {
 		},
 		{
 			input: input{
-				jsonPath: rootQuery,
+				selector: rootQuery,
 				jsonData: "true",
 			},
 			expected: expected{
@@ -953,7 +965,7 @@ func Test_JSONPath_QueryString(t *testing.T) {
 		},
 		{
 			input: input{
-				jsonPath: rootQuery,
+				selector: rootQuery,
 				jsonData: "false",
 			},
 			expected: expected{
@@ -962,7 +974,7 @@ func Test_JSONPath_QueryString(t *testing.T) {
 		},
 		{
 			input: input{
-				jsonPath: rootQuery,
+				selector: rootQuery,
 				jsonData: "not a json string",
 			},
 			expected: expected{
@@ -971,7 +983,7 @@ func Test_JSONPath_QueryString(t *testing.T) {
 		},
 		{
 			input: input{
-				jsonPath: rootQuery,
+				selector: rootQuery,
 				jsonData: `"json string"`,
 			},
 			expected: expected{
@@ -980,18 +992,18 @@ func Test_JSONPath_QueryString(t *testing.T) {
 		},
 		{
 			input: input{
-				jsonPath: &JSONPath{
-					queryString: "invalid",
+				selector: &Selector{
+					selector: "invalid",
 				},
 				jsonData: "{}",
 			},
 			expected: expected{
-				err: "invalid JSONPath query 'invalid'",
+				err: "invalid JSONPath selector 'invalid'",
 			},
 		},
 		{
 			input: input{
-				jsonPath: sampleQuery,
+				selector: sampleQuery,
 				jsonData: `{"key"}`,
 			},
 			expected: expected{
@@ -1000,7 +1012,7 @@ func Test_JSONPath_QueryString(t *testing.T) {
 		},
 		{
 			input: input{
-				jsonPath: sampleQuery,
+				selector: sampleQuery,
 				jsonData: "{}",
 			},
 			expected: expected{
@@ -1009,7 +1021,7 @@ func Test_JSONPath_QueryString(t *testing.T) {
 		},
 		{
 			input: input{
-				jsonPath: sampleQuery,
+				selector: sampleQuery,
 				jsonData: `{"expensive": "test"}`,
 			},
 			expected: expected{
@@ -1018,7 +1030,7 @@ func Test_JSONPath_QueryString(t *testing.T) {
 		},
 		{
 			input: input{
-				jsonPath: sampleQuery,
+				selector: sampleQuery,
 				jsonData: sampleDataString,
 			},
 			expected: expected{
@@ -1027,7 +1039,7 @@ func Test_JSONPath_QueryString(t *testing.T) {
 		},
 		{
 			input: input{
-				jsonPath: altSampleQuery,
+				selector: altSampleQuery,
 				jsonData: sampleDataString,
 			},
 			expected: expected{
@@ -1041,7 +1053,7 @@ func Test_JSONPath_QueryString(t *testing.T) {
 		},
 		{
 			input: input{
-				jsonPath: lengthQuery,
+				selector: lengthQuery,
 				jsonData: `[1,2,3]`,
 			},
 			expected: expected{
@@ -1050,7 +1062,7 @@ func Test_JSONPath_QueryString(t *testing.T) {
 		},
 		{
 			input: input{
-				jsonPath: lengthQuery,
+				selector: lengthQuery,
 				jsonData: `[1,2,]`,
 			},
 			expected: expected{
@@ -1061,7 +1073,7 @@ func Test_JSONPath_QueryString(t *testing.T) {
 
 	for idx, test := range tests {
 		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
-			value, err := test.input.jsonPath.QueryString(test.input.jsonData)
+			value, err := test.input.selector.QueryString(test.input.jsonData)
 
 			if test.expected.err != "" {
 				assert.EqualError(t, err, test.expected.err)
@@ -1078,13 +1090,13 @@ func Test_JSONPath_QueryString(t *testing.T) {
 	}
 }
 
-func Test_JSONPath_Query(t *testing.T) {
+func Test_Selector_Query(t *testing.T) {
 
-	sampleQuery, _ := Compile("$.expensive")
-	altSampleQuery, _ := Compile("$..author")
+	sampleSelector, _ := Compile("$.expensive")
+	altSampleSelector, _ := Compile("$..author")
 
 	type input struct {
-		jsonPath *JSONPath
+		selector *Selector
 		jsonData interface{}
 	}
 
@@ -1099,7 +1111,7 @@ func Test_JSONPath_Query(t *testing.T) {
 	}{
 		{
 			input: input{
-				jsonPath: sampleQuery,
+				selector: sampleSelector,
 				jsonData: make(chan bool, 1),
 			},
 			expected: expected{
@@ -1108,7 +1120,7 @@ func Test_JSONPath_Query(t *testing.T) {
 		},
 		{
 			input: input{
-				jsonPath: sampleQuery,
+				selector: sampleSelector,
 				jsonData: "not something that can be marshaled",
 			},
 			expected: expected{
@@ -1117,7 +1129,7 @@ func Test_JSONPath_Query(t *testing.T) {
 		},
 		{
 			input: input{
-				jsonPath: sampleQuery,
+				selector: sampleSelector,
 				jsonData: &storeData{},
 			},
 			expected: expected{
@@ -1126,18 +1138,18 @@ func Test_JSONPath_Query(t *testing.T) {
 		},
 		{
 			input: input{
-				jsonPath: &JSONPath{
-					queryString: "invalid",
+				selector: &Selector{
+					selector: "invalid",
 				},
 				jsonData: &sampleData{},
 			},
 			expected: expected{
-				err: "invalid JSONPath query 'invalid'",
+				err: "invalid JSONPath selector 'invalid'",
 			},
 		},
 		{
 			input: input{
-				jsonPath: sampleQuery,
+				selector: sampleSelector,
 				jsonData: &bookData{},
 			},
 			expected: expected{
@@ -1146,7 +1158,7 @@ func Test_JSONPath_Query(t *testing.T) {
 		},
 		{
 			input: input{
-				jsonPath: sampleQuery,
+				selector: sampleSelector,
 				jsonData: &sampleData{
 					Expensive: 15,
 				},
@@ -1157,7 +1169,7 @@ func Test_JSONPath_Query(t *testing.T) {
 		},
 		{
 			input: input{
-				jsonPath: sampleQuery,
+				selector: sampleSelector,
 				jsonData: sampleDataObject,
 			},
 			expected: expected{
@@ -1166,7 +1178,7 @@ func Test_JSONPath_Query(t *testing.T) {
 		},
 		{
 			input: input{
-				jsonPath: altSampleQuery,
+				selector: altSampleSelector,
 				jsonData: sampleDataObject,
 			},
 			expected: expected{
@@ -1182,7 +1194,7 @@ func Test_JSONPath_Query(t *testing.T) {
 
 	for idx, test := range tests {
 		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
-			value, err := test.input.jsonPath.Query(test.input.jsonData)
+			value, err := test.input.selector.Query(test.input.jsonData)
 
 			if test.expected.err != "" {
 				assert.EqualError(t, err, test.expected.err)

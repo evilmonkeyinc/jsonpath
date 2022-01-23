@@ -6,14 +6,16 @@ import (
 	"strings"
 
 	"github.com/evilmonkeyinc/jsonpath/option"
+	"github.com/evilmonkeyinc/jsonpath/script"
 )
 
-func newFilterToken(expression string, options *option.QueryOptions) *filterToken {
-	return &filterToken{expression: expression, options: options}
+func newFilterToken(expression string, engine script.Engine, options *option.QueryOptions) *filterToken {
+	return &filterToken{expression: expression, engine: engine, options: options}
 }
 
 type filterToken struct {
 	expression string
+	engine     script.Engine
 	options    *option.QueryOptions
 }
 
@@ -35,14 +37,29 @@ func (token *filterToken) Apply(root, current interface{}, next []Token) (interf
 			return false
 		}
 
-		if matches, ok := evaluation.(bool); ok {
-			return matches
-		} else if strValue, ok := evaluation.(string); ok {
-			strValue = strings.Trim(strValue, "'")
-			return strValue != ""
+		objType, objValue := getTypeAndValue(evaluation)
+		if objType == nil {
+			return false
 		}
 
-		return true
+		switch objType.Kind() {
+		case reflect.Bool:
+			return objValue.Bool()
+		case reflect.Array, reflect.Slice, reflect.Map:
+			return objValue.Len() > 0
+		case reflect.String:
+			strValue := objValue.String()
+			if len(strValue) > 1 {
+				if strings.HasPrefix(strValue, "'") && strings.HasSuffix(strValue, "'") {
+					strValue = strValue[1 : len(strValue)-1]
+				} else if strings.HasPrefix(strValue, "\"") && strings.HasSuffix(strValue, "\"") {
+					strValue = strValue[1 : len(strValue)-1]
+				}
+			}
+			return strValue != ""
+		default:
+			return !objValue.IsZero()
+		}
 	}
 
 	elements := make([]interface{}, 0)
@@ -51,6 +68,12 @@ func (token *filterToken) Apply(root, current interface{}, next []Token) (interf
 	if objType == nil {
 		return nil, getInvalidTokenTargetNilError(token.Type(), reflect.Array, reflect.Map, reflect.Slice)
 	}
+
+	compiledExpression, err := token.engine.Compile(token.expression, token.options)
+	if err != nil {
+		return nil, getInvalidExpressionError(err)
+	}
+
 	switch objType.Kind() {
 	case reflect.Map:
 		keys := objVal.MapKeys()
@@ -59,8 +82,7 @@ func (token *filterToken) Apply(root, current interface{}, next []Token) (interf
 		for _, kv := range keys {
 			element := objVal.MapIndex(kv).Interface()
 
-			// TODO : we should compile expression so we don't have to tokenize each time
-			evaluation, err := evaluateExpression(root, element, token.expression, token.options)
+			evaluation, err := compiledExpression.Evaluate(root, element)
 			if err != nil {
 				// we ignore errors, it has failed evaluation
 				evaluation = nil
@@ -75,8 +97,8 @@ func (token *filterToken) Apply(root, current interface{}, next []Token) (interf
 
 		for i := 0; i < length; i++ {
 			element := objVal.Index(i).Interface()
-			// TODO : we should compile expression so we don't have to tokenize each time
-			evaluation, err := evaluateExpression(root, element, token.expression, token.options)
+
+			evaluation, err := compiledExpression.Evaluate(root, element)
 			if err != nil {
 				// we ignore errors, it has failed evaluation
 				evaluation = nil
@@ -103,19 +125,14 @@ func (token *filterToken) Apply(root, current interface{}, next []Token) (interf
 			return indexToken.Apply(current, elements, futureTokens)
 		}
 		// any other token type
-
 		results := make([]interface{}, 0)
-
 		for _, element := range elements {
-
 			result, _ := nextToken.Apply(root, element, futureTokens)
 			if result != nil {
 				results = append(results, result)
 			}
 		}
-
 		return results, nil
 	}
-
 	return elements, nil
 }

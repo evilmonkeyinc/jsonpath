@@ -10,7 +10,7 @@ import (
 func Test_Parse(t *testing.T) {
 
 	type input struct {
-		query string
+		selector string
 	}
 
 	type expected struct {
@@ -23,55 +23,55 @@ func Test_Parse(t *testing.T) {
 		expected expected
 	}{
 		{
-			input: input{query: ""},
+			input: input{selector: ""},
 			expected: expected{
 				err: "invalid token. token string is empty",
 			},
 		},
 		{
-			input: input{query: "['fail'"},
+			input: input{selector: "['fail'"},
 			expected: expected{
 				err: "invalid token. '['fail'' does not match any token format",
 			},
 		},
 		{
-			input: input{query: "[ ]"},
+			input: input{selector: "[ ]"},
 			expected: expected{
 				err: "invalid token. '[ ]' does not match any token format",
 			},
 		},
 		{
-			input: input{query: "[?]"},
+			input: input{selector: "[?]"},
 			expected: expected{
 				err: "invalid token. '[?]' does not match any token format",
 			},
 		},
 		{
-			input: input{query: "[why though]"},
+			input: input{selector: "[why though]"},
 			expected: expected{
 				err: "invalid token. '[why though]' does not match any token format",
 			},
 		},
 		{
-			input: input{query: "[1'2']"},
+			input: input{selector: "[1'2']"},
 			expected: expected{
 				err: "invalid token. '[1'2']' does not match any token format",
 			},
 		},
 		{
-			input: input{query: "[1(@.length)]"},
+			input: input{selector: "[1(@.length)]"},
 			expected: expected{
 				err: "invalid expression. invalid format '1(@.length)'",
 			},
 		},
 		{
-			input: input{query: "$"},
+			input: input{selector: "$"},
 			expected: expected{
 				token: &rootToken{},
 			},
 		},
 		{
-			input: input{query: "store"},
+			input: input{selector: "store"},
 			expected: expected{
 				token: &keyToken{
 					key: "store",
@@ -79,14 +79,14 @@ func Test_Parse(t *testing.T) {
 			},
 		},
 		{
-			input: input{query: "1"},
+			input: input{selector: "1"},
 			expected: expected{
 				token: &keyToken{key: "1"},
 				err:   "",
 			},
 		},
 		{
-			input: input{query: "book"},
+			input: input{selector: "book"},
 			expected: expected{
 				token: &keyToken{
 					key: "book",
@@ -94,13 +94,13 @@ func Test_Parse(t *testing.T) {
 			},
 		},
 		{
-			input: input{query: "*"},
+			input: input{selector: "*"},
 			expected: expected{
 				token: &wildcardToken{},
 			},
 		},
 		{
-			input: input{query: "author"},
+			input: input{selector: "author"},
 			expected: expected{
 				token: &keyToken{
 					key: "author",
@@ -108,25 +108,25 @@ func Test_Parse(t *testing.T) {
 			},
 		},
 		{
-			input: input{query: "@"},
+			input: input{selector: "@"},
 			expected: expected{
 				token: &currentToken{},
 			},
 		},
 		{
-			input: input{query: "[*]"},
+			input: input{selector: "[*]"},
 			expected: expected{
 				token: &wildcardToken{},
 			},
 		},
 		{
-			input: input{query: ".."},
+			input: input{selector: ".."},
 			expected: expected{
 				token: &recursiveToken{},
 			},
 		},
 		{
-			input: input{query: "[?(@.isbn)]"},
+			input: input{selector: "[?(@.isbn)]"},
 			expected: expected{
 				token: &filterToken{
 					expression: "@.isbn",
@@ -134,7 +134,7 @@ func Test_Parse(t *testing.T) {
 			},
 		},
 		{
-			input: input{query: "[2]"},
+			input: input{selector: "[2]"},
 			expected: expected{
 				token: &indexToken{
 					index: 2,
@@ -142,7 +142,7 @@ func Test_Parse(t *testing.T) {
 			},
 		},
 		{
-			input: input{query: "[(@.length-1)]"},
+			input: input{selector: "[(@.length-1)]"},
 			expected: expected{
 				token: &scriptToken{
 					expression: "@.length-1",
@@ -150,7 +150,7 @@ func Test_Parse(t *testing.T) {
 			},
 		},
 		{
-			input: input{query: "[-1:]"},
+			input: input{selector: "[-1:]"},
 			expected: expected{
 				token: &rangeToken{
 					from: int64(-1),
@@ -160,7 +160,7 @@ func Test_Parse(t *testing.T) {
 			},
 		},
 		{
-			input: input{query: "[1:(@.length-1)]"},
+			input: input{selector: "[1:(@.length-1)]"},
 			expected: expected{
 				token: &rangeToken{
 					from: int64(1),
@@ -172,7 +172,7 @@ func Test_Parse(t *testing.T) {
 			},
 		},
 		{
-			input: input{query: "[0,1]"},
+			input: input{selector: "[0,1]"},
 			expected: expected{
 				token: &unionToken{
 					arguments: []interface{}{int64(0), int64(1)},
@@ -180,7 +180,7 @@ func Test_Parse(t *testing.T) {
 			},
 		},
 		{
-			input: input{query: "['first','last']"},
+			input: input{selector: "['first','last']"},
 			expected: expected{
 				token: &unionToken{
 					arguments: []interface{}{"first", "last"},
@@ -188,31 +188,31 @@ func Test_Parse(t *testing.T) {
 			},
 		},
 		{
-			input: input{query: "[0,]"},
+			input: input{selector: "[0,]"},
 			expected: expected{
 				err: "invalid token. '[0,]' does not match any token format",
 			},
 		},
 		{
-			input: input{query: "[,1]"},
+			input: input{selector: "[,1]"},
 			expected: expected{
 				err: "invalid token. '[,1]' does not match any token format",
 			},
 		},
 		{
-			input: input{query: "[(0),]"},
+			input: input{selector: "[(0),]"},
 			expected: expected{
 				err: "invalid token. '[(0),]' does not match any token format",
 			},
 		},
 		{
-			input: input{query: "[0,'1',]"},
+			input: input{selector: "[0,'1',]"},
 			expected: expected{
 				err: "invalid token. '[0,'1',]' does not match any token format",
 			},
 		},
 		{
-			input: input{query: "[0,(@.length-1)]"},
+			input: input{selector: "[0,(@.length-1)]"},
 			expected: expected{
 
 				token: &unionToken{
@@ -226,7 +226,7 @@ func Test_Parse(t *testing.T) {
 			},
 		},
 		{
-			input: input{query: "[0,'one',2,(1+2)]"},
+			input: input{selector: "[0,'one',2,(1+2)]"},
 			expected: expected{
 				token: &unionToken{
 					arguments: []interface{}{
@@ -241,7 +241,7 @@ func Test_Parse(t *testing.T) {
 			},
 		},
 		{
-			input: input{query: "[(@.length-2),(@.length-1),1]"},
+			input: input{selector: "[(@.length-2),(@.length-1),1]"},
 			expected: expected{
 				token: &unionToken{
 					arguments: []interface{}{
@@ -257,7 +257,7 @@ func Test_Parse(t *testing.T) {
 			},
 		},
 		{
-			input: input{query: "[:2]"},
+			input: input{selector: "[:2]"},
 			expected: expected{
 				token: &rangeToken{
 					to: int64(2),
@@ -265,7 +265,7 @@ func Test_Parse(t *testing.T) {
 			},
 		},
 		{
-			input: input{query: "[:(@.length-1)]"},
+			input: input{selector: "[:(@.length-1)]"},
 			expected: expected{
 				token: &rangeToken{
 					to: &expressionToken{
@@ -275,13 +275,13 @@ func Test_Parse(t *testing.T) {
 			},
 		},
 		{
-			input: input{query: "[:'key']"},
+			input: input{selector: "[:'key']"},
 			expected: expected{
 				err: "invalid expression. invalid format ''key''",
 			},
 		},
 		{
-			input: input{query: "[0:(@.length-1):2]"},
+			input: input{selector: "[0:(@.length-1):2]"},
 			expected: expected{
 				token: &rangeToken{
 					from: int64(0),
@@ -293,7 +293,7 @@ func Test_Parse(t *testing.T) {
 			},
 		},
 		{
-			input: input{query: "[(@.length-1):1:2]"},
+			input: input{selector: "[(@.length-1):1:2]"},
 			expected: expected{
 				token: &rangeToken{
 					from: &expressionToken{
@@ -305,7 +305,7 @@ func Test_Parse(t *testing.T) {
 			},
 		},
 		{
-			input: input{query: "['store']"},
+			input: input{selector: "['store']"},
 			expected: expected{
 				token: &keyToken{
 					key: "store",
@@ -313,19 +313,19 @@ func Test_Parse(t *testing.T) {
 			},
 		},
 		{
-			input: input{query: "[store]"},
+			input: input{selector: "[store]"},
 			expected: expected{
 				err: "invalid token. '[store]' does not match any token format",
 			},
 		},
 		{
-			input: input{query: "[store,book]"},
+			input: input{selector: "[store,book]"},
 			expected: expected{
 				err: "invalid token. '[store,book]' does not match any token format",
 			},
 		},
 		{
-			input: input{query: "[(1+2*(3+4)+5')]"},
+			input: input{selector: "[(1+2*(3+4)+5')]"},
 			expected: expected{
 				token: &scriptToken{
 					expression: "1+2*(3+4)+5'",
@@ -333,7 +333,7 @@ func Test_Parse(t *testing.T) {
 			},
 		},
 		{
-			input: input{query: "['this key has brackets ( and colons : and commas , but is not a union, range, or script']"},
+			input: input{selector: "['this key has brackets ( and colons : and commas , but is not a union, range, or script']"},
 			expected: expected{
 				token: &keyToken{
 					key: "this key has brackets ( and colons : and commas , but is not a union, range, or script",
@@ -341,55 +341,55 @@ func Test_Parse(t *testing.T) {
 			},
 		},
 		{
-			input: input{query: "[1,2:4]"},
+			input: input{selector: "[1,2:4]"},
 			expected: expected{
 				err: "invalid token. '[1,2:4]' does not match any token format",
 			},
 		},
 		{
-			input: input{query: "[1:2:3:]"},
+			input: input{selector: "[1:2:3:]"},
 			expected: expected{
 				err: "invalid token. '[1:2:3:]' does not match any token format",
 			},
 		},
 		{
-			input: input{query: "[1:2:3:4]"},
+			input: input{selector: "[1:2:3:4]"},
 			expected: expected{
 				err: "invalid token. '[1:2:3:4]' does not match any token format",
 			},
 		},
 		{
-			input: input{query: "['key':'end]"},
+			input: input{selector: "['key':'end]"},
 			expected: expected{
 				err: "invalid expression. invalid format ''key''",
 			},
 		},
 		{
-			input: input{query: "[::2]"},
+			input: input{selector: "[::2]"},
 			expected: expected{
 				token: &rangeToken{step: int64(2)},
 			},
 		},
 		{
-			input: input{query: "[:end:2]"},
+			input: input{selector: "[:end:2]"},
 			expected: expected{
 				err: "invalid token. '[:end:2]' does not match any token format",
 			},
 		},
 		{
-			input: input{query: "length"},
+			input: input{selector: "length"},
 			expected: expected{
 				token: &lengthToken{},
 			},
 		},
 		{
-			input: input{query: "[length]"},
+			input: input{selector: "[length]"},
 			expected: expected{
 				err: "invalid token. '[length]' does not match any token format",
 			},
 		},
 		{
-			input: input{query: "['length']"},
+			input: input{selector: "['length']"},
 			expected: expected{
 				token: &keyToken{
 					key: "length",
@@ -397,31 +397,31 @@ func Test_Parse(t *testing.T) {
 			},
 		},
 		{
-			input: input{query: "['']"},
+			input: input{selector: "['']"},
 			expected: expected{
 				token: &keyToken{key: ""},
 			},
 		},
 		{
-			input: input{query: "['1':(@.length)]"},
+			input: input{selector: "['1':(@.length)]"},
 			expected: expected{
 				err: "invalid expression. invalid format ''1''",
 			},
 		},
 		{
-			input: input{query: "[0:'1']"},
+			input: input{selector: "[0:'1']"},
 			expected: expected{
 				err: "invalid expression. invalid format ''1''",
 			},
 		},
 		{
-			input: input{query: "[0:1:'1']"},
+			input: input{selector: "[0:1:'1']"},
 			expected: expected{
 				err: "invalid expression. invalid format ''1''",
 			},
 		},
 		{
-			input: input{query: "[0:100:(1+1)]"},
+			input: input{selector: "[0:100:(1+1)]"},
 			expected: expected{
 				token: &rangeToken{
 					from: int64(0),
@@ -433,13 +433,13 @@ func Test_Parse(t *testing.T) {
 			},
 		},
 		{
-			input: input{query: "[:10:1]"},
+			input: input{selector: "[:10:1]"},
 			expected: expected{
 				token: &rangeToken{to: int64(10), step: int64(1)},
 			},
 		},
 		{
-			input: input{query: "[1, 2]"},
+			input: input{selector: "[1, 2]"},
 			expected: expected{
 				token: &unionToken{
 					arguments: []interface{}{int64(1), int64(2)},
@@ -447,13 +447,13 @@ func Test_Parse(t *testing.T) {
 			},
 		},
 		{
-			input: input{query: "[1: 2]"},
+			input: input{selector: "[1: 2]"},
 			expected: expected{
 				token: &rangeToken{from: int64(1), to: int64(2)},
 			},
 		},
 		{
-			input: input{query: "['key\\'s']"},
+			input: input{selector: "['key\\'s']"},
 			expected: expected{
 				token: &keyToken{
 					key: "key's",
@@ -461,31 +461,31 @@ func Test_Parse(t *testing.T) {
 			},
 		},
 		{
-			input: input{query: "[\\'key\\'s']"},
+			input: input{selector: "[\\'key\\'s']"},
 			expected: expected{
 				err: "invalid token. '[\\'key\\'s']' does not match any token format",
 			},
 		},
 		{
-			input: input{query: `["key"]`},
+			input: input{selector: `["key"]`},
 			expected: expected{
 				token: newKeyToken("key"),
 			},
 		},
 		{
-			input: input{query: `["key's"]`},
+			input: input{selector: `["key's"]`},
 			expected: expected{
 				token: newKeyToken("key's"),
 			},
 		},
 		{
-			input: input{query: `["\"keys\""]`},
+			input: input{selector: `["\"keys\""]`},
 			expected: expected{
 				token: newKeyToken("\"keys\""),
 			},
 		},
 		{
-			input: input{query: `["one","two",'three']`},
+			input: input{selector: `["one","two",'three']`},
 			expected: expected{
 				token: &unionToken{
 					arguments: []interface{}{"one", "two", "three"},
@@ -496,25 +496,24 @@ func Test_Parse(t *testing.T) {
 
 	for idx, test := range tests {
 		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
-			token, err := Parse(test.input.query, nil)
+			token, err := Parse(test.input.selector, nil, nil)
 
 			if test.expected.err == "" {
-				assert.Nil(t, err, fmt.Sprintf("input '%s' err check failed. expected 'nil' actual '%v'", test.input.query, err))
+				assert.Nil(t, err, fmt.Sprintf("input '%s' err check failed. expected 'nil' actual '%v'", test.input.selector, err))
 			} else {
-				assert.EqualError(t, err, test.expected.err, fmt.Sprintf("input '%s' err check failed. expected '%s' actual '%v'", test.input.query, test.expected.err, err))
+				assert.EqualError(t, err, test.expected.err, fmt.Sprintf("input '%s' err check failed. expected '%s' actual '%v'", test.input.selector, test.expected.err, err))
 			}
-			assert.EqualValues(t, test.expected.token, token, fmt.Sprintf("input '%s' token check failed. expected '%v' actual '%v'", test.input.query, test.expected.token, token))
+			assert.EqualValues(t, test.expected.token, token, fmt.Sprintf("input '%s' token check failed. expected '%v' actual '%v'", test.input.selector, test.expected.token, token))
 		})
 	}
 
 }
 
-func Test_tokenize(t *testing.T) {
+func Test_Tokenize(t *testing.T) {
 
 	type expected struct {
-		tokens    []string
-		remainder string
-		err       string
+		tokens []string
+		err    string
 	}
 
 	tests := []struct {
@@ -761,37 +760,16 @@ func Test_tokenize(t *testing.T) {
 			},
 		},
 		{
-			input: "@.length-1",
-			expected: expected{
-				tokens:    []string{"@", "length"},
-				remainder: "-1",
-			},
-		},
-		{
-			input: "@.length*2",
-			expected: expected{
-				tokens:    []string{"@", "length"},
-				remainder: "*2",
-			},
-		},
-		{
 			input: "@.isbn",
 			expected: expected{
 				tokens: []string{"@", "isbn"},
-			},
-		},
-		{
-			input: "@.price<10",
-			expected: expected{
-				tokens:    []string{"@", "price"},
-				remainder: "<10",
 			},
 		},
 	}
 
 	for idx, test := range tests {
 		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
-			tokens, remainder, err := tokenize(test.input, true)
+			tokens, err := Tokenize(test.input)
 
 			if test.expected.err != "" {
 				assert.EqualError(t, err, test.expected.err, "unexpected error for %s", test.input)
@@ -803,8 +781,6 @@ func Test_tokenize(t *testing.T) {
 				expected := test.expected.tokens[i]
 				assert.EqualValues(t, expected, actual, "unexpected token for %s", test.input)
 			}
-
-			assert.Equal(t, test.expected.remainder, remainder, "unexpected remainder for %s", test.input)
 		})
 	}
 
