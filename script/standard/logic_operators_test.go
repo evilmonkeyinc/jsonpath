@@ -336,6 +336,8 @@ func Test_greaterThanOrEqualOperator(t *testing.T) {
 }
 
 func Test_equalsOperator(t *testing.T) {
+	currentKeySelector, _ := newSelectorOperator("@.key", &ScriptEngine{}, nil)
+
 	tests := []*operatorTest{
 		{
 			input: operatorTestInput{
@@ -401,6 +403,38 @@ func Test_equalsOperator(t *testing.T) {
 			},
 			expected: operatorTestExpected{
 				value: true,
+			},
+		},
+		{
+			input: operatorTestInput{
+				operator: &equalsOperator{
+					arg1: currentKeySelector,
+					arg2: "true",
+				},
+				paramters: map[string]interface{}{
+					"@": map[string]interface{}{
+						"key": true,
+					},
+				},
+			},
+			expected: operatorTestExpected{
+				value: true,
+			},
+		},
+		{
+			input: operatorTestInput{
+				operator: &equalsOperator{
+					arg1: currentKeySelector,
+					arg2: "true",
+				},
+				paramters: map[string]interface{}{
+					"@": map[string]interface{}{
+						"key": "true",
+					},
+				},
+			},
+			expected: operatorTestExpected{
+				value: false,
 			},
 		},
 	}

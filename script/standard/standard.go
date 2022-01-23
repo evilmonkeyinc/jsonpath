@@ -237,6 +237,13 @@ func (compiled *compiledExpression) Evaluate(root, current interface{}) (interfa
 		if val, ok := parameters[expression]; ok {
 			return val, nil
 		}
+
+		if number, err := getNumber(expression, parameters); err == nil {
+			return number, nil
+		} else if boolean, err := getBoolean(expression, parameters); err == nil {
+			return boolean, nil
+		}
+
 		return expression, nil
 	}
 

@@ -120,21 +120,30 @@ func getString(argument interface{}, parameters map[string]interface{}) (string,
 	if str, ok := argument.(string); ok {
 		if arg, ok := parameters[str]; ok {
 			argument = arg
-			if str, ok := arg.(string); ok {
-				return str, nil
+			if parsed, ok := arg.(string); ok {
+				str = parsed
+
+				if len(str) > 1 {
+					if strings.HasPrefix(str, "'") && strings.HasSuffix(str, "'") {
+						return str, nil
+					} else if strings.HasPrefix(str, `"`) && strings.HasSuffix(str, `"`) {
+						str = str[1 : len(str)-1]
+					}
+				}
+				return fmt.Sprintf("'%s'", str), nil
 			}
-		} else if len(str) > 1 {
-			if strings.HasPrefix(str, "'") && strings.HasSuffix(str, "'") {
-				return str[1 : len(str)-1], nil
-			} else if strings.HasPrefix(str, `"`) && strings.HasSuffix(str, `"`) {
-				return str[1 : len(str)-1], nil
+		} else {
+			if len(str) > 1 {
+				if strings.HasPrefix(str, "'") && strings.HasSuffix(str, "'") {
+					return str, nil
+				} else if strings.HasPrefix(str, `"`) && strings.HasSuffix(str, `"`) {
+					str = str[1 : len(str)-1]
+					return fmt.Sprintf("'%s'", str), nil
+				}
 			}
+			return str, nil
 		}
-
-		return str, nil
 	}
-
-	// TODO: need to handle quotes
 
 	return fmt.Sprintf("%v", argument), nil
 }

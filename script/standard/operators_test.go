@@ -331,7 +331,7 @@ func Test_getString(t *testing.T) {
 				argument: "'single quotes'",
 			},
 			expected: expected{
-				value: "single quotes",
+				value: "'single quotes'",
 			},
 		},
 		{
@@ -339,7 +339,7 @@ func Test_getString(t *testing.T) {
 				argument: `"double quotes"`,
 			},
 			expected: expected{
-				value: "double quotes",
+				value: "'double quotes'",
 			},
 		},
 		{
@@ -350,7 +350,7 @@ func Test_getString(t *testing.T) {
 				},
 			},
 			expected: expected{
-				value: "value",
+				value: "'value'",
 			},
 		},
 		{

@@ -1,6 +1,7 @@
 package standard
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 
@@ -73,5 +74,15 @@ func (op *selectorOperator) Evaluate(parameters map[string]interface{}) (interfa
 		next = op.tokens[1:]
 	}
 
-	return op.tokens[0].Apply(root, current, next)
+	value, err := op.tokens[0].Apply(root, current, next)
+	if err != nil {
+		return nil, err
+	}
+	if strValue, ok := value.(string); ok {
+		if len(strValue) > 1 && strings.HasPrefix(strValue, "'") && strings.HasSuffix(strValue, "'") {
+			return strValue, nil
+		}
+		return fmt.Sprintf("'%s'", strValue), nil
+	}
+	return value, nil
 }

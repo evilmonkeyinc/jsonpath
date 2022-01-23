@@ -115,7 +115,7 @@ func Test_selectorOperator(t *testing.T) {
 				},
 			},
 			expected: operatorTestExpected{
-				value: "value",
+				value: "'value'",
 			},
 		},
 		{
@@ -128,7 +128,20 @@ func Test_selectorOperator(t *testing.T) {
 				},
 			},
 			expected: operatorTestExpected{
-				value: "this",
+				value: "'this'",
+			},
+		},
+		{
+			input: operatorTestInput{
+				operator: currentKeyOperator,
+				paramters: map[string]interface{}{
+					"@": map[string]interface{}{
+						"key": true,
+					},
+				},
+			},
+			expected: operatorTestExpected{
+				value: true,
 			},
 		},
 	}

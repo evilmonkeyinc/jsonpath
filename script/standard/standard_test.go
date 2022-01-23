@@ -425,6 +425,18 @@ func Test_ScriptEngine_buildOperators(t *testing.T) {
 				},
 			},
 		},
+		{
+			input: input{
+				expression: "@.key==true",
+				tokens:     defaultTokens,
+			},
+			expected: expected{
+				operator: &equalsOperator{
+					arg1: currentKey,
+					arg2: "true",
+				},
+			},
+		},
 	}
 
 	for idx, test := range tests {
@@ -494,7 +506,7 @@ func Test_ScriptEngine_Evaluate(t *testing.T) {
 				expression: "$",
 			},
 			expected: expected{
-				value: "root",
+				value: "'root'",
 			},
 		},
 		{
@@ -504,7 +516,7 @@ func Test_ScriptEngine_Evaluate(t *testing.T) {
 				expression: "@",
 			},
 			expected: expected{
-				value: "current",
+				value: "'current'",
 			},
 		},
 		{

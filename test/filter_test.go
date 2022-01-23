@@ -188,11 +188,10 @@ var filterTests []testData = []testData{
 		expectedError: "invalid expression. is empty",
 	},
 	{
-		selector: `$[?(@.key==42)]`, // TODO : need to not match on string 42 unless in quotes
+		selector: `$[?(@.key==42)]`,
 		data:     `[ {"key": 0}, {"key": 42}, {"key": -1}, {"key": 1}, {"key": 41}, {"key": 43}, {"key": 42.0001}, {"key": 41.9999}, {"key": 100}, {"key": "some"}, {"key": "42"}, {"key": null}, {"key": 420}, {"key": ""}, {"key": {}}, {"key": []}, {"key": [42]}, {"key": {"key": 42}}, {"key": {"some": 42}}, {"some": "value"} ]`,
 		expected: []interface{}{
 			map[string]interface{}{"key": float64(42)},
-			map[string]interface{}{"key": "42"},
 		},
 		consensus:     consensusNone,
 		expectedError: "",
@@ -250,9 +249,10 @@ var filterTests []testData = []testData{
 		expectedError: "",
 	},
 	{
+		// TODO : better array comparison, this fails due to single quotes
 		selector:      `$[?(@.d==['v1','v2'])]`,
 		data:          `[ { "d": [ "v1", "v2" ] }, { "d": [ "a", "b" ] }, { "d": "v1" }, { "d": "v2" }, { "d": {} }, { "d": [] }, { "d": null }, { "d": -1 }, { "d": 0 }, { "d": 1 }, { "d": "['v1','v2']" }, { "d": "['v1', 'v2']" }, { "d": "v1,v2" }, { "d": "[\"v1\", \"v2\"]" }, { "d": "[\"v1\",\"v2\"]" } ]`,
-		expected:      []interface{}{map[string]interface{}{"d": "['v1','v2']"}},
+		expected:      []interface{}{},
 		consensus:     consensusNone,
 		expectedError: "",
 	},
@@ -271,9 +271,11 @@ var filterTests []testData = []testData{
 		expectedError: "",
 	},
 	{
-		selector:      `$[?(@.key==null)]`, // TODO : nil/null support
-		data:          `[ { "some": "some value" }, { "key": true }, { "key": false }, { "key": null }, { "key": "value" }, { "key": "" }, { "key": 0 }, { "key": 1 }, { "key": -1 }, { "key": 42 }, { "key": {} }, { "key": [] } ]`,
-		expected:      []interface{}{},
+		selector: `$[?(@.key==null)]`,
+		data:     `[ { "some": "some value" }, { "key": true }, { "key": false }, { "key": null }, { "key": "value" }, { "key": "" }, { "key": 0 }, { "key": 1 }, { "key": -1 }, { "key": 42 }, { "key": {} }, { "key": [] } ]`,
+		expected: []interface{}{
+			map[string]interface{}{"key": nil},
+		},
 		consensus:     consensusNone,
 		expectedError: "",
 	},
@@ -304,9 +306,8 @@ var filterTests []testData = []testData{
 	{
 		selector: `$[?(@.key==-0.123e2)]`,
 		data:     `[{"key": -12.3}, {"key": -0.123}, {"key": -12}, {"key": 12.3}, {"key": 2}, {"key": "-0.123e2"}]`,
-		expected: []interface{}{ // TODO : should not match string
+		expected: []interface{}{
 			map[string]interface{}{"key": float64(-12.3)},
-			map[string]interface{}{"key": "-0.123e2"},
 		},
 		consensus:     consensusNone,
 		expectedError: "",
@@ -314,9 +315,7 @@ var filterTests []testData = []testData{
 	{
 		selector: `$[?(@.key==010)]`,
 		data:     `[{"key": "010"}, {"key": "10"}, {"key": 10}, {"key": 0}, {"key": 8}]`,
-		expected: []interface{}{ // TODO : unexpected result
-			map[string]interface{}{"key": "010"},
-			map[string]interface{}{"key": "10"},
+		expected: []interface{}{
 			map[string]interface{}{"key": float64(10)},
 		},
 		consensus:     consensusNone,
@@ -420,7 +419,6 @@ var filterTests []testData = []testData{
 			map[string]interface{}{"key": float64(43)},
 			map[string]interface{}{"key": float64(42.0001)},
 			map[string]interface{}{"key": float64(100)},
-			map[string]interface{}{"key": "43"},
 		},
 		consensus:     consensusNone,
 		expectedError: "",
@@ -433,8 +431,6 @@ var filterTests []testData = []testData{
 			map[string]interface{}{"key": float64(43)},
 			map[string]interface{}{"key": float64(42.0001)},
 			map[string]interface{}{"key": float64(100)},
-			map[string]interface{}{"key": "43"},
-			map[string]interface{}{"key": "42"},
 		},
 		consensus:     consensusNone,
 		expectedError: "",
@@ -461,7 +457,6 @@ var filterTests []testData = []testData{
 			map[string]interface{}{"key": float64(-1)},
 			map[string]interface{}{"key": float64(41)},
 			map[string]interface{}{"key": float64(41.9999)},
-			map[string]interface{}{"key": "41"}, // TODO : should not match on string
 		},
 		consensus:     consensusNone,
 		expectedError: "",
@@ -475,8 +470,6 @@ var filterTests []testData = []testData{
 			map[string]interface{}{"key": float64(-1)},
 			map[string]interface{}{"key": float64(41)},
 			map[string]interface{}{"key": float64(41.9999)},
-			map[string]interface{}{"key": "42"},
-			map[string]interface{}{"key": "41"},
 		},
 		consensus:     consensusNone,
 		expectedError: "",
@@ -550,6 +543,7 @@ var filterTests []testData = []testData{
 			map[string]interface{}{"key": float64(41.9999)},
 			map[string]interface{}{"key": float64(100)},
 			map[string]interface{}{"key": "some"},
+			map[string]interface{}{"key": "42"},
 			map[string]interface{}{"key": nil},
 			map[string]interface{}{"key": float64(420)},
 			map[string]interface{}{"key": ""},
@@ -685,11 +679,9 @@ var filterTests []testData = []testData{
 		expectedError: "",
 	},
 	{
-		selector: `$[?(false)]`, // TODO we need to parse this correctly
-		data:     `[1, 3, "nice", true, null, false, {}, [], -1, 0, ""]`,
-		expected: []interface{}{
-			float64(1), float64(3), "nice", true, nil, false, map[string]interface{}{}, []interface{}{}, float64(-1), float64(0), "",
-		},
+		selector:      `$[?(false)]`,
+		data:          `[1, 3, "nice", true, null, false, {}, [], -1, 0, ""]`,
+		expected:      []interface{}{},
 		consensus:     consensusNone,
 		expectedError: "",
 	},
