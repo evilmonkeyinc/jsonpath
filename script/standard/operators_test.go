@@ -377,6 +377,28 @@ func Test_getString(t *testing.T) {
 				value: "true",
 			},
 		},
+		{
+			input: input{
+				argument: `@`,
+				parameters: map[string]interface{}{
+					"@": "'value'",
+				},
+			},
+			expected: expected{
+				value: "'value'",
+			},
+		},
+		{
+			input: input{
+				argument: `@`,
+				parameters: map[string]interface{}{
+					"@": `"value"`,
+				},
+			},
+			expected: expected{
+				value: "'value'",
+			},
+		},
 	}
 
 	for idx, test := range tests {

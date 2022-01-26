@@ -196,24 +196,15 @@ For maps, the keys will be sorted into alphabetical order and they will be used 
 
 For strings instead of returning an array of characters instead will return a substring. For example if you applied `[0:3]` to the string `string` it would return `str`.
 
-## Supported standard evaluation operations
+## Script Engine
 
-| symbol | name | supported types | example | notes |
-| --- | --- | --- | --- | --- |
-| == | equals | any | 1 == 1 returns true | |
-| != | not equals | any | 1 != 2 returns true | |
-| * | multiplication | int\|float | 2*2 returns 4 | |
-| / | division | int\|float | 10/5 returns 2 | if you supply two whole numbers you will only get a whole number response, even if there is a remainder i.e. 10/4 would return 2, not 2.5. to include remainders you would need to have the numerator as a float i.e. 10.0/4 would return 2.5 |
-| + | addition | int\|float | 2+2 returns 4 | |
-| - | subtraction | int\|float | 2-2 returns 0 | |
-| % | remainder | int\|float | 5 % 2 returns 1 | this operator will divide the numerator by the denominator and then return the remainder |
-| > | greater than | int\|float | 1 > 0 returns true | |
-| >= | greater than or equal to | int\|float | 1 >= 1 returns true | |
-| < | less than | int\|float | 1 < 2 returns true | |
-| <= | less than or equal to  | int\|float | 1 <= 1 returns true | |
-| && | combine and | expression\|bool | true&&false returns false | evaluate two expressions that return true or false, and return true if both are true |
-| \|\| | combine or | expression\|bool | true\|\|false returns true | evaluate two expressions that return true or false, and return true if either are true |
-| (...) | sub-expression | expression | (1+2)*3 returns 9 | allows you to isolate a sub-expression so it will be evaluated first separate from the rest of the expression |
+The library supports scripts and filters using a [standard script engine](script/standard/README.md) included with this library.
+
+Additionally, a custom script engine can be created and passed as an additional option when compiling the JSONPath selector
+
+```golang
+
+```
 
 ## History
 

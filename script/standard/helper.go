@@ -1,11 +1,5 @@
 package standard
 
-import (
-	"fmt"
-
-	"github.com/evilmonkeyinc/jsonpath/errors"
-)
-
 func findUnquotedOperators(source string, operator string) int {
 	inSingleQuotes := false
 	inDoubleQuotes := false
@@ -15,10 +9,10 @@ func findUnquotedOperators(source string, operator string) int {
 	roundBracketClose := 0
 
 	inSquareBrackets := func() bool {
-		return squareBracketClose != squareBracketOpen
+		return squareBracketOpen > squareBracketClose
 	}
 	inRoundBrackets := func() bool {
-		return roundBracketOpen != roundBracketClose
+		return roundBracketOpen > roundBracketClose
 	}
 
 	for idx, rne := range source {
@@ -82,8 +76,4 @@ func findUnquotedOperators(source string, operator string) int {
 	}
 
 	return -1
-}
-
-func getInvalidExpressionEmptyError() error {
-	return fmt.Errorf("%w. is empty", errors.ErrInvalidExpression)
 }

@@ -20,14 +20,17 @@ func (op *regexOperator) Evaluate(parameters map[string]interface{}) (interface{
 		return nil, err
 	}
 
+	if len(b) > 1 && strings.HasPrefix(b, "'") && strings.HasSuffix(b, "'") {
+		b = b[1 : len(b)-1]
+	}
+
 	pattern, err := getString(op.arg2, parameters)
 	if err != nil {
 		return nil, err
 	}
 
-	if strings.HasPrefix(pattern, "/") {
-		end := strings.LastIndex(pattern, "/")
-		pattern = pattern[1:end]
+	if len(pattern) > 1 && strings.HasPrefix(pattern, "'") && strings.HasSuffix(pattern, "'") {
+		pattern = pattern[1 : len(pattern)-1]
 	}
 
 	regex, err := regexp.Compile(pattern)

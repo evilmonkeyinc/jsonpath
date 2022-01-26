@@ -564,7 +564,7 @@ var filterTests []testData = []testData{
 		expectedError: "",
 	},
 	{
-		selector:      `$[?(@.name=~/hello.*/)]`, // TODO : need regex support
+		selector:      `$[?(@.name=~/hello.*/)]`, // TODO : need better regex support
 		data:          `[ {"name": "hullo world"}, {"name": "hello world"}, {"name": "yes hello world"}, {"name": "HELLO WORLD"}, {"name": "good bye"} ]`,
 		expected:      []interface{}{},
 		consensus:     consensusNone,

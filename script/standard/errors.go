@@ -1,6 +1,10 @@
 package standard
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/evilmonkeyinc/jsonpath/errors"
+)
 
 var (
 	errUnsupportedOperator            error = fmt.Errorf("unsupported operator")
@@ -11,3 +15,7 @@ var (
 	errInvalidArgumentExpectedBoolean error = fmt.Errorf("%w. expected boolean", errInvalidArgument)
 	errInvalidArgumentExpectedRegex   error = fmt.Errorf("%w. expected a valid regexp", errInvalidArgument)
 )
+
+func getInvalidExpressionEmptyError() error {
+	return fmt.Errorf("%w. is empty", errors.ErrInvalidExpression)
+}
