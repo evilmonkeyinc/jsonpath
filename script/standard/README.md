@@ -4,23 +4,26 @@ The standard script engine is a basic implementation of the script.Engine interf
 
 ## Supported Operations
 
-|operator|name|supported types|
-|-|-|-|
-|`\|\|`|logical OR|boolean|
-|`&&`|logical AND|boolean|
-|`==`|equals|number\|string|
-|`!=`|not equals|number\|string|
-|`<=`|less than or equal to|number|
-|`>=`|greater than or equal to|number|
-|`<`|less than|number|
-|`>`|greater than|number|
-|`=~`|regex|string|
-|`+`|plus/addition|number|
-|`-`|minus/subtraction|number|
-|`**`|power|number|
-|`*`|multiplication|number|
-|`/`|division|number|
-|`%`|modulus|integer|
+|operator|name|supported types|description|
+|-|-|-|-|
+|`\|\|`|logical OR|boolean|return true if left-side OR right-side are true|
+|`&&`|logical AND|boolean|return true if left-side AND right-side are true|
+|`!`|not|boolean|return true if right-side is false. The is no left-side argument|
+|`==`|equals|number\|string|return true if left-side and right-side arguments are equal|
+|`!=`|not equals|number\|string|return true if left-side and right-side arguments are not equal|
+|`<=`|less than or equal to|number|return true if left-side number is less than or equal to the right-side number|
+|`>=`|greater than or equal to|number|return true if left-side number is greater than or equal to the right-side number|
+|`<`|less than|number|return true if left-side number is less than the right-side number|
+|`>`|greater than|number|return true if left-side number is greater than the right-side number|
+|`=~`|regex|string|perform a regex match on the left-side value using the right-side pattern|
+|`+`|plus/addition|number|return the left-side number added to the right-side number|
+|`-`|minus/subtraction|number|return the left-side number minus the right-side number|
+|`**`|power|number|return the left-side number increased to the power of the right-side number|
+|`*`|multiplication|number|return the left-side number multiplied by the right-side number|
+|`/`|division|number|return the left-side number divided by the right-side number|
+|`%`|modulus|integer|return the remainder of the left-side number divided by the right-side number|
+
+All operators have a left-side and right-side argument, expect the not `!` operator which only as a right-side argument. The arguments can be strings, numbers, boolean values, arrays, objects, a special parameter, or other expressions, for example `true && true || false` includes the logical AND operator with left-side `true` and right-side a logical OR operator with left-side `true` and right-side `false`.
 
 ### Regex
 
