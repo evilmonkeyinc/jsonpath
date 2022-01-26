@@ -13,7 +13,7 @@ import (
 // TODO : add support for bitwise operators | &^ ^ &  << >> after + and -
 var defaultTokens []string = []string{
 	"||", "&&",
-	"==", "!=", "<=", ">=", "<", ">", "=~",
+	"==", "!=", "<=", ">=", "<", ">", "=~", "!",
 	"+", "-",
 	"**", "*", "/", "%",
 	"@", "$",
@@ -75,8 +75,8 @@ func (engine *ScriptEngine) buildOperators(expression string, tokens []string, o
 
 	// check right for more tokens, or use raw string as input
 	// right check needs done first as some expressions just have left sides
-	arg2Str := strings.TrimSpace(expression[idx+(len(nextToken)):])
-	if arg2Str == "" && (nextToken != "$" && nextToken != "@") {
+	rightsideString := strings.TrimSpace(expression[idx+(len(nextToken)):])
+	if rightsideString == "" && (nextToken != "$" && nextToken != "@") {
 		if len(tokens) == 1 {
 			return nil, nil
 		}
@@ -84,14 +84,14 @@ func (engine *ScriptEngine) buildOperators(expression string, tokens []string, o
 		return engine.buildOperators(expression, tokens[1:], options)
 	}
 
-	arg2, err := engine.parseArgument(arg2Str, tokens, options)
+	rightside, err := engine.parseArgument(rightsideString, tokens, options)
 	if err != nil {
 		return nil, err
 	}
 
 	// check left for more tokens, or use raw string as input
-	arg1Str := strings.TrimSpace(expression[0:idx])
-	if arg1Str == "" && (nextToken != "$" && nextToken != "@") {
+	leftsideString := strings.TrimSpace(expression[0:idx])
+	if leftsideString == "" && (nextToken != "$" && nextToken != "@" && nextToken != "!") {
 		if len(tokens) == 1 {
 			return nil, nil
 		}
@@ -99,13 +99,20 @@ func (engine *ScriptEngine) buildOperators(expression string, tokens []string, o
 		return engine.buildOperators(expression, tokens[1:], options)
 	}
 
-	arg1, err := engine.parseArgument(arg1Str, tokens, options)
+	leftside, err := engine.parseArgument(leftsideString, tokens, options)
 	if err != nil {
 		return nil, err
 	}
 
 	switch nextToken {
 	case "@", "$":
+		if leftside != nil {
+			// There should not be a left side to this operator
+			if len(tokens) == 1 {
+				return nil, nil
+			}
+			return engine.buildOperators(expression, tokens[1:], options)
+		}
 		selector, err := newSelectorOperator(expression, engine, options)
 		if err != nil {
 			return nil, err
@@ -113,78 +120,89 @@ func (engine *ScriptEngine) buildOperators(expression string, tokens []string, o
 		return selector, nil
 	case "=~":
 		return &regexOperator{
-			arg1: arg1,
-			arg2: arg2,
+			arg1: leftside,
+			arg2: rightside,
+		}, nil
+	case "!":
+		if leftside != nil {
+			// There should not be a left side to this operator
+			if len(tokens) == 1 {
+				return nil, nil
+			}
+			return engine.buildOperators(expression, tokens[1:], options)
+		}
+		return &notOperator{
+			arg: rightside,
 		}, nil
 	case "||":
 		return &orOperator{
-			arg1: arg1,
-			arg2: arg2,
+			arg1: leftside,
+			arg2: rightside,
 		}, nil
 	case "&&":
 		return &andOperator{
-			arg1: arg1,
-			arg2: arg2,
+			arg1: leftside,
+			arg2: rightside,
 		}, nil
 	case "==":
 		return &equalsOperator{
-			arg1: arg1,
-			arg2: arg2,
+			arg1: leftside,
+			arg2: rightside,
 		}, nil
 	case "!=":
 		return &notEqualsOperator{
-			arg1: arg1,
-			arg2: arg2,
+			arg1: leftside,
+			arg2: rightside,
 		}, nil
 	case "<=":
 		return &lessThanOrEqualOperator{
-			arg1: arg1,
-			arg2: arg2,
+			arg1: leftside,
+			arg2: rightside,
 		}, nil
 	case ">=":
 		return &greaterThanOrEqualOperator{
-			arg1: arg1,
-			arg2: arg2,
+			arg1: leftside,
+			arg2: rightside,
 		}, nil
 	case "<":
 		return &lessThanOperator{
-			arg1: arg1,
-			arg2: arg2,
+			arg1: leftside,
+			arg2: rightside,
 		}, nil
 	case ">":
 		return &greaterThanOperator{
-			arg1: arg1,
-			arg2: arg2,
+			arg1: leftside,
+			arg2: rightside,
 		}, nil
 	case "+":
 		return &plusOperator{
-			arg1: arg1,
-			arg2: arg2,
+			arg1: leftside,
+			arg2: rightside,
 		}, nil
 	case "-":
 		return &subtractOperator{
-			arg1: arg1,
-			arg2: arg2,
+			arg1: leftside,
+			arg2: rightside,
 		}, nil
 	case "**":
 		return &powerOfOperator{
-			arg1: arg1,
-			arg2: arg2,
+			arg1: leftside,
+			arg2: rightside,
 		}, nil
 	case "*":
 		return &multiplyOperator{
-			arg1: arg1,
-			arg2: arg2,
+			arg1: leftside,
+			arg2: rightside,
 		}, nil
 	case "/":
 		return &divideOperator{
-			arg1: arg1,
-			arg2: arg2,
+			arg1: leftside,
+			arg2: rightside,
 		}, nil
 	case "%":
 		return &modulusOperator{
-			arg1: arg1,
-			arg2: arg2,
+			arg1: leftside,
+			arg2: rightside,
 		}, nil
 	}
 
@@ -201,6 +219,10 @@ func (engine *ScriptEngine) parseArgument(argument string, tokens []string, opti
 	}
 
 	argument = strings.TrimSpace(argument)
+	if argument == "" {
+		return nil, nil
+	}
+
 	var arg interface{} = argument
 	if strings.HasPrefix(argument, "[") && strings.HasSuffix(argument, "]") {
 		val := make([]interface{}, 0)

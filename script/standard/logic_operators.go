@@ -157,3 +157,17 @@ func (op *notEqualsOperator) Evaluate(parameters map[string]interface{}) (interf
 
 	return first != second, nil
 }
+
+type notOperator struct {
+	arg interface{}
+}
+
+func (op *notOperator) Evaluate(parameters map[string]interface{}) (interface{}, error) {
+
+	result, err := getBoolean(op.arg, parameters)
+	if err != nil {
+		return nil, err
+	}
+
+	return !result, nil
+}

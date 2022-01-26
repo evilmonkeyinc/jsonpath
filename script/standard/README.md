@@ -46,3 +46,9 @@ Using the root or current symbol allows to embed a JSONPath selector within an e
 The nil and null tokens can be used interchangeably to represent a nil value.
 
 > remember that the @ character has different meaning in subscripts than it does in filters.
+
+## Limitations
+
+The script parser does not infer meaning from symbols/tokens and the neighboring characters, what may be considered a valid mathematical equation is not always a valid script expression.
+
+For example, the equations `8+3-3*6+2(2*3)` will not be parsed correctly as the engine does not under stand that `2(2*3)` is the same as `2*(2*3)`, if you needed such an equation you would remove any ambiguity of what a number next to a bracket means like so `8+3-3*6+2*(2*3)`.

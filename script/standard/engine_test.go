@@ -67,7 +67,21 @@ func Test_ScriptEngine_Compile(t *testing.T) {
 				expression: ".$",
 			},
 			expected: expected{
-				err: "unexpected token '.' at index 0",
+				compiled: &compiledExpression{
+					expression:   ".$",
+					rootOperator: nil,
+					engine:       engine,
+					options:      nil,
+				},
+				err: "",
+			},
+		},
+		{
+			input: input{
+				expression: "$[]",
+			},
+			expected: expected{
+				err: "invalid token. '[]' does not match any token format",
 			},
 		},
 	}
@@ -199,7 +213,18 @@ func Test_ScriptEngine_Evaluate(t *testing.T) {
 				},
 			},
 			expected: expected{
-				err: "unexpected token '.' at index 0",
+				value: false,
+			},
+		},
+		{
+			input: input{
+				expression: "@[]=~'hello.*'",
+				current: map[string]interface{}{
+					"name": "hello world",
+				},
+			},
+			expected: expected{
+				err: "invalid token. '[]' does not match any token format",
 			},
 		},
 	}
@@ -596,7 +621,17 @@ func Test_ScriptEngine_buildOperators(t *testing.T) {
 			},
 			expected: expected{
 				operator: nil,
-				err:      "unexpected token '.' at index 0",
+				err:      "",
+			},
+		},
+		{
+			input: input{
+				expression: "$[]",
+				tokens:     defaultTokens,
+			},
+			expected: expected{
+				operator: nil,
+				err:      "invalid token. '[]' does not match any token format",
 			},
 		},
 		{
@@ -633,6 +668,48 @@ func Test_ScriptEngine_buildOperators(t *testing.T) {
 			input: input{
 				expression: "||.",
 				tokens:     []string{"||", "&&"},
+			},
+			expected: expected{
+				operator: nil,
+				err:      "",
+			},
+		},
+		{
+			input: input{
+				expression: "!true",
+				tokens:     defaultTokens,
+			},
+			expected: expected{
+				operator: &notOperator{arg: "true"},
+				err:      "",
+			},
+		},
+		{
+			input: input{
+				expression: "!(0==1)",
+				tokens:     defaultTokens,
+			},
+			expected: expected{
+				operator: &notOperator{
+					arg: &equalsOperator{arg1: "0", arg2: "1"},
+				},
+				err: "",
+			},
+		},
+		{
+			input: input{
+				expression: "true!true",
+				tokens:     defaultTokens,
+			},
+			expected: expected{
+				operator: nil,
+				err:      "",
+			},
+		},
+		{
+			input: input{
+				expression: "true!true",
+				tokens:     []string{"!"},
 			},
 			expected: expected{
 				operator: nil,
@@ -678,7 +755,16 @@ func Test_ScriptEngine_parseArgument(t *testing.T) {
 				tokens:   defaultTokens,
 			},
 			expected: expected{
-				err: "unexpected token '.' at index 0",
+				value: ".$",
+			},
+		},
+		{
+			input: input{
+				argument: "$[]",
+				tokens:   defaultTokens,
+			},
+			expected: expected{
+				err: "invalid token. '[]' does not match any token format",
 			},
 		},
 		{
@@ -727,4 +813,159 @@ func Test_ScriptEngine_parseArgument(t *testing.T) {
 			assert.Equal(t, test.expected.value, actual)
 		})
 	}
+}
+
+func Test_Evaluate(t *testing.T) {
+
+	tests := []struct {
+		expression string
+		expected   interface{}
+	}{
+		{
+			expression: "true || false",
+			expected:   true,
+		},
+		{
+			expression: "true && true",
+			expected:   true,
+		},
+		{
+			expression: "false || true && true",
+			expected:   true,
+		},
+		{
+			expression: "true && true || false",
+			expected:   true,
+		},
+		{
+			expression: "true == true",
+			expected:   true,
+		},
+		{
+			expression: "'true' == true",
+			expected:   false,
+		},
+		{
+			expression: "'true' == 'true'",
+			expected:   true,
+		},
+		{
+			expression: "true != true",
+			expected:   false,
+		},
+		{
+			expression: "'true' != true",
+			expected:   true,
+		},
+		{
+			expression: "'true' != 'true'",
+			expected:   false,
+		},
+		{
+			expression: "1 < 2",
+			expected:   true,
+		},
+		{
+			expression: "2 < 2",
+			expected:   false,
+		},
+		{
+			expression: "1 <= 2",
+			expected:   true,
+		},
+		{
+			expression: "2 <= 2",
+			expected:   true,
+		},
+		{
+			expression: "2 > 1",
+			expected:   true,
+		},
+		{
+			expression: "2 > 2",
+			expected:   false,
+		},
+		{
+			expression: "2 >= 1",
+			expected:   true,
+		},
+		{
+			expression: "2 >= 2",
+			expected:   true,
+		},
+		{
+			expression: "1 + 2",
+			expected:   float64(3),
+		},
+		{
+			expression: "2 - 1",
+			expected:   float64(1),
+		},
+		{
+			expression: "1 + 2 - 3",
+			expected:   float64(0),
+		},
+		{
+			expression: "1 * 2",
+			expected:   float64(2),
+		},
+		{
+			expression: "1 / 2",
+			expected:   float64(0.5),
+		},
+		{
+			expression: "1 * 2 / 8",
+			expected:   float64(0.25),
+		},
+		{
+			expression: "2 ** 0",
+			expected:   float64(1),
+		},
+		{
+			expression: "2 ** 1",
+			expected:   float64(2),
+		},
+		{
+			expression: "2 ** 2",
+			expected:   float64(4),
+		},
+		{
+			expression: "4 % 2",
+			expected:   int64(0),
+		},
+		{
+			expression: "4 % 3",
+			expected:   int64(1),
+		},
+		{
+			expression: "15/5*(8-6+3)*5",
+			expected:   float64(75),
+		},
+		{
+			expression: "8+3-3*6+2*(2*3)",
+			expected:   float64(5),
+		},
+		{
+			expression: "!false",
+			expected:   true,
+		},
+		{
+			expression: "!true",
+			expected:   false,
+		},
+		{
+			expression: "!(1==1)",
+			expected:   false,
+		},
+	}
+
+	for idx, test := range tests {
+		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
+			engine := &ScriptEngine{}
+			actual, err := engine.Evaluate(nil, nil, test.expression, nil)
+			assert.Nil(t, err)
+			assert.Equal(t, test.expected, actual)
+		})
+	}
+
 }
