@@ -522,7 +522,7 @@ func Test_notOperator(t *testing.T) {
 				},
 			},
 			expected: operatorTestExpected{
-				err: "invalid argument. is nil",
+				value: true,
 			},
 		},
 		{

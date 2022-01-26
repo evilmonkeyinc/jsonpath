@@ -73,7 +73,7 @@ func getNumber(argument interface{}, parameters map[string]interface{}) (float64
 
 func getBoolean(argument interface{}, parameters map[string]interface{}) (bool, error) {
 	if argument == nil {
-		return false, errInvalidArgumentNil
+		return false, nil
 	}
 	if parameters == nil {
 		parameters = make(map[string]interface{})
@@ -91,6 +91,10 @@ func getBoolean(argument interface{}, parameters map[string]interface{}) (bool, 
 		if arg, ok := parameters[str]; ok {
 			argument = arg
 		}
+	}
+
+	if argument == nil {
+		return false, nil
 	}
 
 	str := fmt.Sprintf("%v", argument)

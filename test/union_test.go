@@ -31,9 +31,9 @@ var unionTests []testData = []testData{
 	{
 		selector:      `$[?(@.key<3),?(@.key>6)]`,
 		data:          `[{"key": 1}, {"key": 8}, {"key": 3}, {"key": 10}, {"key": 7}, {"key": 2}, {"key": 6}, {"key": 4}]`,
-		expected:      nil,
+		expected:      []interface{}{},
 		consensus:     consensusNone,
-		expectedError: "invalid expression. unexpected token '3' at index 0",
+		expectedError: "",
 	},
 	{
 		selector:      `$['key','another']`,

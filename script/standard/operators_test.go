@@ -213,6 +213,8 @@ func Test_getNumber(t *testing.T) {
 
 func Test_getBoolean(t *testing.T) {
 
+	currentSelector, _ := newSelectorOperator("@", &ScriptEngine{}, nil)
+
 	type input struct {
 		argument   interface{}
 		parameters map[string]interface{}
@@ -230,7 +232,7 @@ func Test_getBoolean(t *testing.T) {
 		{
 			input: input{},
 			expected: expected{
-				err: "invalid argument. is nil",
+				value: false,
 			},
 		},
 		{
@@ -285,6 +287,25 @@ func Test_getBoolean(t *testing.T) {
 			},
 			expected: expected{
 				value: true,
+			},
+		},
+		{
+			input: input{
+				argument: currentSelector,
+			},
+			expected: expected{
+				value: false,
+			},
+		},
+		{
+			input: input{
+				argument: "null",
+				parameters: map[string]interface{}{
+					"null": nil,
+				},
+			},
+			expected: expected{
+				value: false,
 			},
 		},
 	}
