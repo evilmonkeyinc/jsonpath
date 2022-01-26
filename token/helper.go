@@ -82,6 +82,9 @@ func getTypeAndValue(obj interface{}) (reflect.Type, reflect.Value) {
 	objVal := reflect.ValueOf(obj)
 
 	if objType.Kind() == reflect.Ptr {
+		if objVal.IsNil() {
+			return nil, reflect.ValueOf(nil)
+		}
 		objType = objType.Elem()
 		objVal = objVal.Elem()
 	}

@@ -52,7 +52,7 @@ func (token *filterToken) Apply(root, current interface{}, next []Token) (interf
 			if len(strValue) > 1 {
 				if strings.HasPrefix(strValue, "'") && strings.HasSuffix(strValue, "'") {
 					strValue = strValue[1 : len(strValue)-1]
-				} else if strings.HasPrefix(strValue, "\"") && strings.HasSuffix(strValue, "\"") {
+				} else if strings.HasPrefix(strValue, `"`) && strings.HasSuffix(strValue, `"`) {
 					strValue = strValue[1 : len(strValue)-1]
 				}
 			}

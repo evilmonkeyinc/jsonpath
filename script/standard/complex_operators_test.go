@@ -55,17 +55,6 @@ func Test_regexOperator(t *testing.T) {
 		{
 			input: operatorTestInput{
 				operator: &regexOperator{
-					arg1: "1",
-					arg2: `/\d/i`,
-				},
-			},
-			expected: operatorTestExpected{
-				value: true,
-			},
-		},
-		{
-			input: operatorTestInput{
-				operator: &regexOperator{
 					arg1: "string",
 					arg2: `\d`,
 				},
@@ -83,6 +72,17 @@ func Test_regexOperator(t *testing.T) {
 			},
 			expected: operatorTestExpected{
 				err: "invalid argument. expected a valid regexp",
+			},
+		},
+		{
+			input: operatorTestInput{
+				operator: &regexOperator{
+					arg1: "'1'",
+					arg2: `"\d"`,
+				},
+			},
+			expected: operatorTestExpected{
+				value: true,
 			},
 		},
 	}
@@ -142,6 +142,32 @@ func Test_selectorOperator(t *testing.T) {
 			},
 			expected: operatorTestExpected{
 				value: true,
+			},
+		},
+		{
+			input: operatorTestInput{
+				operator: currentKeyOperator,
+				paramters: map[string]interface{}{
+					"@": map[string]interface{}{
+						"notkey": true,
+					},
+				},
+			},
+			expected: operatorTestExpected{
+				err: "key: invalid token key 'key' not found",
+			},
+		},
+		{
+			input: operatorTestInput{
+				operator: currentKeyOperator,
+				paramters: map[string]interface{}{
+					"@": map[string]interface{}{
+						"key": "'value'",
+					},
+				},
+			},
+			expected: operatorTestExpected{
+				value: "'value'",
 			},
 		},
 	}

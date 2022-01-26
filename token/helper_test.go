@@ -91,6 +91,20 @@ func Test_isInteger(t *testing.T) {
 				ok:    true,
 			},
 		},
+		{
+			input: float64(100),
+			expected: expected{
+				value: 100,
+				ok:    true,
+			},
+		},
+		{
+			input: float64(3.14),
+			expected: expected{
+				value: 0,
+				ok:    false,
+			},
+		},
 	}
 
 	for idx, test := range tests {
@@ -185,6 +199,10 @@ func Test_getStructFields(t *testing.T) {
 
 func Test_getTypeAndValue(t *testing.T) {
 
+	getNilPointer := func() *sampleStruct {
+		return nil
+	}
+
 	sampleString := "sample"
 
 	type expected struct {
@@ -229,6 +247,13 @@ func Test_getTypeAndValue(t *testing.T) {
 			expected: expected{
 				kind:  reflect.Struct,
 				value: sampleStruct{},
+			},
+		},
+		{
+			input: getNilPointer(),
+			expected: expected{
+				kind:  reflect.Invalid,
+				value: nil,
 			},
 		},
 	}

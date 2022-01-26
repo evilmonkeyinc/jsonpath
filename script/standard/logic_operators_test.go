@@ -512,3 +512,89 @@ func Test_notEqualsOperator(t *testing.T) {
 	}
 	batchOperatorTests(t, tests)
 }
+
+func Test_notOperator(t *testing.T) {
+	tests := []*operatorTest{
+		{
+			input: operatorTestInput{
+				operator: &notOperator{
+					arg: nil,
+				},
+			},
+			expected: operatorTestExpected{
+				value: true,
+			},
+		},
+		{
+			input: operatorTestInput{
+				operator: &notOperator{
+					arg: "value",
+				},
+			},
+			expected: operatorTestExpected{
+				err: "invalid argument. expected boolean",
+			},
+		},
+		{
+			input: operatorTestInput{
+				operator: &notOperator{
+					arg: "1",
+				},
+			},
+			expected: operatorTestExpected{
+				value: false,
+			},
+		},
+		{
+			input: operatorTestInput{
+				operator: &notOperator{
+					arg: 2,
+				},
+			},
+			expected: operatorTestExpected{
+				err: "invalid argument. expected boolean",
+			},
+		},
+		{
+			input: operatorTestInput{
+				operator: &notOperator{
+					arg: true,
+				},
+			},
+			expected: operatorTestExpected{
+				value: false,
+			},
+		},
+		{
+			input: operatorTestInput{
+				operator: &notOperator{
+					arg: false,
+				},
+			},
+			expected: operatorTestExpected{
+				value: true,
+			},
+		},
+		{
+			input: operatorTestInput{
+				operator: &notOperator{
+					arg: &equalsOperator{arg1: "1", arg2: "1"},
+				},
+			},
+			expected: operatorTestExpected{
+				value: false,
+			},
+		},
+		{
+			input: operatorTestInput{
+				operator: &notOperator{
+					arg: &equalsOperator{arg1: "2", arg2: "1"},
+				},
+			},
+			expected: operatorTestExpected{
+				value: true,
+			},
+		},
+	}
+	batchOperatorTests(t, tests)
+}

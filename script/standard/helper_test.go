@@ -125,6 +125,20 @@ func Test_findUnquotedOperators(t *testing.T) {
 			},
 			expected: 6,
 		},
+		{
+			input: input{
+				source:    `'[]']`,
+				subString: "]",
+			},
+			expected: 4,
+		},
+		{
+			input: input{
+				source:    `'[(<"||">)]'`,
+				subString: "||",
+			},
+			expected: -1,
+		},
 	}
 
 	for idx, test := range tests {
