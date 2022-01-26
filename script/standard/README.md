@@ -26,7 +26,7 @@ The standard script engine is a basic implementation of the script.Engine interf
 
 The regex operator will perform a regex match check using the left side argument as the input and the right as the regex pattern.
 
-The right side pattern must be passed as a string, between single or double quotes, to ensure that no characters are mistaken for other operators
+The right side pattern should be passed as a string, between single or double quotes, to ensure that no characters are mistaken for other operators.
 
 > the regex operation is handled by the standard [`regexp`](https://pkg.go.dev/regexp) golang library `Match` function.
 
@@ -45,4 +45,4 @@ Using the root or current symbol allows to embed a JSONPath selector within an e
 
 The nil and null tokens can be used interchangeably to represent a nil value.
 
-> remember that the @ character has different meaning in subscripts than it does in filters
+> remember that the @ character has different meaning in subscripts than it does in filters.
