@@ -6,6 +6,10 @@ func Test_Misc(t *testing.T) {
 	batchTest(t, miscTests)
 }
 
+func Benchmark_Misc(b *testing.B) {
+	batchBenchmark(b, miscTests)
+}
+
 var miscTests []testData = []testData{
 	{
 		selector:      "", // empty

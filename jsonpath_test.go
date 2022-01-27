@@ -7,6 +7,37 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func Benchmark_Selector(b *testing.B) {
+
+	selectors := []string{
+		"$.store.book[*].author",
+		"$..author",
+		"$.store.*",
+		"$.store..price",
+		"$..book[2]",
+		"$..book[(@.length-1)]",
+		"$..book[-1:]",
+		"$..book[0,1]",
+		"$..book[:2]",
+		"$..book[?(@.isbn)]",
+		"$..book[?(@.price<10)]",
+		"$..book[?(@.price<$.expensive)]",
+		"$..*",
+	}
+
+	for _, selector := range selectors {
+		b.Run(fmt.Sprintf("%s", selector), func(b *testing.B) {
+			var err error
+			for i := 0; i < b.N; i++ {
+				_, err = QueryString(selector, sampleDataString)
+				if err != nil {
+					b.Error()
+				}
+			}
+		})
+	}
+}
+
 // Tests designed after the examples in the specification document
 //
 // https://goessner.net/articles/JsonPath/

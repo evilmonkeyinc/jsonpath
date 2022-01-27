@@ -8,6 +8,10 @@ func Test_Bracket(t *testing.T) {
 	batchTest(t, bracketTests)
 }
 
+func Benchmark_Bracket(b *testing.B) {
+	batchBenchmark(b, bracketTests)
+}
+
 var bracketTests []testData = []testData{
 	{
 		selector:      "$['key']",

@@ -8,6 +8,10 @@ func Test_Array(t *testing.T) {
 	batchTest(t, arrayTests)
 }
 
+func Benchmark_Array(b *testing.B) {
+	batchBenchmark(b, arrayTests)
+}
+
 var arrayTests []testData = []testData{
 	{
 		selector:  "$[1:3]",

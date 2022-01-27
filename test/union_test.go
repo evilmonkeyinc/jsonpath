@@ -6,6 +6,10 @@ func Test_Union(t *testing.T) {
 	batchTest(t, unionTests)
 }
 
+func Benchmark_Union(b *testing.B) {
+	batchBenchmark(b, unionTests)
+}
+
 var unionTests []testData = []testData{
 	{
 		selector:      `$[0,1]`,
