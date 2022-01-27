@@ -6,6 +6,10 @@ func Test_Dot(t *testing.T) {
 	batchTest(t, dotTests)
 }
 
+func Benchmark_Dot(b *testing.B) {
+	batchBenchmark(b, dotTests)
+}
+
 var dotTests []testData = []testData{
 	{
 		selector:  `@.a`,

@@ -49,6 +49,16 @@ func batchTest(t *testing.T, tests []testData) {
 	}
 }
 
+func batchBenchmark(b *testing.B, tests []testData) {
+	for idx, test := range tests {
+		b.Run(fmt.Sprintf("%d", idx), func(b *testing.B) {
+			for n := 0; n < b.N; n++ {
+				jsonpath.QueryString(test.selector, test.data)
+			}
+		})
+	}
+}
+
 func Test_generateReadme(t *testing.T) {
 
 	header := `# Consensus Tests

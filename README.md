@@ -203,7 +203,9 @@ The library supports scripts and filters using a [standard script engine](script
 Additionally, a custom script engine can be created and passed as an additional option when compiling the JSONPath selector
 
 ```golang
-
+...
+compiled, err := jsonpath.Compile(selector, jsonpath.ScriptEngine(customScriptEngine))
+...
 ```
 
 ## History
@@ -212,6 +214,6 @@ The [original specification for JSONPath](https://goessner.net/articles/JsonPath
 
 ## Hows does this compare to...
 
-There are many [implementations](https://cburgmer.github.io/json-path-comparison/) in multiple languages so I will not claim that this library is better in any way but I believe that it is true to the original specification and was an enjoyable challenge.
+There are many [implementations](https://cburgmer.github.io/json-path-comparison/) in multiple languages. Some sample benchmarks against other implementations are detailed [here](benchmark/README.md). This implementation has merit but it not the quickest golang implementation available but could be useful for those not wanting to use json marshaling.
 
 Sample queries and the expected response for this implementation compared to the community consensus are available [here](test/README.md)

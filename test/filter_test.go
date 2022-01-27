@@ -8,6 +8,10 @@ func Test_Filter(t *testing.T) {
 	batchTest(t, filterTests)
 }
 
+func Benchmark_Filter(b *testing.B) {
+	batchBenchmark(b, filterTests)
+}
+
 var filterTests []testData = []testData{
 	{
 		selector:      `$[?(@.key)]`,
