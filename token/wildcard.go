@@ -23,6 +23,25 @@ func (token *wildcardToken) Apply(root, current interface{}, next []Token) (inte
 
 	elements := make([]interface{}, 0)
 
+	var nextToken Token
+	var futureTokens []Token
+
+	if len(next) > 0 {
+		nextToken = next[0]
+		futureTokens = next[1:]
+	}
+
+	handleNext := func(item interface{}) (interface{}, bool) {
+		if nextToken == nil {
+			return item, true
+		}
+		result, _ := nextToken.Apply(root, item, futureTokens)
+		if result == nil {
+			return nil, false
+		}
+		return result, true
+	}
+
 	objType, objVal := getTypeAndValue(current)
 	if objType == nil {
 		return nil, getInvalidTokenTargetNilError(
@@ -37,20 +56,26 @@ func (token *wildcardToken) Apply(root, current interface{}, next []Token) (inte
 		sortMapKeys(keys)
 		for _, kv := range keys {
 			value := objVal.MapIndex(kv).Interface()
-			elements = append(elements, value)
+			if item, add := handleNext(value); add {
+				elements = append(elements, item)
+			}
 		}
 		break
 	case reflect.Array, reflect.Slice:
 		length := objVal.Len()
 		for i := 0; i < length; i++ {
 			value := objVal.Index(i).Interface()
-			elements = append(elements, value)
+			if item, add := handleNext(value); add {
+				elements = append(elements, item)
+			}
 		}
 	case reflect.Struct:
 		fields := getStructFields(objVal, true)
 		for _, field := range fields {
 			value := objVal.FieldByName(field.Name).Interface()
-			elements = append(elements, value)
+			if item, add := handleNext(value); add {
+				elements = append(elements, item)
+			}
 		}
 		break
 	default:
@@ -61,20 +86,5 @@ func (token *wildcardToken) Apply(root, current interface{}, next []Token) (inte
 		)
 	}
 
-	if len(next) > 0 {
-		nextToken := next[0]
-		futureTokens := next[1:]
-
-		results := make([]interface{}, 0)
-
-		for _, item := range elements {
-			result, _ := nextToken.Apply(root, item, futureTokens)
-			if result != nil {
-				results = append(results, result)
-			}
-		}
-
-		return results, nil
-	}
 	return elements, nil
 }
