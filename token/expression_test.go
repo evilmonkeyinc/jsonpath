@@ -36,7 +36,16 @@ func (engine *testCompiledExpression) Evaluate(root, current interface{}) (inter
 var _ Token = &expressionToken{}
 
 func Test_newExpressionToken(t *testing.T) {
-	assert.IsType(t, &expressionToken{}, newExpressionToken("", nil, nil))
+	t.Run("success", func(t *testing.T) {
+		actual, err := newExpressionToken("", &testEngine{}, nil)
+		assert.Nil(t, err)
+		assert.IsType(t, &expressionToken{}, actual)
+	})
+	t.Run("fail", func(t *testing.T) {
+		actual, err := newExpressionToken("", &testEngine{err: fmt.Errorf("fail")}, nil)
+		assert.EqualError(t, err, "fail")
+		assert.Nil(t, actual)
+	})
 }
 
 func Test_ExpressionToken_String(t *testing.T) {
@@ -75,8 +84,8 @@ func Test_ExpressionToken_Apply(t *testing.T) {
 		},
 		{
 			token: &expressionToken{
-				expression: "any",
-				engine:     &testEngine{err: fmt.Errorf("engine error")},
+				expression:         "any",
+				compiledExpression: &testCompiledExpression{err: fmt.Errorf("engine error")},
 			},
 			input: input{},
 			expected: expected{
@@ -85,8 +94,8 @@ func Test_ExpressionToken_Apply(t *testing.T) {
 		},
 		{
 			token: &expressionToken{
-				expression: "any",
-				engine:     &testEngine{response: true},
+				expression:         "any",
+				compiledExpression: &testCompiledExpression{response: true},
 			},
 			input: input{},
 			expected: expected{
@@ -95,8 +104,8 @@ func Test_ExpressionToken_Apply(t *testing.T) {
 		},
 		{
 			token: &expressionToken{
-				expression: "any",
-				engine:     &testEngine{response: false},
+				expression:         "any",
+				compiledExpression: &testCompiledExpression{response: false},
 			},
 			input: input{
 				tokens: []Token{&currentToken{}},

@@ -11,7 +11,16 @@ import (
 var _ Token = &scriptToken{}
 
 func Test_newScriptToken(t *testing.T) {
-	assert.IsType(t, &scriptToken{}, newScriptToken("", nil, nil))
+	t.Run("success", func(t *testing.T) {
+		actual, err := newScriptToken("", &testEngine{}, nil)
+		assert.Nil(t, err)
+		assert.IsType(t, &scriptToken{}, actual)
+	})
+	t.Run("failed", func(t *testing.T) {
+		actual, err := newScriptToken("", &testEngine{err: fmt.Errorf("failed")}, nil)
+		assert.EqualError(t, err, "failed")
+		assert.Nil(t, actual)
+	})
 }
 
 func Test_ScriptToken_String(t *testing.T) {
@@ -50,8 +59,8 @@ func Test_ScriptToken_Apply(t *testing.T) {
 		},
 		{
 			token: &scriptToken{
-				expression: "engine error",
-				engine:     &testEngine{err: fmt.Errorf("engine error")},
+				expression:         "engine error",
+				compiledExpression: &testCompiledExpression{err: fmt.Errorf("engine error")},
 			},
 			input: input{},
 			expected: expected{
@@ -60,8 +69,8 @@ func Test_ScriptToken_Apply(t *testing.T) {
 		},
 		{
 			token: &scriptToken{
-				expression: "nil response",
-				engine:     &testEngine{response: nil},
+				expression:         "nil response",
+				compiledExpression: &testCompiledExpression{response: nil},
 			},
 			input: input{},
 			expected: expected{
@@ -70,8 +79,8 @@ func Test_ScriptToken_Apply(t *testing.T) {
 		},
 		{
 			token: &scriptToken{
-				expression: "bool response",
-				engine:     &testEngine{response: true},
+				expression:         "bool response",
+				compiledExpression: &testCompiledExpression{response: true},
 			},
 			input: input{},
 			expected: expected{
@@ -80,8 +89,8 @@ func Test_ScriptToken_Apply(t *testing.T) {
 		},
 		{
 			token: &scriptToken{
-				expression: "string response",
-				engine:     &testEngine{response: "key"},
+				expression:         "string response",
+				compiledExpression: &testCompiledExpression{response: "key"},
 			},
 			input: input{
 				current: map[string]interface{}{
@@ -94,8 +103,8 @@ func Test_ScriptToken_Apply(t *testing.T) {
 		},
 		{
 			token: &scriptToken{
-				expression: "int response",
-				engine:     &testEngine{response: 1},
+				expression:         "int response",
+				compiledExpression: &testCompiledExpression{response: 1},
 			},
 			input: input{
 				current: []string{"one", "two", "three"},

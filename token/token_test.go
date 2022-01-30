@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/evilmonkeyinc/jsonpath/script"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -11,6 +12,7 @@ func Test_Parse(t *testing.T) {
 
 	type input struct {
 		selector string
+		engine   script.Engine
 	}
 
 	type expected struct {
@@ -129,7 +131,8 @@ func Test_Parse(t *testing.T) {
 			input: input{selector: "[?(@.isbn)]"},
 			expected: expected{
 				token: &filterToken{
-					expression: "@.isbn",
+					expression:         "@.isbn",
+					compiledExpression: &testCompiledExpression{},
 				},
 			},
 		},
@@ -145,7 +148,8 @@ func Test_Parse(t *testing.T) {
 			input: input{selector: "[(@.length-1)]"},
 			expected: expected{
 				token: &scriptToken{
-					expression: "@.length-1",
+					expression:         "@.length-1",
+					compiledExpression: &testCompiledExpression{},
 				},
 			},
 		},
@@ -160,12 +164,15 @@ func Test_Parse(t *testing.T) {
 			},
 		},
 		{
-			input: input{selector: "[1:(@.length-1)]"},
+			input: input{
+				selector: "[1:(@.length-1)]",
+			},
 			expected: expected{
 				token: &rangeToken{
 					from: int64(1),
 					to: &expressionToken{
-						expression: "@.length-1",
+						expression:         "@.length-1",
+						compiledExpression: &testCompiledExpression{},
 					},
 					step: nil,
 				},
@@ -219,7 +226,8 @@ func Test_Parse(t *testing.T) {
 					arguments: []interface{}{
 						int64(0),
 						&expressionToken{
-							expression: "@.length-1",
+							expression:         "@.length-1",
+							compiledExpression: &testCompiledExpression{},
 						},
 					},
 				},
@@ -234,7 +242,8 @@ func Test_Parse(t *testing.T) {
 						"one",
 						int64(2),
 						&expressionToken{
-							expression: "1+2",
+							expression:         "1+2",
+							compiledExpression: &testCompiledExpression{},
 						},
 					},
 				},
@@ -246,10 +255,12 @@ func Test_Parse(t *testing.T) {
 				token: &unionToken{
 					arguments: []interface{}{
 						&expressionToken{
-							expression: "@.length-2",
+							expression:         "@.length-2",
+							compiledExpression: &testCompiledExpression{},
 						},
 						&expressionToken{
-							expression: "@.length-1",
+							expression:         "@.length-1",
+							compiledExpression: &testCompiledExpression{},
 						},
 						int64(1),
 					},
@@ -269,7 +280,8 @@ func Test_Parse(t *testing.T) {
 			expected: expected{
 				token: &rangeToken{
 					to: &expressionToken{
-						expression: "@.length-1",
+						expression:         "@.length-1",
+						compiledExpression: &testCompiledExpression{},
 					},
 				},
 			},
@@ -286,7 +298,8 @@ func Test_Parse(t *testing.T) {
 				token: &rangeToken{
 					from: int64(0),
 					to: &expressionToken{
-						expression: "@.length-1",
+						expression:         "@.length-1",
+						compiledExpression: &testCompiledExpression{},
 					},
 					step: int64(2),
 				},
@@ -297,7 +310,8 @@ func Test_Parse(t *testing.T) {
 			expected: expected{
 				token: &rangeToken{
 					from: &expressionToken{
-						expression: "@.length-1",
+						expression:         "@.length-1",
+						compiledExpression: &testCompiledExpression{},
 					},
 					to:   int64(1),
 					step: int64(2),
@@ -328,7 +342,8 @@ func Test_Parse(t *testing.T) {
 			input: input{selector: "[(1+2*(3+4)+5')]"},
 			expected: expected{
 				token: &scriptToken{
-					expression: "1+2*(3+4)+5'",
+					expression:         "1+2*(3+4)+5'",
+					compiledExpression: &testCompiledExpression{},
 				},
 			},
 		},
@@ -427,7 +442,8 @@ func Test_Parse(t *testing.T) {
 					from: int64(0),
 					to:   int64(100),
 					step: &expressionToken{
-						expression: "1+1",
+						expression:         "1+1",
+						compiledExpression: &testCompiledExpression{},
 					},
 				},
 			},
@@ -492,11 +508,42 @@ func Test_Parse(t *testing.T) {
 				},
 			},
 		},
+		{
+			input: input{
+				selector: "[(<):]",
+				engine:   &testEngine{err: fmt.Errorf("fail")},
+			},
+			expected: expected{
+				err: "invalid expression. fail",
+			},
+		},
+		{
+			input: input{
+				selector: "[:(<)]",
+				engine:   &testEngine{err: fmt.Errorf("fail")},
+			},
+			expected: expected{
+				err: "invalid expression. fail",
+			},
+		},
+		{
+			input: input{
+				selector: "[::(<)]",
+				engine:   &testEngine{err: fmt.Errorf("fail")},
+			},
+			expected: expected{
+				err: "invalid expression. fail",
+			},
+		},
 	}
 
 	for idx, test := range tests {
 		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
-			token, err := Parse(test.input.selector, nil, nil)
+			engine := test.input.engine
+			if engine == nil {
+				engine = &testEngine{compiledExpression: &testCompiledExpression{}}
+			}
+			token, err := Parse(test.input.selector, engine, nil)
 
 			if test.expected.err == "" {
 				assert.Nil(t, err, fmt.Sprintf("input '%s' err check failed. expected 'nil' actual '%v'", test.input.selector, err))
@@ -763,6 +810,12 @@ func Test_Tokenize(t *testing.T) {
 			input: "@.isbn",
 			expected: expected{
 				tokens: []string{"@", "isbn"},
+			},
+		},
+		{
+			input: "@.'.'",
+			expected: expected{
+				tokens: []string{"@", "'.'"},
 			},
 		},
 	}

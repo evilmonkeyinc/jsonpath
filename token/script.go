@@ -8,14 +8,22 @@ import (
 	"github.com/evilmonkeyinc/jsonpath/script"
 )
 
-func newScriptToken(expression string, engine script.Engine, options *option.QueryOptions) *scriptToken {
-	return &scriptToken{expression: expression, engine: engine, options: options}
+func newScriptToken(expression string, engine script.Engine, options *option.QueryOptions) (*scriptToken, error) {
+	compiledExpression, err := engine.Compile(expression, options)
+	if err != nil {
+		return nil, err
+	}
+	return &scriptToken{
+		expression:         expression,
+		compiledExpression: compiledExpression,
+		options:            options,
+	}, nil
 }
 
 type scriptToken struct {
-	expression string
-	engine     script.Engine
-	options    *option.QueryOptions
+	expression         string
+	compiledExpression script.CompiledExpression
+	options            *option.QueryOptions
 }
 
 func (token *scriptToken) String() string {
@@ -31,7 +39,7 @@ func (token *scriptToken) Apply(root, current interface{}, next []Token) (interf
 		return nil, getInvalidExpressionEmptyError()
 	}
 
-	value, err := token.engine.Evaluate(root, current, token.expression, token.options)
+	value, err := token.compiledExpression.Evaluate(root, current)
 	if err != nil {
 		return nil, getInvalidExpressionError(err)
 	}
