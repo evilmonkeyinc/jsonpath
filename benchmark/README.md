@@ -11,176 +11,161 @@ Test of accuracy are based off of the expected response based on the original sp
 ## Command
 
 ```bash
-go test -bench=. -cpu=1 -benchmem -count=1 -benchtime=100x
+go test -bench=. -cpu=1 -benchmem -count=1 -benchtime=1000x
 ```
 
 ## Libraries
 
-- `github.com/PaesslerAG/jsonpath v0.1.1`  
-- `github.com/bhmj/jsonslice v1.1.2`  
-- `github.com/evilmonkeyinc/jsonpath v0.7.0`  
-- `github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852`  
-- `github.com/spyzhov/ajson v0.7.0`  
+- `github.com/evilmonkeyinc/jsonpath v0.7.0`
+- `github.com/PaesslerAG/jsonpath v0.1.1` *uses reflection
+- `github.com/bhmj/jsonslice v1.1.2` *custom parser
+- `github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852` *uses reflection
+- `github.com/spyzhov/ajson v0.7.0` *custom parser
 
 ## TL;DR
 
-This implementation is slower than others, but is only one of two that has a non-error response to all sample selectors, the other being the [spyzhov/ajson](https://github.com/spyzhov/ajson) implementation which is on average twice as fast but relies on its own json marshaller (which is impressive in it's own right)
+This implementation is slower than the others, but is only one of two that has a non-error response to all sample selectors or return the expected response, the other being the [spyzhov/ajson](https://github.com/spyzhov/ajson) implementation which is on average at least twice as fast but relies on its own json marshaller.
 
-Generally the accuracy of the implementations that could run are the same, with a minor deviation with how array ranges are handled with one, one implementation ran but did not return a response I suspect the testing method is flawed but without adequate documentation I could not confirm this.
+Generally the accuracy of the implementations that run are the same, with a minor deviation with how array ranges are handled with one of them when it returned an array with a single item which itself was the expected response.
 
-## Selectors
+## Test
 
-### `$.store.book[*].author`
-
-Expected Response: `["Nigel Rees","Evelyn Waugh","Herman Melville","J. R. R. Tolkien"]`
-
-|library|ns/op|B/op|allocs/op|accurate|
-|-|-|-|-|-|
-|evilmonkeyinc|43551 ns/op|6496 B/op|188 allocs/op|true|
-|paesslerAG|25549 ns/op|6417 B/op|131 allocs/op|false|
-|bhmj|6188 ns/op|1188 B/op|14 allocs/op|true|
-|spyzhov|17612 ns/op|6608 B/op|127 allocs/op|true|
-
-
-### `$..author`
-
-Expected Response: `["Nigel Rees","Evelyn Waugh","Herman Melville","J. R. R. Tolkien"]`
-
-|library|ns/op|B/op|allocs/op|accurate|
-|-|-|-|-|-|
-|evilmonkeyinc|198323 ns/op|16689 B/op|458 allocs/op|true|
-|paesslerAG|16293 ns/op|6361 B/op|122 allocs/op|false|
-|bhmj|16665 ns/op|1554 B/op|27 allocs/op|true|
-|spyzhov|20614 ns/op|7912 B/op|159 allocs/op|true|
-
-
-### `$.store.*`
-
-Expected Response: `[too large]`
-> the expected response is an array with two components, the bike object and and array containing the book
-
-|library|ns/op|B/op|allocs/op|accurate|
-|-|-|-|-|-|
-|evilmonkeyinc|25933 ns/op|4928 B/op|130 allocs/op|true|
-|paesslerAG|16568 ns/op|6233 B/op|120 allocs/op|false|
-|bhmj|8429 ns/op|3708 B/op|9 allocs/op|true|
-|spyzhov|13288 ns/op|6376 B/op|117 allocs/op|true|
-
-### `$.store..price`
-
-Expected Response; `[19.95,8.95,12.99,8.99,22.99]`
-
-|library|ns/op|B/op|allocs/op|accurate|
-|-|-|-|-|-|
-|evilmonkeyinc|104648 ns/op|15673 B/op|443 allocs/op|true|
-|paesslerAG|99737 ns/op|6297 B/op|125 allocs/op|false|
-|bhmj|90572 ns/op|1195 B/op|28 allocs/op|true|
-|spyzhov|23793 ns/op|7816 B/op|158 allocs/op|true|
-
-### `$..book[2]`
-
-Expected Response: `[{"author":"Herman Melville","category":"fiction","isbn":"0-553-21311-3","price":8.99,"title":"Moby Dick"}]`
-
-|library|ns/op|B/op|allocs/op|accurate|
-|-|-|-|-|-|
-|evilmonkeyinc|192611 ns/op|16961 B/op|471 allocs/op|true|
-|paesslerAG|25408 ns/op|6545 B/op|130 allocs/op|false|
-|bhmj|13719 ns/op|1260 B/op|16 allocs/op|true|
-|spyzhov|130744 ns/op|7904 B/op|160 allocs/op|true|
-
-### `$..book[(@.length-1)]`
-
-Expected Response: `[{"author":"J. R. R. Tolkien","category":"fiction","isbn":"0-395-19395-8","price":22.99,"title":"The Lord of the Rings"}]`
-
-|library|ns/op|B/op|allocs/op|accurate|
-|-|-|-|-|-|
-|evilmonkeyinc|138309 ns/op|18001 B/op|542 allocs/op|true|
-|spyzhov|47062 ns/op|8840 B/op|197 allocs/op|true|
-
-### `$..book[-1:]`
-
-Expected Response" `[{"author":"J. R. R. Tolkien","category":"fiction","isbn":"0-395-19395-8","price":22.99,"title":"The Lord of the Rings"}]`
-
-|library|ns/op|B/op|allocs/op|accurate|
-|-|-|-|-|-|
-|evilmonkeyinc|198634 ns/op|17201 B/op|486 allocs/op|true|
-|paesslerAG|64934 ns/op|6801 B/op|137 allocs/op|false|
-|bhmj|16392 ns/op|1709 B/op|22 allocs/op|note1|
-|spyzhov|17658 ns/op|7968 B/op|164 allocs/op|true|
-
-> note1: returned an array containing the expected response, an array in an array, but the correct object
-
-### `$..book[0,1]`
-
-Expected Response: `[{"author":"Nigel Rees","category":"reference","price":8.95,"title":"Sayings of the Century"},{"author":"Evelyn Waugh","category":"fiction","price":12.99,"title":"Sword of Honour"}]`
-
-|library|ns/op|B/op|allocs/op|accurate|
-|-|-|-|-|-|
-|evilmonkeyinc|111628 ns/op|17297 B/op|489 allocs/op|true|
-|paesslerAG|54361 ns/op|6817 B/op|136 allocs/op|false|
-|bhmj|23537 ns/op|2285 B/op|23 allocs/op|note1|
-|spyzhov|49976 ns/op|8048 B/op|165 allocs/op|true|
-
-> note1: returned an array containing the expected response, an array in an array, but the correct object
-
-### `$..book[:2]`
-
-Expected Response: `[{"author":"Nigel Rees","category":"reference","price":8.95,"title":"Sayings of the Century"},{"author":"Evelyn Waugh","category":"fiction","price":12.99,"title":"Sword of Honour"}]`
-
-|library|ns/op|B/op|allocs/op|accurate|
-|-|-|-|-|-|
-|evilmonkeyinc|138072 ns/op|17281 B/op|483 allocs/op|true|
-|paesslerAG|28601 ns/op|6801 B/op|137 allocs/op|false|
-|bhmj|21478 ns/op|2349 B/op|24 allocs/op|note1|
-|spyzhov|77671 ns/op|7984 B/op|164 allocs/op|true|
-
-> note1: returned an array containing the expected response, an array in an array, but the correct object
-
-### `$..book[?(@.isbn)]`
-
-Expected Response: ` [{"author":"Herman Melville","category":"fiction","isbn":"0-553-21311-3","price":8.99,"title":"Moby Dick"},{"author":"J. R. R. Tolkien","category":"fiction","isbn":"0-395-19395-8","price":22.99,"title":"The Lord of the Rings"}]`
-
-|library|ns/op|B/op|allocs/op|accurate|
-|-|-|-|-|-|
-|evilmonkeyinc|211344 ns/op|20265 B/op|556 allocs/op|true|
-|paesslerAG|138063 ns/op|6937 B/op|143 allocs/op|false|
-|bhmj|78538 ns/op|2731 B/op|30 allocs/op|note1|
-|spyzhov|71054 ns/op|8864 B/op|217 allocs/op|true|
-
-> note1: returned an array containing the expected response, an array in an array, but the correct object
-
-### `$..book[?(@.price<10)]`
-
-Expected Response: `{"author":"Nigel Rees","category":"reference","price":8.95,"title":"Sayings of the Century"},{"author":"Herman Melville","category":"fiction","isbn":"0-553-21311-3","price":8.99,"title":"Moby Dick"}]`
-
-|library|ns/op|B/op|allocs/op|accurate|
-|-|-|-|-|-|
-|evilmonkeyinc|282446 ns/op|20153 B/op|564 allocs/op|true|
-|bhmj|79741 ns/op|2899 B/op|43 allocs/op|note1|
-|spyzhov|79312 ns/op|10160 B/op|263 allocs/op|true|
-
-> note1: returned an array containing the expected response, an array in an array, but the correct object
-
-### `$..book[?(@.price<$.expensive)]`
-
-Expected Response: `{"author":"Nigel Rees","category":"reference","price":8.95,"title":"Sayings of the Century"},{"author":"Herman Melville","category":"fiction","isbn":"0-553-21311-3","price":8.99,"title":"Moby Dick"}]`
-
-|library|ns/op|B/op|allocs/op|accurate|
-|-|-|-|-|-|
-|evilmonkeyinc|305200 ns/op|21449 B/op|628 allocs/op|true|
-|bhmj|147911 ns/op|2995 B/op|46 allocs/op|note1|
-|spyzhov|232748 ns/op|10088 B/op|285 allocs/op|true|
-
-> note1: returned an array containing the expected response, an array in an array, but the correct object
-
-### `$..*`
-
-Expected Response: `[too large]`
-> the expected response is an array that contains every value from the sample data, this will include an array, objects, and then each individual element of those collections
-
-|library|ns/op|B/op|allocs/op|accurate|
-|-|-|-|-|-|
-|evilmonkeyinc|144373 ns/op|20193 B/op|546 allocs/op|true|
-|paesslerAG|32120 ns/op|6216 B/op|117 allocs/op|false|
-|bhmj|78242 ns/op|31209 B/op|69 allocs/op|true|
-|spyzhov|71936 ns/op|9288 B/op|187 allocs/op|true|
+```bash
+goos: darwin
+goarch: amd64
+pkg: github.com/evilmonkeyinc/jsonpath/benchmark
+cpu: Intel(R) Core(TM) i5-5257U CPU @ 2.70GHz
+Benchmark_Comparison/$.store.book[*].author/evilmonkeyinc         	   10000	     21165 ns/op	    6496 B/op	     188 allocs/op
+Benchmark_Comparison/$.store.book[*].author/paesslerAG            	   10000	     16595 ns/op	    6944 B/op	     153 allocs/op
+Benchmark_Comparison/$.store.book[*].author/bhmj                  	   10000	      4880 ns/op	    1185 B/op	      14 allocs/op
+Benchmark_Comparison/$.store.book[*].author/oliveagle             	   10000	     17070 ns/op	    4784 B/op	     147 allocs/op
+Benchmark_Comparison/$.store.book[*].author/spyzhov               	   10000	     16361 ns/op	    7032 B/op	     136 allocs/op
+Benchmark_Comparison/$..author/evilmonkeyinc                      	   10000	     56820 ns/op	   16688 B/op	     458 allocs/op
+Benchmark_Comparison/$..author/paesslerAG                         	   10000	    113776 ns/op	   20624 B/op	     630 allocs/op
+Benchmark_Comparison/$..author/bhmj                               	   10000	     33157 ns/op	    1553 B/op	      27 allocs/op
+Benchmark_Comparison/$..author/oliveagle                          	   10000	     37042 ns/op	    4464 B/op	     118 allocs/op
+--- BENCH: Benchmark_Comparison/$..author/oliveagle
+    benchmark_test.go:137: unsupported
+    benchmark_test.go:137: unsupported
+Benchmark_Comparison/$..author/spyzhov                            	   10000	     51169 ns/op	    8336 B/op	     168 allocs/op
+Benchmark_Comparison/$.store.*/evilmonkeyinc                      	   10000	     43641 ns/op	    4929 B/op	     130 allocs/op
+Benchmark_Comparison/$.store.*/paesslerAG                         	   10000	     31748 ns/op	    6280 B/op	     126 allocs/op
+Benchmark_Comparison/$.store.*/bhmj                               	   10000	      5370 ns/op	    3705 B/op	       9 allocs/op
+Benchmark_Comparison/$.store.*/oliveagle                          	   10000	     20300 ns/op	    4480 B/op	     118 allocs/op
+--- BENCH: Benchmark_Comparison/$.store.*/oliveagle
+    benchmark_test.go:137: unsupported
+    benchmark_test.go:137: unsupported
+Benchmark_Comparison/$.store.*/spyzhov                            	   10000	     12892 ns/op	    6785 B/op	     124 allocs/op
+Benchmark_Comparison/$.store..price/evilmonkeyinc                 	   10000	     50521 ns/op	   15672 B/op	     443 allocs/op
+Benchmark_Comparison/$.store..price/paesslerAG                    	   10000	     60435 ns/op	   17400 B/op	     515 allocs/op
+Benchmark_Comparison/$.store..price/bhmj                          	   10000	     12666 ns/op	    1192 B/op	      28 allocs/op
+Benchmark_Comparison/$.store..price/oliveagle                     	   10000	     13522 ns/op	    4576 B/op	     128 allocs/op
+--- BENCH: Benchmark_Comparison/$.store..price/oliveagle
+    benchmark_test.go:137: unsupported
+    benchmark_test.go:137: unsupported
+Benchmark_Comparison/$.store..price/spyzhov                       	   10000	     18554 ns/op	    8256 B/op	     168 allocs/op
+Benchmark_Comparison/$..book[2]/evilmonkeyinc                     	   10000	     54938 ns/op	   16960 B/op	     471 allocs/op
+Benchmark_Comparison/$..book[2]/paesslerAG                        	   10000	     50810 ns/op	   20816 B/op	     643 allocs/op
+Benchmark_Comparison/$..book[2]/bhmj                              	   10000	     10774 ns/op	    1257 B/op	      16 allocs/op
+Benchmark_Comparison/$..book[2]/oliveagle                         	   10000	     12317 ns/op	    4560 B/op	     124 allocs/op
+--- BENCH: Benchmark_Comparison/$..book[2]/oliveagle
+    benchmark_test.go:137: unsupported
+    benchmark_test.go:137: unsupported
+Benchmark_Comparison/$..book[2]/spyzhov                           	   10000	     18695 ns/op	    8296 B/op	     166 allocs/op
+Benchmark_Comparison/$..book[(@.length-1)]/evilmonkeyinc          	   10000	    129960 ns/op	   18000 B/op	     542 allocs/op
+Benchmark_Comparison/$..book[(@.length-1)]/paesslerAG             	   10000	     18974 ns/op	    6576 B/op	     140 allocs/op
+--- BENCH: Benchmark_Comparison/$..book[(@.length-1)]/paesslerAG
+    benchmark_test.go:84: unsupported
+    benchmark_test.go:84: unsupported
+Benchmark_Comparison/$..book[(@.length-1)]/bhmj                   	   10000	       622.8 ns/op	     648 B/op	       4 allocs/op
+--- BENCH: Benchmark_Comparison/$..book[(@.length-1)]/bhmj
+    benchmark_test.go:102: unsupported
+    benchmark_test.go:102: unsupported
+Benchmark_Comparison/$..book[(@.length-1)]/oliveagle              	   10000	     14319 ns/op	    4736 B/op	     143 allocs/op
+--- BENCH: Benchmark_Comparison/$..book[(@.length-1)]/oliveagle
+    benchmark_test.go:137: unsupported
+    benchmark_test.go:137: unsupported
+Benchmark_Comparison/$..book[(@.length-1)]/spyzhov                	   10000	     24926 ns/op	    9248 B/op	     203 allocs/op
+Benchmark_Comparison/$..book[-1:]/evilmonkeyinc                   	   10000	    127852 ns/op	   17200 B/op	     486 allocs/op
+Benchmark_Comparison/$..book[-1:]/paesslerAG                      	   10000	    134288 ns/op	   21184 B/op	     654 allocs/op
+Benchmark_Comparison/$..book[-1:]/bhmj                            	   10000	     29420 ns/op	    1706 B/op	      22 allocs/op
+--- BENCH: Benchmark_Comparison/$..book[-1:]/bhmj
+    benchmark_test.go:109: found single nested array
+    benchmark_test.go:109: found single nested array
+Benchmark_Comparison/$..book[-1:]/oliveagle                       	   10000	     20008 ns/op	    4664 B/op	     129 allocs/op
+--- BENCH: Benchmark_Comparison/$..book[-1:]/oliveagle
+    benchmark_test.go:137: unsupported
+    benchmark_test.go:137: unsupported
+Benchmark_Comparison/$..book[-1:]/spyzhov                         	   10000	     63175 ns/op	    8376 B/op	     170 allocs/op
+Benchmark_Comparison/$..book[0,1]/evilmonkeyinc                   	   10000	    116278 ns/op	   17297 B/op	     489 allocs/op
+Benchmark_Comparison/$..book[0,1]/paesslerAG                      	   10000	     80451 ns/op	   21312 B/op	     656 allocs/op
+Benchmark_Comparison/$..book[0,1]/bhmj                            	   10000	     11671 ns/op	    2282 B/op	      23 allocs/op
+--- BENCH: Benchmark_Comparison/$..book[0,1]/bhmj
+    benchmark_test.go:109: found single nested array
+    benchmark_test.go:109: found single nested array
+Benchmark_Comparison/$..book[0,1]/oliveagle                       	   10000	     15306 ns/op	    4648 B/op	     130 allocs/op
+--- BENCH: Benchmark_Comparison/$..book[0,1]/oliveagle
+    benchmark_test.go:137: unsupported
+    benchmark_test.go:137: unsupported
+Benchmark_Comparison/$..book[0,1]/spyzhov                         	   10000	     22789 ns/op	    8456 B/op	     172 allocs/op
+Benchmark_Comparison/$..book[:2]/evilmonkeyinc                    	   10000	     92287 ns/op	   17281 B/op	     483 allocs/op
+Benchmark_Comparison/$..book[:2]/paesslerAG                       	   10000	     89657 ns/op	   21248 B/op	     656 allocs/op
+Benchmark_Comparison/$..book[:2]/bhmj                             	   10000	     26255 ns/op	    2346 B/op	      24 allocs/op
+--- BENCH: Benchmark_Comparison/$..book[:2]/bhmj
+    benchmark_test.go:109: found single nested array
+    benchmark_test.go:109: found single nested array
+Benchmark_Comparison/$..book[:2]/oliveagle                        	   10000	     14178 ns/op	    4648 B/op	     126 allocs/op
+--- BENCH: Benchmark_Comparison/$..book[:2]/oliveagle
+    benchmark_test.go:137: unsupported
+    benchmark_test.go:137: unsupported
+Benchmark_Comparison/$..book[:2]/spyzhov                          	   10000	     37200 ns/op	    8392 B/op	     171 allocs/op
+Benchmark_Comparison/$..book[?(@.isbn)]/evilmonkeyinc             	   10000	     69058 ns/op	   20265 B/op	     556 allocs/op
+Benchmark_Comparison/$..book[?(@.isbn)]/paesslerAG                	   10000	     55980 ns/op	   21896 B/op	     679 allocs/op
+Benchmark_Comparison/$..book[?(@.isbn)]/bhmj                      	   10000	     15960 ns/op	    2728 B/op	      30 allocs/op
+--- BENCH: Benchmark_Comparison/$..book[?(@.isbn)]/bhmj
+    benchmark_test.go:109: found single nested array
+    benchmark_test.go:109: found single nested array
+Benchmark_Comparison/$..book[?(@.isbn)]/oliveagle                 	   10000	     12832 ns/op	    4680 B/op	     138 allocs/op
+--- BENCH: Benchmark_Comparison/$..book[?(@.isbn)]/oliveagle
+    benchmark_test.go:137: unsupported
+    benchmark_test.go:137: unsupported
+Benchmark_Comparison/$..book[?(@.isbn)]/spyzhov                   	   10000	     22150 ns/op	    9272 B/op	     224 allocs/op
+Benchmark_Comparison/$..book[?(@.price<10)]/evilmonkeyinc         	   10000	     65729 ns/op	   20153 B/op	     564 allocs/op
+Benchmark_Comparison/$..book[?(@.price<10)]/paesslerAG            	   10000	     15610 ns/op	    6576 B/op	     140 allocs/op
+--- BENCH: Benchmark_Comparison/$..book[?(@.price<10)]/paesslerAG
+    benchmark_test.go:84: unsupported
+    benchmark_test.go:84: unsupported
+Benchmark_Comparison/$..book[?(@.price<10)]/bhmj                  	   10000	     17494 ns/op	    2896 B/op	      43 allocs/op
+--- BENCH: Benchmark_Comparison/$..book[?(@.price<10)]/bhmj
+    benchmark_test.go:109: found single nested array
+    benchmark_test.go:109: found single nested array
+Benchmark_Comparison/$..book[?(@.price<10)]/oliveagle             	   10000	     13628 ns/op	    4792 B/op	     146 allocs/op
+--- BENCH: Benchmark_Comparison/$..book[?(@.price<10)]/oliveagle
+    benchmark_test.go:137: unsupported
+    benchmark_test.go:137: unsupported
+Benchmark_Comparison/$..book[?(@.price<10)]/spyzhov               	   10000	     25878 ns/op	   10568 B/op	     270 allocs/op
+Benchmark_Comparison/$..book[?(@.price<$.expensive)]/evilmonkeyinc         	   10000	     73693 ns/op	   21449 B/op	     628 allocs/op
+Benchmark_Comparison/$..book[?(@.price<$.expensive)]/paesslerAG            	   10000	     15426 ns/op	    6616 B/op	     140 allocs/op
+--- BENCH: Benchmark_Comparison/$..book[?(@.price<$.expensive)]/paesslerAG
+    benchmark_test.go:84: unsupported
+    benchmark_test.go:84: unsupported
+Benchmark_Comparison/$..book[?(@.price<$.expensive)]/bhmj                  	   10000	     20282 ns/op	    2992 B/op	      46 allocs/op
+--- BENCH: Benchmark_Comparison/$..book[?(@.price<$.expensive)]/bhmj
+    benchmark_test.go:109: found single nested array
+    benchmark_test.go:109: found single nested array
+Benchmark_Comparison/$..book[?(@.price<$.expensive)]/oliveagle             	   10000	     14472 ns/op	    5080 B/op	     164 allocs/op
+--- BENCH: Benchmark_Comparison/$..book[?(@.price<$.expensive)]/oliveagle
+    benchmark_test.go:137: unsupported
+    benchmark_test.go:137: unsupported
+Benchmark_Comparison/$..book[?(@.price<$.expensive)]/spyzhov               	   10000	     32897 ns/op	   10496 B/op	     292 allocs/op
+Benchmark_Comparison/$..*/evilmonkeyinc                                    	   10000	     72445 ns/op	   20199 B/op	     546 allocs/op
+Benchmark_Comparison/$..*/paesslerAG                                       	   10000	     46927 ns/op	   20440 B/op	     647 allocs/op
+Benchmark_Comparison/$..*/bhmj                                             	   10000	     25616 ns/op	   31209 B/op	      69 allocs/op
+Benchmark_Comparison/$..*/oliveagle                                        	   10000	     12465 ns/op	    4304 B/op	     107 allocs/op
+--- BENCH: Benchmark_Comparison/$..*/oliveagle
+    benchmark_test.go:137: unsupported
+    benchmark_test.go:137: unsupported
+Benchmark_Comparison/$..*/spyzhov                                          	   10000	     22968 ns/op	   11519 B/op	     220 allocs/op
+PASS
+ok  	github.com/evilmonkeyinc/jsonpath/benchmark	25.365s
+```
