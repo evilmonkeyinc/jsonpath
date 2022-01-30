@@ -217,7 +217,7 @@ func Parse(tokenString string, engine script.Engine, options *option.QueryOption
 		if !strings.HasPrefix(subscript, "?(") || !strings.HasSuffix(subscript, ")") {
 			return nil, getInvalidTokenFormatError(tokenString)
 		}
-		return newFilterToken(strings.TrimSpace(subscript[2:len(subscript)-1]), engine, options), nil
+		return newFilterToken(strings.TrimSpace(subscript[2:len(subscript)-1]), engine, options)
 	}
 
 	// from this point we have the chance of things being nested or wrapped
@@ -368,7 +368,7 @@ func Parse(tokenString string, engine script.Engine, options *option.QueryOption
 			if isKey(strArg) {
 				return newKeyToken(strArg[1 : len(strArg)-1]), nil
 			} else if isScript(strArg) {
-				return newScriptToken(strArg[1:len(strArg)-1], engine, options), nil
+				return newScriptToken(strArg[1:len(strArg)-1], engine, options)
 			}
 		} else if intArg, ok := isInteger(arg); ok {
 			return newIndexToken(intArg, options), nil
@@ -417,7 +417,11 @@ func Parse(tokenString string, engine script.Engine, options *option.QueryOption
 		for idx, arg := range args {
 			if strArg, ok := arg.(string); ok {
 				if isScript(strArg) {
-					arg = newExpressionToken(strArg[1:len(strArg)-1], engine, options)
+					var err error
+					arg, err = newExpressionToken(strArg[1:len(strArg)-1], engine, options)
+					if err != nil {
+						return nil, getInvalidExpressionError(err)
+					}
 					args[idx] = arg
 					continue
 				} else if isKey(strArg) {
@@ -451,19 +455,31 @@ func Parse(tokenString string, engine script.Engine, options *option.QueryOption
 			if !isScript(strFrom) {
 				return nil, getInvalidExpressionFormatError(strFrom)
 			}
-			from = newExpressionToken(strFrom[1:len(strFrom)-1], engine, options)
+			var err error
+			from, err = newExpressionToken(strFrom[1:len(strFrom)-1], engine, options)
+			if err != nil {
+				return nil, getInvalidExpressionError(err)
+			}
 		}
 		if strTo, ok := to.(string); ok {
 			if !isScript(strTo) {
 				return nil, getInvalidExpressionFormatError(strTo)
 			}
-			to = newExpressionToken(strTo[1:len(strTo)-1], engine, options)
+			var err error
+			to, err = newExpressionToken(strTo[1:len(strTo)-1], engine, options)
+			if err != nil {
+				return nil, getInvalidExpressionError(err)
+			}
 		}
 		if strStep, ok := step.(string); ok {
 			if !isScript(strStep) {
 				return nil, getInvalidExpressionFormatError(strStep)
 			}
-			step = newExpressionToken(strStep[1:len(strStep)-1], engine, options)
+			var err error
+			step, err = newExpressionToken(strStep[1:len(strStep)-1], engine, options)
+			if err != nil {
+				return nil, getInvalidExpressionError(err)
+			}
 		}
 
 		return newRangeToken(from, to, step, options), nil

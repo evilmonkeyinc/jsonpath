@@ -140,7 +140,11 @@ func Test_UnionToken_String(t *testing.T) {
 			expected: "[1,3,4]",
 		},
 		{
-			input:    &unionToken{arguments: []interface{}{1, &expressionToken{expression: "4%2", engine: &testEngine{response: 0}}, "last"}},
+			input: &unionToken{arguments: []interface{}{
+				1,
+				&expressionToken{expression: "4%2", compiledExpression: &testCompiledExpression{response: 0}},
+				"last",
+			}},
 			expected: "[1,(4%2),'last']",
 		},
 	}
@@ -167,7 +171,7 @@ func Test_UnionToken_Apply(t *testing.T) {
 		{
 			token: &unionToken{
 				arguments: []interface{}{
-					&expressionToken{expression: "nil", engine: &testEngine{response: nil}},
+					&expressionToken{expression: "nil", compiledExpression: &testCompiledExpression{response: nil}},
 				},
 			},
 			input: input{
@@ -213,7 +217,7 @@ func Test_UnionToken_Apply(t *testing.T) {
 		{
 			token: &unionToken{
 				arguments: []interface{}{
-					&expressionToken{expression: "", engine: &testEngine{response: ""}},
+					&expressionToken{expression: "", compiledExpression: &testCompiledExpression{response: ""}},
 					"one",
 				},
 			},
@@ -227,7 +231,7 @@ func Test_UnionToken_Apply(t *testing.T) {
 		{
 			token: &unionToken{
 				arguments: []interface{}{
-					&expressionToken{expression: "1+1", engine: &testEngine{response: 2}},
+					&expressionToken{expression: "1+1", compiledExpression: &testCompiledExpression{response: 2}},
 					"one",
 				},
 			},
@@ -241,7 +245,7 @@ func Test_UnionToken_Apply(t *testing.T) {
 		{
 			token: &unionToken{
 				arguments: []interface{}{
-					&expressionToken{expression: "1+1", engine: &testEngine{response: 2}},
+					&expressionToken{expression: "1+1", compiledExpression: &testCompiledExpression{response: 2}},
 					3,
 				},
 			},

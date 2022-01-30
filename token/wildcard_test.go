@@ -21,179 +21,206 @@ func Test_WildcardToken_Type(t *testing.T) {
 	assert.Equal(t, "wildcard", (&wildcardToken{}).Type())
 }
 
+var wildcardTests = []*tokenTest{
+	{
+		token: &wildcardToken{},
+		input: input{
+			current: nil,
+		},
+		expected: expected{
+			value: nil,
+			err:   "wildcard: invalid token target. expected [array map slice] got [nil]",
+		},
+	},
+	{
+		token: &wildcardToken{},
+		input: input{
+			current: "not array or map",
+		},
+		expected: expected{
+			value: nil,
+			err:   "wildcard: invalid token target. expected [array map slice] got [string]",
+		},
+	},
+	{
+		token: &wildcardToken{},
+		input: input{
+			current: []string{"one", "two", "three"},
+		},
+		expected: expected{
+			value: []interface{}{"one", "two", "three"},
+		},
+	},
+	{
+		token: &wildcardToken{},
+		input: input{
+			current: []interface{}{"one", "two", nil},
+		},
+		expected: expected{
+			value: []interface{}{"one", "two", nil},
+		},
+	},
+	{
+		token: &wildcardToken{},
+		input: input{
+			current: []interface{}{"one", "two", "three", 4, 5},
+		},
+		expected: expected{
+			value: []interface{}{"one", "two", "three", 4, 5},
+		},
+	},
+	{
+		token: &wildcardToken{},
+		input: input{
+			current: map[string]int64{
+				"one":   1,
+				"two":   2,
+				"three": 3,
+			},
+		},
+		expected: expected{
+			value: []interface{}{
+				int64(1),
+				int64(2),
+				int64(3),
+			},
+		},
+	},
+	{
+		token: &wildcardToken{},
+		input: input{
+			current: map[string]string{
+				"one":   "1",
+				"two":   "2",
+				"three": "3",
+			},
+		},
+		expected: expected{
+			value: []interface{}{"1", "2", "3"},
+		},
+	},
+	{
+		token: &wildcardToken{},
+		input: input{
+			current: map[string]interface{}{
+				"one":   "1",
+				"two":   2,
+				"three": "3",
+			},
+		},
+		expected: expected{
+			value: []interface{}{"1", 2, "3"},
+		},
+	},
+	{
+		token: &wildcardToken{},
+		input: input{
+			current: [3]string{
+				"1",
+				"2",
+				"3",
+			},
+		},
+		expected: expected{
+			value: []interface{}{"1", "2", "3"},
+		},
+	},
+	{
+		token: &wildcardToken{},
+		input: input{
+			current: []map[string]interface{}{
+				{"name": "one"},
+				{"name": "two"},
+				{"name": "three"},
+			},
+		},
+		expected: expected{
+			value: []interface{}{
+				map[string]interface{}{"name": "one"},
+				map[string]interface{}{"name": "two"},
+				map[string]interface{}{"name": "three"},
+			},
+		},
+	},
+	{
+		token: &wildcardToken{},
+		input: input{
+			current: []map[string]interface{}{
+				{"name": "one"},
+				{"name": "two"},
+				{"name": "three"},
+			},
+			tokens: []Token{
+				&keyToken{
+					key: "name",
+				},
+			},
+		},
+		expected: expected{
+			value: []interface{}{
+				"one",
+				"two",
+				"three",
+			},
+		},
+	},
+	{
+		token: &wildcardToken{},
+		input: input{
+			current: sampleStruct{},
+		},
+		expected: expected{
+			value: []interface{}{
+				"",
+				int64(0),
+				"",
+			},
+		},
+	},
+	{
+		token: &wildcardToken{},
+		input: input{
+			current: sampleStruct{
+				One:   "one",
+				Two:   "two",
+				Three: 3,
+				Four:  4,
+				Five:  "five",
+				Six:   "six",
+			},
+		},
+		expected: expected{
+			value: []interface{}{
+				"one",
+				"two",
+				int64(4),
+				"five",
+				"six",
+			},
+		},
+	},
+
+	{
+		token: &wildcardToken{},
+		input: input{
+			current: [4]interface{}{
+				"123",
+				"246",
+				"369",
+				nil,
+			},
+			tokens: []Token{&indexToken{index: 0, allowString: true}},
+		},
+		expected: expected{
+			value: []interface{}{"1", "2", "3"},
+		},
+	},
+}
+
 func Test_WildcardToken_Apply(t *testing.T) {
+	batchTokenTests(t, wildcardTests)
+}
 
-	tests := []*tokenTest{
-		{
-			token: &wildcardToken{},
-			input: input{
-				current: nil,
-			},
-			expected: expected{
-				value: nil,
-				err:   "wildcard: invalid token target. expected [array map slice] got [nil]",
-			},
-		},
-		{
-			token: &wildcardToken{},
-			input: input{
-				current: "not array or map",
-			},
-			expected: expected{
-				value: nil,
-				err:   "wildcard: invalid token target. expected [array map slice] got [string]",
-			},
-		},
-		{
-			token: &wildcardToken{},
-			input: input{
-				current: []string{"one", "two", "three"},
-			},
-			expected: expected{
-				value: []interface{}{"one", "two", "three"},
-			},
-		},
-		{
-			token: &wildcardToken{},
-			input: input{
-				current: []interface{}{"one", "two", "three", 4, 5},
-			},
-			expected: expected{
-				value: []interface{}{"one", "two", "three", 4, 5},
-			},
-		},
-		{
-			token: &wildcardToken{},
-			input: input{
-				current: map[string]int64{
-					"one":   1,
-					"two":   2,
-					"three": 3,
-				},
-			},
-			expected: expected{
-				value: []interface{}{
-					int64(1),
-					int64(2),
-					int64(3),
-				},
-			},
-		},
-		{
-			token: &wildcardToken{},
-			input: input{
-				current: map[string]string{
-					"one":   "1",
-					"two":   "2",
-					"three": "3",
-				},
-			},
-			expected: expected{
-				value: []interface{}{"1", "2", "3"},
-			},
-		},
-		{
-			token: &wildcardToken{},
-			input: input{
-				current: map[string]interface{}{
-					"one":   "1",
-					"two":   2,
-					"three": "3",
-				},
-			},
-			expected: expected{
-				value: []interface{}{"1", 2, "3"},
-			},
-		},
-		{
-			token: &wildcardToken{},
-			input: input{
-				current: [3]string{
-					"1",
-					"2",
-					"3",
-				},
-			},
-			expected: expected{
-				value: []interface{}{"1", "2", "3"},
-			},
-		},
-		{
-			token: &wildcardToken{},
-			input: input{
-				current: []map[string]interface{}{
-					{"name": "one"},
-					{"name": "two"},
-					{"name": "three"},
-				},
-			},
-			expected: expected{
-				value: []interface{}{
-					map[string]interface{}{"name": "one"},
-					map[string]interface{}{"name": "two"},
-					map[string]interface{}{"name": "three"},
-				},
-			},
-		},
-		{
-			token: &wildcardToken{},
-			input: input{
-				current: []map[string]interface{}{
-					{"name": "one"},
-					{"name": "two"},
-					{"name": "three"},
-				},
-				tokens: []Token{
-					&keyToken{
-						key: "name",
-					},
-				},
-			},
-			expected: expected{
-				value: []interface{}{
-					"one",
-					"two",
-					"three",
-				},
-			},
-		},
-		{
-			token: &wildcardToken{},
-			input: input{
-				current: sampleStruct{},
-			},
-			expected: expected{
-				value: []interface{}{
-					"",
-					int64(0),
-					"",
-				},
-			},
-		},
-		{
-			token: &wildcardToken{},
-			input: input{
-				current: sampleStruct{
-					One:   "one",
-					Two:   "two",
-					Three: 3,
-					Four:  4,
-					Five:  "five",
-					Six:   "six",
-				},
-			},
-			expected: expected{
-				value: []interface{}{
-					"one",
-					"two",
-					int64(4),
-					"five",
-					"six",
-				},
-			},
-		},
-	}
-
-	batchTokenTests(t, tests)
-
+func Benchmark_WildcardToken_Apply(b *testing.B) {
+	batchTokenBenchmarks(b, wildcardTests)
 }

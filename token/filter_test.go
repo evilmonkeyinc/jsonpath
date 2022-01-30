@@ -11,7 +11,16 @@ import (
 var _ Token = &filterToken{}
 
 func Test_newFilterToken(t *testing.T) {
-	assert.IsType(t, &filterToken{}, newFilterToken("", nil, nil))
+	t.Run("success", func(t *testing.T) {
+		actual, err := newFilterToken("", &testEngine{}, nil)
+		assert.Nil(t, err)
+		assert.IsType(t, &filterToken{}, actual)
+	})
+	t.Run("failed", func(t *testing.T) {
+		actual, err := newFilterToken("", &testEngine{err: fmt.Errorf("failed")}, nil)
+		assert.EqualError(t, err, "failed")
+		assert.Nil(t, actual)
+	})
 }
 
 func Test_FilterToken_String(t *testing.T) {
@@ -53,10 +62,8 @@ func Test_FilterToken_Apply(t *testing.T) {
 		},
 		{
 			token: &filterToken{
-				expression: "nil current",
-				engine: &testEngine{
-					compiledExpression: &testCompiledExpression{},
-				},
+				expression:         "nil current",
+				compiledExpression: &testCompiledExpression{},
 			},
 			input: input{},
 			expected: expected{
@@ -65,10 +72,8 @@ func Test_FilterToken_Apply(t *testing.T) {
 		},
 		{
 			token: &filterToken{
-				expression: "invalid current",
-				engine: &testEngine{
-					compiledExpression: &testCompiledExpression{},
-				},
+				expression:         "invalid current",
+				compiledExpression: &testCompiledExpression{},
 			},
 			input: input{
 				current: "string",
@@ -79,24 +84,8 @@ func Test_FilterToken_Apply(t *testing.T) {
 		},
 		{
 			token: &filterToken{
-				expression: "fail compile",
-				engine: &testEngine{
-					err: fmt.Errorf("engine error"),
-				},
-			},
-			input: input{
-				current: []interface{}{},
-			},
-			expected: expected{
-				err: "invalid expression. engine error",
-			},
-		},
-		{
-			token: &filterToken{
-				expression: "empty array",
-				engine: &testEngine{
-					compiledExpression: &testCompiledExpression{},
-				},
+				expression:         "empty array",
+				compiledExpression: &testCompiledExpression{},
 			},
 			input: input{
 				current: []interface{}{},
@@ -108,10 +97,8 @@ func Test_FilterToken_Apply(t *testing.T) {
 		{
 			token: &filterToken{
 				expression: "failed evaluate array",
-				engine: &testEngine{
-					compiledExpression: &testCompiledExpression{
-						err: fmt.Errorf("compiled failed"),
-					},
+				compiledExpression: &testCompiledExpression{
+					err: fmt.Errorf("compiled failed"),
 				},
 			},
 			input: input{
@@ -124,10 +111,8 @@ func Test_FilterToken_Apply(t *testing.T) {
 		{
 			token: &filterToken{
 				expression: "true evaluate array",
-				engine: &testEngine{
-					compiledExpression: &testCompiledExpression{
-						response: true,
-					},
+				compiledExpression: &testCompiledExpression{
+					response: true,
 				},
 			},
 			input: input{
@@ -140,10 +125,8 @@ func Test_FilterToken_Apply(t *testing.T) {
 		{
 			token: &filterToken{
 				expression: "false evaluate array",
-				engine: &testEngine{
-					compiledExpression: &testCompiledExpression{
-						response: false,
-					},
+				compiledExpression: &testCompiledExpression{
+					response: false,
 				},
 			},
 			input: input{
@@ -156,10 +139,8 @@ func Test_FilterToken_Apply(t *testing.T) {
 		{
 			token: &filterToken{
 				expression: "empty string evaluate array",
-				engine: &testEngine{
-					compiledExpression: &testCompiledExpression{
-						response: "",
-					},
+				compiledExpression: &testCompiledExpression{
+					response: "",
 				},
 			},
 			input: input{
@@ -172,10 +153,8 @@ func Test_FilterToken_Apply(t *testing.T) {
 		{
 			token: &filterToken{
 				expression: "non-empty string evaluate array",
-				engine: &testEngine{
-					compiledExpression: &testCompiledExpression{
-						response: "add this",
-					},
+				compiledExpression: &testCompiledExpression{
+					response: "add this",
 				},
 			},
 			input: input{
@@ -188,10 +167,8 @@ func Test_FilterToken_Apply(t *testing.T) {
 		{
 			token: &filterToken{
 				expression: "other evaluate array",
-				engine: &testEngine{
-					compiledExpression: &testCompiledExpression{
-						response: 3.14,
-					},
+				compiledExpression: &testCompiledExpression{
+					response: 3.14,
 				},
 			},
 			input: input{
@@ -203,10 +180,8 @@ func Test_FilterToken_Apply(t *testing.T) {
 		},
 		{
 			token: &filterToken{
-				expression: "empty map",
-				engine: &testEngine{
-					compiledExpression: &testCompiledExpression{},
-				},
+				expression:         "empty map",
+				compiledExpression: &testCompiledExpression{},
 			},
 			input: input{
 				current: map[string]interface{}{},
@@ -218,10 +193,8 @@ func Test_FilterToken_Apply(t *testing.T) {
 		{
 			token: &filterToken{
 				expression: "failed evaluate map",
-				engine: &testEngine{
-					compiledExpression: &testCompiledExpression{
-						err: fmt.Errorf("compiled failed"),
-					},
+				compiledExpression: &testCompiledExpression{
+					err: fmt.Errorf("compiled failed"),
 				},
 			},
 			input: input{
@@ -234,10 +207,8 @@ func Test_FilterToken_Apply(t *testing.T) {
 		{
 			token: &filterToken{
 				expression: "true evaluate map",
-				engine: &testEngine{
-					compiledExpression: &testCompiledExpression{
-						response: true,
-					},
+				compiledExpression: &testCompiledExpression{
+					response: true,
 				},
 			},
 			input: input{
@@ -250,10 +221,8 @@ func Test_FilterToken_Apply(t *testing.T) {
 		{
 			token: &filterToken{
 				expression: "false evaluate map",
-				engine: &testEngine{
-					compiledExpression: &testCompiledExpression{
-						response: false,
-					},
+				compiledExpression: &testCompiledExpression{
+					response: false,
 				},
 			},
 			input: input{
@@ -266,10 +235,8 @@ func Test_FilterToken_Apply(t *testing.T) {
 		{
 			token: &filterToken{
 				expression: "empty string evaluate map",
-				engine: &testEngine{
-					compiledExpression: &testCompiledExpression{
-						response: "",
-					},
+				compiledExpression: &testCompiledExpression{
+					response: "",
 				},
 			},
 			input: input{
@@ -282,10 +249,8 @@ func Test_FilterToken_Apply(t *testing.T) {
 		{
 			token: &filterToken{
 				expression: "non-empty string evaluate map",
-				engine: &testEngine{
-					compiledExpression: &testCompiledExpression{
-						response: "add this",
-					},
+				compiledExpression: &testCompiledExpression{
+					response: "add this",
 				},
 			},
 			input: input{
@@ -298,10 +263,8 @@ func Test_FilterToken_Apply(t *testing.T) {
 		{
 			token: &filterToken{
 				expression: "other evaluate map",
-				engine: &testEngine{
-					compiledExpression: &testCompiledExpression{
-						response: 3.14,
-					},
+				compiledExpression: &testCompiledExpression{
+					response: 3.14,
 				},
 			},
 			input: input{
@@ -313,8 +276,8 @@ func Test_FilterToken_Apply(t *testing.T) {
 		},
 		{
 			token: &filterToken{
-				expression: "next is index",
-				engine:     &testEngine{compiledExpression: &testCompiledExpression{response: true}},
+				expression:         "next is index",
+				compiledExpression: &testCompiledExpression{response: true},
 			},
 			input: input{
 				current: []interface{}{1, 2, 3, 4, 5},
@@ -326,8 +289,8 @@ func Test_FilterToken_Apply(t *testing.T) {
 		},
 		{
 			token: &filterToken{
-				expression: "next is not index",
-				engine:     &testEngine{compiledExpression: &testCompiledExpression{response: true}},
+				expression:         "next is not index",
+				compiledExpression: &testCompiledExpression{response: true},
 			},
 			input: input{
 				current: []interface{}{
@@ -344,10 +307,8 @@ func Test_FilterToken_Apply(t *testing.T) {
 		{
 			token: &filterToken{
 				expression: "array",
-				engine: &testEngine{
-					compiledExpression: &testCompiledExpression{
-						response: [1]string{"one"},
-					},
+				compiledExpression: &testCompiledExpression{
+					response: [1]string{"one"},
 				},
 			},
 			input: input{
@@ -361,10 +322,8 @@ func Test_FilterToken_Apply(t *testing.T) {
 		{
 			token: &filterToken{
 				expression: "slice",
-				engine: &testEngine{
-					compiledExpression: &testCompiledExpression{
-						response: []string{"one"},
-					},
+				compiledExpression: &testCompiledExpression{
+					response: []string{"one"},
 				},
 			},
 			input: input{
@@ -378,10 +337,8 @@ func Test_FilterToken_Apply(t *testing.T) {
 		{
 			token: &filterToken{
 				expression: "empty array",
-				engine: &testEngine{
-					compiledExpression: &testCompiledExpression{
-						response: [0]string{},
-					},
+				compiledExpression: &testCompiledExpression{
+					response: [0]string{},
 				},
 			},
 			input: input{
@@ -395,10 +352,8 @@ func Test_FilterToken_Apply(t *testing.T) {
 		{
 			token: &filterToken{
 				expression: "map",
-				engine: &testEngine{
-					compiledExpression: &testCompiledExpression{
-						response: map[string]interface{}{"key": "value"},
-					},
+				compiledExpression: &testCompiledExpression{
+					response: map[string]interface{}{"key": "value"},
 				},
 			},
 			input: input{
@@ -412,10 +367,8 @@ func Test_FilterToken_Apply(t *testing.T) {
 		{
 			token: &filterToken{
 				expression: "empty map",
-				engine: &testEngine{
-					compiledExpression: &testCompiledExpression{
-						response: map[string]interface{}{},
-					},
+				compiledExpression: &testCompiledExpression{
+					response: map[string]interface{}{},
 				},
 			},
 			input: input{
@@ -429,10 +382,8 @@ func Test_FilterToken_Apply(t *testing.T) {
 		{
 			token: &filterToken{
 				expression: "nil pointer",
-				engine: &testEngine{
-					compiledExpression: &testCompiledExpression{
-						response: getNilPointer(),
-					},
+				compiledExpression: &testCompiledExpression{
+					response: getNilPointer(),
 				},
 			},
 			input: input{
@@ -446,10 +397,8 @@ func Test_FilterToken_Apply(t *testing.T) {
 		{
 			token: &filterToken{
 				expression: "single quotes empty",
-				engine: &testEngine{
-					compiledExpression: &testCompiledExpression{
-						response: "''",
-					},
+				compiledExpression: &testCompiledExpression{
+					response: "''",
 				},
 			},
 			input: input{
@@ -463,10 +412,8 @@ func Test_FilterToken_Apply(t *testing.T) {
 		{
 			token: &filterToken{
 				expression: "single quotes not empty",
-				engine: &testEngine{
-					compiledExpression: &testCompiledExpression{
-						response: "' '",
-					},
+				compiledExpression: &testCompiledExpression{
+					response: "' '",
 				},
 			},
 			input: input{
@@ -480,10 +427,8 @@ func Test_FilterToken_Apply(t *testing.T) {
 		{
 			token: &filterToken{
 				expression: "double quotes empty",
-				engine: &testEngine{
-					compiledExpression: &testCompiledExpression{
-						response: `""`,
-					},
+				compiledExpression: &testCompiledExpression{
+					response: `""`,
 				},
 			},
 			input: input{
@@ -497,10 +442,8 @@ func Test_FilterToken_Apply(t *testing.T) {
 		{
 			token: &filterToken{
 				expression: "double quotes not empty",
-				engine: &testEngine{
-					compiledExpression: &testCompiledExpression{
-						response: `" "`,
-					},
+				compiledExpression: &testCompiledExpression{
+					response: `" "`,
 				},
 			},
 			input: input{

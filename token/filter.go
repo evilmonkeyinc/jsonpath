@@ -9,14 +9,22 @@ import (
 	"github.com/evilmonkeyinc/jsonpath/script"
 )
 
-func newFilterToken(expression string, engine script.Engine, options *option.QueryOptions) *filterToken {
-	return &filterToken{expression: expression, engine: engine, options: options}
+func newFilterToken(expression string, engine script.Engine, options *option.QueryOptions) (*filterToken, error) {
+	compiledExpression, err := engine.Compile(expression, options)
+	if err != nil {
+		return nil, err
+	}
+	return &filterToken{
+		expression:         expression,
+		compiledExpression: compiledExpression,
+		options:            options,
+	}, nil
 }
 
 type filterToken struct {
-	expression string
-	engine     script.Engine
-	options    *option.QueryOptions
+	expression         string
+	compiledExpression script.CompiledExpression
+	options            *option.QueryOptions
 }
 
 func (token *filterToken) String() string {
@@ -69,11 +77,6 @@ func (token *filterToken) Apply(root, current interface{}, next []Token) (interf
 		return nil, getInvalidTokenTargetNilError(token.Type(), reflect.Array, reflect.Map, reflect.Slice)
 	}
 
-	compiledExpression, err := token.engine.Compile(token.expression, token.options)
-	if err != nil {
-		return nil, getInvalidExpressionError(err)
-	}
-
 	switch objType.Kind() {
 	case reflect.Map:
 		keys := objVal.MapKeys()
@@ -82,7 +85,7 @@ func (token *filterToken) Apply(root, current interface{}, next []Token) (interf
 		for _, kv := range keys {
 			element := objVal.MapIndex(kv).Interface()
 
-			evaluation, err := compiledExpression.Evaluate(root, element)
+			evaluation, err := token.compiledExpression.Evaluate(root, element)
 			if err != nil {
 				// we ignore errors, it has failed evaluation
 				evaluation = nil
@@ -98,7 +101,7 @@ func (token *filterToken) Apply(root, current interface{}, next []Token) (interf
 		for i := 0; i < length; i++ {
 			element := objVal.Index(i).Interface()
 
-			evaluation, err := compiledExpression.Evaluate(root, element)
+			evaluation, err := token.compiledExpression.Evaluate(root, element)
 			if err != nil {
 				// we ignore errors, it has failed evaluation
 				evaluation = nil

@@ -1,7 +1,6 @@
 package token
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -22,152 +21,188 @@ func Test_RecursiveToken_Type(t *testing.T) {
 	assert.Equal(t, "recursive", (&recursiveToken{}).Type())
 }
 
-func Test_RecursiveToken_Apply(t *testing.T) {
-
-	tests := []*tokenTest{
-		{
-			token: &recursiveToken{},
-			input: input{
-				current: []interface{}{nil, "one"},
-			},
-			expected: expected{
-				value: []interface{}{
-					[]interface{}{nil, "one"},
-					"one",
-				},
+var recursiveTokenTests = []*tokenTest{
+	{
+		token: &recursiveToken{},
+		input: input{
+			current: []interface{}{nil, "one"},
+		},
+		expected: expected{
+			value: []interface{}{
+				[]interface{}{nil, "one"},
+				"one",
 			},
 		},
-		{
-			token: &recursiveToken{},
-			input: input{
-				current: map[string]interface{}{
+	},
+	{
+		token: &recursiveToken{},
+		input: input{
+			current: map[string]interface{}{
+				"key1": "one",
+				"k2":   "two",
+				"k3":   "three",
+			},
+		},
+		expected: expected{
+			value: []interface{}{
+				map[string]interface{}{
 					"key1": "one",
 					"k2":   "two",
 					"k3":   "three",
 				},
-			},
-			expected: expected{
-				value: []interface{}{
-					map[string]interface{}{
-						"key1": "one",
-						"k2":   "two",
-						"k3":   "three",
-					},
-					"one",
-					"two",
-					"three",
-				},
+				"one",
+				"two",
+				"three",
 			},
 		},
-		{
-			token: &recursiveToken{},
-			input: input{
-				root: nil,
-				current: []interface{}{
+	},
+	{
+		token: &recursiveToken{},
+		input: input{
+			root: nil,
+			current: []interface{}{
+				map[string]interface{}{
+					"name": "one",
+					"nested": map[string]interface{}{
+						"name": "four",
+					},
+				},
+				map[string]interface{}{
+					"name": "two",
+				},
+				map[string]interface{}{
+					"name": "three",
+				},
+			},
+			tokens: []Token{
+				&keyToken{key: "name"},
+			},
+		},
+		expected: expected{
+			value: []interface{}{
+				"one",
+				"two",
+				"three",
+				"four",
+			},
+		},
+	},
+	{
+		token: &recursiveToken{},
+		input: input{
+			root: nil,
+			current: []interface{}{
+				[]interface{}{
 					map[string]interface{}{
 						"name": "one",
-						"nested": map[string]interface{}{
-							"name": "four",
-						},
 					},
 					map[string]interface{}{
 						"name": "two",
 					},
+				},
+				[]interface{}{
 					map[string]interface{}{
 						"name": "three",
 					},
-				},
-				tokens: []Token{
-					&keyToken{key: "name"},
-				},
-			},
-			expected: expected{
-				value: []interface{}{
-					"one",
-					"two",
-					"three",
-					"four",
-				},
-			},
-		},
-		{
-			token: &recursiveToken{},
-			input: input{
-				root: nil,
-				current: []interface{}{
-					[]interface{}{
-						map[string]interface{}{
-							"name": "one",
-						},
-						map[string]interface{}{
-							"name": "two",
-						},
+					map[string]interface{}{
+						"name": []interface{}{"four", "five"},
 					},
-					[]interface{}{
-						map[string]interface{}{
-							"name": "three",
-						},
-						map[string]interface{}{
-							"name": []interface{}{"four", "five"},
+				},
+				[]interface{}{
+					map[string]interface{}{
+						"name": "six",
+					},
+					map[string]interface{}{
+						"name": []interface{}{
+							"seven",
+							map[string]interface{}{
+								"name": "eight",
+							},
+							map[string]interface{}{
+								"name": "nine",
+							},
 						},
 					},
 				},
-				tokens: []Token{
-					&keyToken{key: "name"},
-				},
 			},
-			expected: expected{
-				value: []interface{}{
-					"one",
-					"two",
-					"three",
-					"four",
-					"five",
-				},
+			tokens: []Token{
+				&keyToken{key: "name"},
 			},
 		},
-	}
-
-	batchTokenTests(t, tests)
-}
-
-func Test_flatten(t *testing.T) {
-	tests := []struct {
-		input    interface{}
-		expected []interface{}
-	}{
-		{
-			input:    nil,
-			expected: []interface{}{},
+		expected: expected{
+			value: []interface{}{
+				"one",
+				"two",
+				"three",
+				"four",
+				"five",
+				"six",
+				"seven",
+				"eight",
+				"nine",
+				map[string]interface{}{
+					"name": "eight",
+				},
+				map[string]interface{}{
+					"name": "nine",
+				},
+			},
 		},
-		{
-			input:    "string",
-			expected: []interface{}{"string"},
+	},
+	{
+		token: &recursiveToken{},
+		input: input{},
+		expected: expected{
+			value: []interface{}{},
 		},
-		{
-			input: []interface{}{"string", "array"},
-			expected: []interface{}{
+	},
+	{
+		token: &recursiveToken{},
+		input: input{
+			current: "string",
+		},
+		expected: expected{
+			value: []interface{}{"string"},
+		},
+	},
+	{
+		token: &recursiveToken{},
+		input: input{
+			current: []interface{}{"string", "array"},
+		},
+		expected: expected{
+			value: []interface{}{
 				[]interface{}{"string", "array"},
 				"string",
 				"array",
 			},
 		},
-		{
-			input: []string{"string", "array"},
-			expected: []interface{}{
+	},
+	{
+		token: &recursiveToken{},
+		input: input{
+			current: []string{"string", "array"},
+		},
+		expected: expected{
+			value: []interface{}{
 				[]string{"string", "array"},
 				"string",
 				"array",
 			},
 		},
-		{
-			input: map[string]interface{}{
+	},
+	{
+		token: &recursiveToken{},
+		input: input{
+			current: map[string]interface{}{
 				"this": "map",
 				"with": []interface{}{
 					"array",
 				},
 			},
-			expected: []interface{}{
+		},
+		expected: expected{
+			value: []interface{}{
 				map[string]interface{}{
 					"this": "map",
 					"with": []interface{}{
@@ -181,17 +216,25 @@ func Test_flatten(t *testing.T) {
 				"array",
 			},
 		},
-		{
-			input: sampleStruct{},
-			expected: []interface{}{
+	},
+	{
+		token: &recursiveToken{},
+		input: input{
+			current: sampleStruct{},
+		},
+		expected: expected{
+			value: []interface{}{
 				sampleStruct{},
 				"",
 				int64(0),
 				"",
 			},
 		},
-		{
-			input: &sampleStruct{
+	},
+	{
+		token: &recursiveToken{},
+		input: input{
+			current: &sampleStruct{
 				One:   "one",
 				Two:   "two",
 				Three: 3,
@@ -199,7 +242,9 @@ func Test_flatten(t *testing.T) {
 				Five:  "five",
 				Six:   "six",
 			},
-			expected: []interface{}{
+		},
+		expected: expected{
+			value: []interface{}{
 				sampleStruct{
 					One:   "one",
 					Two:   "two",
@@ -215,12 +260,13 @@ func Test_flatten(t *testing.T) {
 				"six",
 			},
 		},
-	}
+	},
+}
 
-	for idx, test := range tests {
-		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
-			actual := flatten(test.input)
-			assert.ElementsMatch(t, test.expected, actual)
-		})
-	}
+func Test_RecursiveToken_Apply(t *testing.T) {
+	batchTokenTests(t, recursiveTokenTests)
+}
+
+func Benchmark_RecursiveToken_Apply(b *testing.B) {
+	batchTokenBenchmarks(b, recursiveTokenTests)
 }
