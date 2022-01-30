@@ -843,3 +843,31 @@ func batchTokenTests(t *testing.T, tests []*tokenTest) {
 		})
 	}
 }
+
+func batchTokenBenchmarks(b *testing.B, tests []*tokenTest) {
+	for idx, test := range tests {
+		b.Run(fmt.Sprintf("%d", idx), func(b *testing.B) {
+			actual, err := test.token.Apply(test.input.root, test.input.current, test.input.tokens)
+
+			if test.expected.err == "" {
+				assert.Nil(b, err)
+			} else {
+				assert.EqualError(b, err, test.expected.err)
+			}
+
+			if test.expected.value != nil {
+				if actual == nil {
+					assert.Fail(b, "expected non-nil response")
+					return
+				}
+				if array, ok := test.expected.value.([]interface{}); ok {
+					assert.ElementsMatch(b, array, actual)
+				} else {
+					assert.Equal(b, test.expected.value, actual)
+				}
+			} else {
+				assert.Nil(b, actual)
+			}
+		})
+	}
+}
