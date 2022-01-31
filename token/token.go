@@ -15,8 +15,8 @@ support double quotes in keys?
 // Token represents a component of a JSON Path selector
 type Token interface {
 	Apply(root, current interface{}, next []Token) (interface{}, error)
-	Type() string
 	String() string
+	Type() string
 }
 
 // Tokenize converts a JSON Path selector to a collection of parsable tokens

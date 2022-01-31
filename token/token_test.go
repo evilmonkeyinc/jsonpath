@@ -8,6 +8,17 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type testToken struct {
+	value interface{}
+	err   error
+}
+
+func (token *testToken) Apply(root, current interface{}, next []Token) (interface{}, error) {
+	return token.value, token.err
+}
+func (token *testToken) String() string { return "test" }
+func (token *testToken) Type() string   { return "test" }
+
 func Test_Parse(t *testing.T) {
 
 	type input struct {
