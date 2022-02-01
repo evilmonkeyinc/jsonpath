@@ -261,6 +261,29 @@ var recursiveTokenTests = []*tokenTest{
 			},
 		},
 	},
+	{
+		token: &recursiveToken{},
+		input: input{
+			current: &sampleStruct{
+				One:   "one",
+				Two:   "two",
+				Three: 3,
+				Four:  4,
+				Five:  "five",
+				Six:   "six",
+			},
+			tokens: []Token{&currentToken{}, &wildcardToken{}},
+		},
+		expected: expected{
+			value: []interface{}{
+				"one",
+				"two",
+				int64(4),
+				"five",
+				"six",
+			},
+		},
+	},
 }
 
 func Test_RecursiveToken_Apply(t *testing.T) {

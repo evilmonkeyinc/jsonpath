@@ -47,73 +47,76 @@ func Test_ScriptToken_Type(t *testing.T) {
 	assert.Equal(t, "script", (&scriptToken{}).Type())
 }
 
+var scriptTests = []*tokenTest{
+	{
+		token: &scriptToken{},
+		input: input{},
+		expected: expected{
+			err: "invalid expression. is empty",
+		},
+	},
+	{
+		token: &scriptToken{
+			expression:         "engine error",
+			compiledExpression: &testCompiledExpression{err: fmt.Errorf("engine error")},
+		},
+		input: input{},
+		expected: expected{
+			err: "invalid expression. engine error",
+		},
+	},
+	{
+		token: &scriptToken{
+			expression:         "nil response",
+			compiledExpression: &testCompiledExpression{response: nil},
+		},
+		input: input{},
+		expected: expected{
+			err: "unexpected expression result. expected [int string] got [nil]",
+		},
+	},
+	{
+		token: &scriptToken{
+			expression:         "bool response",
+			compiledExpression: &testCompiledExpression{response: true},
+		},
+		input: input{},
+		expected: expected{
+			err: "unexpected expression result. expected [int string] got [bool]",
+		},
+	},
+	{
+		token: &scriptToken{
+			expression:         "string response",
+			compiledExpression: &testCompiledExpression{response: "key"},
+		},
+		input: input{
+			current: map[string]interface{}{
+				"key": "value",
+			},
+		},
+		expected: expected{
+			value: "value",
+		},
+	},
+	{
+		token: &scriptToken{
+			expression:         "int response",
+			compiledExpression: &testCompiledExpression{response: 1},
+		},
+		input: input{
+			current: []string{"one", "two", "three"},
+		},
+		expected: expected{
+			value: "two",
+		},
+	},
+}
+
 func Test_ScriptToken_Apply(t *testing.T) {
+	batchTokenTests(t, scriptTests)
+}
 
-	tests := []*tokenTest{
-		{
-			token: &scriptToken{},
-			input: input{},
-			expected: expected{
-				err: "invalid expression. is empty",
-			},
-		},
-		{
-			token: &scriptToken{
-				expression:         "engine error",
-				compiledExpression: &testCompiledExpression{err: fmt.Errorf("engine error")},
-			},
-			input: input{},
-			expected: expected{
-				err: "invalid expression. engine error",
-			},
-		},
-		{
-			token: &scriptToken{
-				expression:         "nil response",
-				compiledExpression: &testCompiledExpression{response: nil},
-			},
-			input: input{},
-			expected: expected{
-				err: "unexpected expression result. expected [int string] got [nil]",
-			},
-		},
-		{
-			token: &scriptToken{
-				expression:         "bool response",
-				compiledExpression: &testCompiledExpression{response: true},
-			},
-			input: input{},
-			expected: expected{
-				err: "unexpected expression result. expected [int string] got [bool]",
-			},
-		},
-		{
-			token: &scriptToken{
-				expression:         "string response",
-				compiledExpression: &testCompiledExpression{response: "key"},
-			},
-			input: input{
-				current: map[string]interface{}{
-					"key": "value",
-				},
-			},
-			expected: expected{
-				value: "value",
-			},
-		},
-		{
-			token: &scriptToken{
-				expression:         "int response",
-				compiledExpression: &testCompiledExpression{response: 1},
-			},
-			input: input{
-				current: []string{"one", "two", "three"},
-			},
-			expected: expected{
-				value: "two",
-			},
-		},
-	}
-
-	batchTokenTests(t, tests)
+func Benchmark_ScriptToken_Apply(b *testing.B) {
+	batchTokenBenchmarks(b, scriptTests)
 }

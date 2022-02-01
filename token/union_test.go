@@ -156,281 +156,284 @@ func Test_UnionToken_Type(t *testing.T) {
 	assert.Equal(t, "union", (&unionToken{}).Type())
 }
 
+var unionTests = []*tokenTest{
+	{
+		token: &unionToken{},
+		input: input{
+			current: []interface{}{},
+		},
+		expected: expected{
+			err: "union: invalid token argument. expected [array slice] got [nil]",
+		},
+	},
+	{
+		token: &unionToken{
+			arguments: []interface{}{
+				&expressionToken{expression: "nil", compiledExpression: &testCompiledExpression{response: nil}},
+			},
+		},
+		input: input{
+			current: []interface{}{},
+		},
+		expected: expected{
+			err: "union: invalid token argument. expected [int string] got [nil]",
+		},
+	},
+	{
+		token: &unionToken{
+			arguments: []interface{}{"one", 2},
+		},
+		input: input{
+			current: []interface{}{},
+		},
+		expected: expected{
+			err: "union: invalid token argument. expected [string] got [int]",
+		},
+	},
+	{
+		token: &unionToken{
+			arguments: []interface{}{2, "one"},
+		},
+		input: input{
+			current: []interface{}{},
+		},
+		expected: expected{
+			err: "union: invalid token argument. expected [int] got [string]",
+		},
+	},
+	{
+		token: &unionToken{
+			arguments: []interface{}{3.14},
+		},
+		input: input{
+			current: []interface{}{1, 2, 3, 4, 5},
+		},
+		expected: expected{
+			err: "union: invalid token argument. expected [int string] got [float64]",
+		},
+	},
+	{
+		token: &unionToken{
+			arguments: []interface{}{
+				&expressionToken{expression: "", compiledExpression: &testCompiledExpression{response: ""}},
+				"one",
+			},
+		},
+		input: input{
+			current: []interface{}{},
+		},
+		expected: expected{
+			err: "union: invalid token invalid expression. is empty",
+		},
+	},
+	{
+		token: &unionToken{
+			arguments: []interface{}{
+				&expressionToken{expression: "1+1", compiledExpression: &testCompiledExpression{response: 2}},
+				"one",
+			},
+		},
+		input: input{
+			current: []interface{}{},
+		},
+		expected: expected{
+			err: "union: invalid token argument. expected [int] got [string]",
+		},
+	},
+	{
+		token: &unionToken{
+			arguments: []interface{}{
+				&expressionToken{expression: "1+1", compiledExpression: &testCompiledExpression{response: 2}},
+				3,
+			},
+		},
+		input: input{
+			current: []interface{}{
+				"one",
+				"two",
+				"three",
+				"four",
+			},
+		},
+		expected: expected{
+			value: []interface{}{
+				"three",
+				"four",
+			},
+		},
+	},
+	{
+		token: &unionToken{
+			arguments: []interface{}{
+				0,
+				3,
+				4,
+			},
+		},
+		input: input{
+			current: []interface{}{
+				"one",
+				"two",
+				"three",
+				"four",
+			},
+		},
+		expected: expected{
+			value: []interface{}{"one", "four"},
+		},
+	},
+	{
+		token: &unionToken{
+			arguments: []interface{}{
+				0,
+				3,
+			},
+		},
+		input: input{
+			current: []interface{}{
+				"one",
+				"two",
+				"three",
+				"four",
+			},
+		},
+		expected: expected{
+			value: []interface{}{
+				"one",
+				"four",
+			},
+		},
+	},
+	{
+		token: &unionToken{
+			arguments: []interface{}{
+				"a",
+				"d",
+			},
+			allowMap: true,
+		},
+		input: input{
+			current: map[string]interface{}{
+				"a": "one",
+				"b": "two",
+				"c": "three",
+				"d": "four",
+			},
+		},
+		expected: expected{
+			value: []interface{}{
+				"one",
+				"four",
+			},
+		},
+	},
+	{
+		token: &unionToken{
+			arguments: []interface{}{
+				"a",
+				"d",
+				"e",
+			},
+			allowMap: true,
+		},
+		input: input{
+			current: map[string]interface{}{
+				"a": "one",
+				"b": "two",
+				"c": "three",
+				"d": "four",
+			},
+		},
+		expected: expected{
+			value: []interface{}{"one", "four"},
+		},
+	},
+	{
+		token: &unionToken{
+			arguments:   []interface{}{0, 2, 4},
+			allowString: true,
+		},
+		input: input{
+			current: "abcdefghijkl",
+		},
+		expected: expected{
+			value: "ace",
+		},
+	},
+	{
+		token: &unionToken{
+			arguments:   []interface{}{0, 2, 4},
+			allowString: true,
+		},
+		input: input{
+			current: "abcdefghijkl",
+			tokens: []Token{
+				&indexToken{index: 1, allowString: true},
+			},
+		},
+		expected: expected{
+			value: "c",
+		},
+	},
+	{
+		token: &unionToken{
+			arguments: []interface{}{
+				0,
+				3,
+			},
+		},
+		input: input{
+			current: []interface{}{
+				"one",
+				"two",
+				"three",
+				"four",
+			},
+			tokens: []Token{
+				&indexToken{
+					index: -1,
+				},
+			},
+		},
+		expected: expected{
+			value: "four",
+		},
+	},
+	{
+		token: &unionToken{
+			arguments: []interface{}{
+				0,
+				3,
+			},
+		},
+		input: input{
+			current: []map[string]interface{}{
+				{"name": "one"},
+				{"name": "two"},
+				{"name": "three"},
+				{"name": "four"},
+			},
+			tokens: []Token{
+				&keyToken{
+					key: "name",
+				},
+			},
+		},
+		expected: expected{
+			value: []interface{}{
+				"one",
+				"four",
+			},
+		},
+	},
+}
+
 func Test_UnionToken_Apply(t *testing.T) {
-
-	tests := []*tokenTest{
-		{
-			token: &unionToken{},
-			input: input{
-				current: []interface{}{},
-			},
-			expected: expected{
-				err: "union: invalid token argument. expected [array slice] got [nil]",
-			},
-		},
-		{
-			token: &unionToken{
-				arguments: []interface{}{
-					&expressionToken{expression: "nil", compiledExpression: &testCompiledExpression{response: nil}},
-				},
-			},
-			input: input{
-				current: []interface{}{},
-			},
-			expected: expected{
-				err: "union: invalid token argument. expected [int string] got [nil]",
-			},
-		},
-		{
-			token: &unionToken{
-				arguments: []interface{}{"one", 2},
-			},
-			input: input{
-				current: []interface{}{},
-			},
-			expected: expected{
-				err: "union: invalid token argument. expected [string] got [int]",
-			},
-		},
-		{
-			token: &unionToken{
-				arguments: []interface{}{2, "one"},
-			},
-			input: input{
-				current: []interface{}{},
-			},
-			expected: expected{
-				err: "union: invalid token argument. expected [int] got [string]",
-			},
-		},
-		{
-			token: &unionToken{
-				arguments: []interface{}{3.14},
-			},
-			input: input{
-				current: []interface{}{1, 2, 3, 4, 5},
-			},
-			expected: expected{
-				err: "union: invalid token argument. expected [int string] got [float64]",
-			},
-		},
-		{
-			token: &unionToken{
-				arguments: []interface{}{
-					&expressionToken{expression: "", compiledExpression: &testCompiledExpression{response: ""}},
-					"one",
-				},
-			},
-			input: input{
-				current: []interface{}{},
-			},
-			expected: expected{
-				err: "union: invalid token invalid expression. is empty",
-			},
-		},
-		{
-			token: &unionToken{
-				arguments: []interface{}{
-					&expressionToken{expression: "1+1", compiledExpression: &testCompiledExpression{response: 2}},
-					"one",
-				},
-			},
-			input: input{
-				current: []interface{}{},
-			},
-			expected: expected{
-				err: "union: invalid token argument. expected [int] got [string]",
-			},
-		},
-		{
-			token: &unionToken{
-				arguments: []interface{}{
-					&expressionToken{expression: "1+1", compiledExpression: &testCompiledExpression{response: 2}},
-					3,
-				},
-			},
-			input: input{
-				current: []interface{}{
-					"one",
-					"two",
-					"three",
-					"four",
-				},
-			},
-			expected: expected{
-				value: []interface{}{
-					"three",
-					"four",
-				},
-			},
-		},
-		{
-			token: &unionToken{
-				arguments: []interface{}{
-					0,
-					3,
-					4,
-				},
-			},
-			input: input{
-				current: []interface{}{
-					"one",
-					"two",
-					"three",
-					"four",
-				},
-			},
-			expected: expected{
-				value: []interface{}{"one", "four"},
-			},
-		},
-		{
-			token: &unionToken{
-				arguments: []interface{}{
-					0,
-					3,
-				},
-			},
-			input: input{
-				current: []interface{}{
-					"one",
-					"two",
-					"three",
-					"four",
-				},
-			},
-			expected: expected{
-				value: []interface{}{
-					"one",
-					"four",
-				},
-			},
-		},
-		{
-			token: &unionToken{
-				arguments: []interface{}{
-					"a",
-					"d",
-				},
-				allowMap: true,
-			},
-			input: input{
-				current: map[string]interface{}{
-					"a": "one",
-					"b": "two",
-					"c": "three",
-					"d": "four",
-				},
-			},
-			expected: expected{
-				value: []interface{}{
-					"one",
-					"four",
-				},
-			},
-		},
-		{
-			token: &unionToken{
-				arguments: []interface{}{
-					"a",
-					"d",
-					"e",
-				},
-				allowMap: true,
-			},
-			input: input{
-				current: map[string]interface{}{
-					"a": "one",
-					"b": "two",
-					"c": "three",
-					"d": "four",
-				},
-			},
-			expected: expected{
-				value: []interface{}{"one", "four"},
-			},
-		},
-		{
-			token: &unionToken{
-				arguments:   []interface{}{0, 2, 4},
-				allowString: true,
-			},
-			input: input{
-				current: "abcdefghijkl",
-			},
-			expected: expected{
-				value: "ace",
-			},
-		},
-		{
-			token: &unionToken{
-				arguments:   []interface{}{0, 2, 4},
-				allowString: true,
-			},
-			input: input{
-				current: "abcdefghijkl",
-				tokens: []Token{
-					&indexToken{index: 1, allowString: true},
-				},
-			},
-			expected: expected{
-				value: "c",
-			},
-		},
-		{
-			token: &unionToken{
-				arguments: []interface{}{
-					0,
-					3,
-				},
-			},
-			input: input{
-				current: []interface{}{
-					"one",
-					"two",
-					"three",
-					"four",
-				},
-				tokens: []Token{
-					&indexToken{
-						index: -1,
-					},
-				},
-			},
-			expected: expected{
-				value: "four",
-			},
-		},
-		{
-			token: &unionToken{
-				arguments: []interface{}{
-					0,
-					3,
-				},
-			},
-			input: input{
-				current: []map[string]interface{}{
-					{"name": "one"},
-					{"name": "two"},
-					{"name": "three"},
-					{"name": "four"},
-				},
-				tokens: []Token{
-					&keyToken{
-						key: "name",
-					},
-				},
-			},
-			expected: expected{
-				value: []interface{}{
-					"one",
-					"four",
-				},
-			},
-		},
-	}
-
 	batchTokenTests(t, tests)
+}
+
+func Benchmark_UnionToken_Apply(b *testing.B) {
+	batchTokenBenchmarks(b, tests)
 }
 
 func Test_UnionToken_getUnionByIndex(t *testing.T) {

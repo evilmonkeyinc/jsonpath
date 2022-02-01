@@ -21,37 +21,40 @@ func Test_RootToken_Type(t *testing.T) {
 	assert.Equal(t, "root", (&rootToken{}).Type())
 }
 
+var tests = []*tokenTest{
+	{
+		token: &rootToken{},
+		input: input{
+			root: map[string]interface{}{
+				"name": "first",
+			},
+		},
+		expected: expected{
+			value: map[string]interface{}{
+				"name": "first",
+			},
+		},
+	},
+	{
+		token: &rootToken{},
+		input: input{
+			root: map[string]interface{}{
+				"name": "first",
+			},
+			tokens: []Token{&keyToken{
+				key: "name",
+			}},
+		},
+		expected: expected{
+			value: "first",
+		},
+	},
+}
+
 func Test_RootToken_Apply(t *testing.T) {
-
-	tests := []*tokenTest{
-		{
-			token: &rootToken{},
-			input: input{
-				root: map[string]interface{}{
-					"name": "first",
-				},
-			},
-			expected: expected{
-				value: map[string]interface{}{
-					"name": "first",
-				},
-			},
-		},
-		{
-			token: &rootToken{},
-			input: input{
-				root: map[string]interface{}{
-					"name": "first",
-				},
-				tokens: []Token{&keyToken{
-					key: "name",
-				}},
-			},
-			expected: expected{
-				value: "first",
-			},
-		},
-	}
-
 	batchTokenTests(t, tests)
+}
+
+func Benchmark_RootToken_Apply(b *testing.B) {
+	batchTokenBenchmarks(b, tests)
 }
