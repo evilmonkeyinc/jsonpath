@@ -149,1114 +149,1056 @@ func Test_RangeToken_Type(t *testing.T) {
 }
 
 func Test_RangeToken_Apply(t *testing.T) {
-
-	tests := []*tokenTest{
-		{
-			token: &rangeToken{
-				from: nil,
-			},
-			input: input{
-				current: []interface{}{
-					"one",
-					"two",
-					"three",
-				},
-			},
-			expected: expected{
-				value: []interface{}{
-					"one",
-					"two",
-					"three",
-				},
-			},
-		},
-		{
-			token: &rangeToken{
-				from: 0,
-			},
-			input: input{
-				current: []interface{}{
-					"one",
-					"two",
-					"three",
-				},
-			},
-			expected: expected{
-				value: []interface{}{
-					"one",
-					"two",
-					"three",
-				},
-			},
-		},
-		{
-			token: &rangeToken{
-				from: 1,
-			},
-			input: input{
-				current: []interface{}{
-					"one",
-					"two",
-					"three",
-				},
-			},
-			expected: expected{
-				value: []interface{}{
-					"two",
-					"three",
-				},
-			},
-		},
-		{
-			token: &rangeToken{
-				from: 1,
-				to:   2,
-			},
-			input: input{
-				current: []interface{}{
-					"one",
-					"two",
-					"three",
-				},
-			},
-			expected: expected{
-				value: []interface{}{
-					"two",
-				},
-			},
-		},
-		{
-			token: &rangeToken{
-				from: 1,
-				step: 3,
-			},
-			input: input{
-				current: []interface{}{
-					"one",
-					"two",
-					"three",
-				},
-			},
-			expected: expected{
-				value: []interface{}{
-					"two",
-				},
-			},
-		},
-		{
-			token: &rangeToken{
-				from: 0,
-				to:   3,
-				step: 2,
-			},
-			input: input{
-				current: []interface{}{
-					"one",
-					"two",
-					"three",
-				},
-			},
-			expected: expected{
-				value: []interface{}{
-					"one",
-					"three",
-				},
-			},
-		},
-		{
-			token: &rangeToken{
-				from: 0,
-				to:   2,
-			},
-			input: input{
-				current: []interface{}{
-					"one",
-					"two",
-					"three",
-				},
-			},
-			expected: expected{
-				value: []interface{}{
-					"one",
-					"two",
-				},
-			},
-		},
-		{
-			token: &rangeToken{
-				from: 0,
-				to:   2,
-				step: 2,
-			},
-			input: input{
-				current: []interface{}{
-					"one",
-					"two",
-					"three",
-				},
-			},
-			expected: expected{
-				value: []interface{}{
-					"one",
-				},
-			},
-		},
-		{
-			token: &rangeToken{
-				from: 0,
-				step: 2,
-			},
-			input: input{
-				current: []interface{}{
-					"one",
-					"two",
-					"three",
-				},
-			},
-			expected: expected{
-				value: []interface{}{
-					"one",
-					"three",
-				},
-			},
-		},
-		{
-			token: &rangeToken{
-				from: 0,
-				to:   100,
-			},
-			input: input{
-				current: []interface{}{1, 2, 3},
-			},
-			expected: expected{
-				value: []interface{}{1, 2, 3},
-			},
-		},
-		{
-			token: &rangeToken{
-				from: "string",
-				to:   2,
-				step: 2,
-			},
-			input: input{
-				current: []interface{}{
-					"one",
-					"two",
-					"three",
-				},
-			},
-			expected: expected{
-				err: "range: invalid token argument. expected [int] got [string]",
-			},
-		},
-		{
-			token: &rangeToken{
-				from: 0,
-				to:   "string",
-				step: 2,
-			},
-			input: input{
-				current: []interface{}{
-					"one",
-					"two",
-					"three",
-				},
-			},
-			expected: expected{
-				err: "range: invalid token argument. expected [int] got [string]",
-			},
-		},
-		{
-			token: &rangeToken{
-				from: 0,
-				to:   1,
-				step: "string",
-			},
-			input: input{
-				current: []interface{}{
-					"one",
-					"two",
-					"three",
-				},
-			},
-			expected: expected{
-				err: "range: invalid token argument. expected [int] got [string]",
-			},
-		},
-		{
-			token: &rangeToken{
-				from: &expressionToken{
-					expression:         "",
-					compiledExpression: &testCompiledExpression{response: ""},
-				},
-			},
-			input: input{
-				current: []interface{}{
-					"one",
-					"two",
-					"three",
-				},
-			},
-			expected: expected{
-				err: "range: invalid token invalid expression. is empty",
-			},
-		},
-		{
-			token: &rangeToken{
-				from: &expressionToken{
-					expression:         "'key'",
-					compiledExpression: &testCompiledExpression{response: "key"},
-				},
-			},
-			input: input{
-				current: []interface{}{
-					"one",
-					"two",
-					"three",
-				},
-			},
-			expected: expected{
-				err: "range: invalid token unexpected expression result. expected [int] got [string]",
-			},
-		},
-		{
-			token: &rangeToken{
-				from: &indexToken{index: 0},
-			},
-			input: input{
-				current: []interface{}{
-					"one",
-					"two",
-					"three",
-				},
-			},
-			expected: expected{
-				err: "range: invalid token unexpected expression result. expected [int] got [string]",
-			},
-		},
-		{
-			token: &rangeToken{
-				from: &expressionToken{
-					expression:         "@.length-1",
-					compiledExpression: &testCompiledExpression{response: 2},
-				},
-			},
-			input: input{
-				current: []interface{}{
-					"one",
-					"two",
-					"three",
-				},
-			},
-			expected: expected{
-				value: []interface{}{
-					"three",
-				},
-			},
-		},
-		{
-			token: &rangeToken{
-				from: 0,
-				to: &expressionToken{
-					expression:         "",
-					compiledExpression: &testCompiledExpression{response: ""},
-				},
-			},
-			input: input{
-				current: []interface{}{
-					"one",
-					"two",
-					"three",
-				},
-			},
-			expected: expected{
-				err: "range: invalid token invalid expression. is empty",
-			},
-		},
-		{
-			token: &rangeToken{
-				from: 0,
-				to: &expressionToken{
-					expression:         "'key'",
-					compiledExpression: &testCompiledExpression{response: "key"},
-				},
-			},
-			input: input{
-				current: []interface{}{
-					"one",
-					"two",
-					"three",
-				},
-			},
-			expected: expected{
-				err: "range: invalid token unexpected expression result. expected [int] got [string]",
-			},
-		},
-		{
-			token: &rangeToken{
-				from: 0,
-				to:   &indexToken{index: 0},
-			},
-			input: input{
-				current: []interface{}{
-					"one",
-					"two",
-					"three",
-				},
-			},
-			expected: expected{
-				err: "range: invalid token unexpected expression result. expected [int] got [string]",
-			},
-		},
-		{
-			token: &rangeToken{
-				from: 0,
-				to: &expressionToken{
-					expression:         "@.length-2",
-					compiledExpression: &testCompiledExpression{response: 1},
-				},
-			},
-			input: input{
-				current: []interface{}{
-					"one",
-					"two",
-					"three",
-				},
-			},
-			expected: expected{
-				value: []interface{}{
-					"one",
-				},
-			},
-		},
-		{
-			token: &rangeToken{
-				from: 0,
-				step: &expressionToken{
-					expression:         "",
-					compiledExpression: &testCompiledExpression{response: ""},
-				},
-			},
-			input: input{
-				current: []interface{}{
-					"one",
-					"two",
-					"three",
-				},
-			},
-			expected: expected{
-				err: "range: invalid token invalid expression. is empty",
-			},
-		},
-		{
-			token: &rangeToken{
-				from: 0,
-				step: &expressionToken{
-					expression:         "'key'",
-					compiledExpression: &testCompiledExpression{response: "key"},
-				},
-			},
-			input: input{
-				current: []interface{}{
-					"one",
-					"two",
-					"three",
-				},
-			},
-			expected: expected{
-				err: "range: invalid token unexpected expression result. expected [int] got [string]",
-			},
-		},
-		{
-			token: &rangeToken{
-				from: 0,
-				step: &indexToken{index: 0},
-			},
-			input: input{
-				current: []interface{}{
-					"one",
-					"two",
-					"three",
-				},
-			},
-			expected: expected{
-				err: "range: invalid token unexpected expression result. expected [int] got [string]",
-			},
-		},
-		{
-			token: &rangeToken{
-				from: 0,
-				step: &expressionToken{
-					expression:         "@.length-1",
-					compiledExpression: &testCompiledExpression{response: 2},
-				},
-			},
-			input: input{
-				current: []interface{}{
-					"one",
-					"two",
-					"three",
-				},
-			},
-			expected: expected{
-				value: []interface{}{
-					"one",
-					"three",
-				},
-			},
-		},
-		{
-			token: &rangeToken{
-				from: 0,
-			},
-			input: input{
-				tokens: []Token{&keyToken{key: "name"}},
-				current: []map[string]interface{}{
-					{
-						"name": "one",
-					},
-					{
-						"name": "two",
-					},
-					{
-						"name": "three",
-					},
-					{
-						"name": "four",
-					},
-					{
-						"name": "five",
-					},
-				},
-			},
-			expected: expected{
-				value: []interface{}{
-					"one",
-					"two",
-					"three",
-					"four",
-					"five",
-				},
-			},
-		},
-		{
-			token: &rangeToken{
-				from: 1,
-				to:   -2,
-			},
-			input: input{
-				tokens: []Token{&keyToken{key: "name"}},
-				current: []map[string]interface{}{
-					{
-						"name": "one",
-					},
-					{
-						"name": "two",
-					},
-					{
-						"name": "three",
-					},
-					{
-						"name": "four",
-					},
-					{
-						"name": "five",
-					},
-				},
-			},
-			expected: expected{
-				value: []interface{}{
-					"two",
-					"three",
-				},
-			},
-		},
-		{
-			token: &rangeToken{from: 10},
-			input: input{
-				current: "this is a substring",
-			},
-			expected: expected{
-				err: "range: invalid token target. expected [array slice] got [string]",
-			},
-		},
-		{
-			token: &rangeToken{from: 10, allowString: true},
-			input: input{
-				current: "this is a substring",
-			},
-			expected: expected{
-				value: "substring",
-			},
-		},
-		{
-			token: &rangeToken{from: -9, allowString: true},
-			input: input{
-				current: "this is a substring",
-				tokens: []Token{
-					&indexToken{index: 0, allowString: true},
-				},
-			},
-			expected: expected{
-				value: "s",
-			},
-		},
-		{
-			token: &rangeToken{from: 1},
-			input: input{
-				current: []interface{}{
-					"one",
-					"two",
-					"three",
-					"four",
-				},
-				tokens: []Token{
-					&indexToken{
-						index: 0,
-					},
-				},
-			},
-			expected: expected{
-				value: "two",
-			},
-		},
-		{
-			token: &rangeToken{
-				from: &expressionToken{
-					expression:         "nil",
-					compiledExpression: &testCompiledExpression{response: nil},
-				},
-			},
-			input: input{
-				current: []interface{}{
-					"one",
-					"two",
-					"three",
-					"four",
-				},
-			},
-			expected: expected{
-				err: "range: invalid token unexpected expression result. expected [int] got [nil]",
-			},
-		},
-		{
-			token: &rangeToken{
-				from: 0,
-				to: &expressionToken{
-					expression:         "nil",
-					compiledExpression: &testCompiledExpression{response: nil},
-				},
-			},
-			input: input{
-				current: []interface{}{
-					"one",
-					"two",
-					"three",
-					"four",
-				},
-			},
-			expected: expected{
-				err: "range: invalid token unexpected expression result. expected [int] got [nil]",
-			},
-		},
-		{
-			token: &rangeToken{
-				from: 0,
-				to:   1,
-				step: &expressionToken{
-					expression:         "nil",
-					compiledExpression: &testCompiledExpression{response: nil},
-				},
-			},
-			input: input{
-				current: []interface{}{
-					"one",
-					"two",
-					"three",
-					"four",
-				},
-			},
-			expected: expected{
-				err: "range: invalid token unexpected expression result. expected [int] got [nil]",
-			},
-		},
-		{
-			token: &rangeToken{
-				from: 0,
-				to:   1,
-			},
-			input: input{
-				current: 123,
-			},
-			expected: expected{
-				err: "range: invalid token target. expected [array slice] got [int]",
-			},
-		},
-	}
-
-	batchTokenTests(t, tests)
+	batchTokenTests(t, rangeTests)
 }
 
-func Test_getRange(t *testing.T) {
-	type input struct {
-		token            *rangeToken
-		obj              interface{}
-		start, end, step *int64
-	}
+func Benchmark_RangeToken_Apply(b *testing.B) {
+	batchTokenBenchmarks(b, rangeTests)
+}
 
-	type expected struct {
-		obj interface{}
-		err string
-	}
-
-	testArray := []interface{}{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, "ten", "eleven", "twelve", 13}
-
-	intPtr := func(i int64) *int64 {
-		return &i
-	}
-
-	tests := []struct {
-		input    input
-		expected expected
-	}{
-		{
-			input: input{
-				token: &rangeToken{},
-				obj:   nil,
-			},
-			expected: expected{
-				err: "range: invalid token target. expected [array slice] got [nil]",
+var rangeTests = []*tokenTest{
+	{
+		token: &rangeToken{
+			from: nil,
+		},
+		input: input{
+			current: []interface{}{
+				"one",
+				"two",
+				"three",
 			},
 		},
-		{
-			input: input{
-				token: &rangeToken{},
-				obj:   123,
-			},
-			expected: expected{
-				err: "range: invalid token target. expected [array slice] got [int]",
+		expected: expected{
+			value: []interface{}{
+				"one",
+				"two",
+				"three",
 			},
 		},
-		{
-			input: input{
-				token: &rangeToken{allowMap: true},
-				obj:   123,
-			},
-			expected: expected{
-				err: "range: invalid token target. expected [array slice map] got [int]",
+	},
+	{
+		token: &rangeToken{
+			from: 0,
+		},
+		input: input{
+			current: []interface{}{
+				"one",
+				"two",
+				"three",
 			},
 		},
-		{
-			input: input{
-				token: &rangeToken{allowString: true},
-				obj:   123,
-			},
-			expected: expected{
-				err: "range: invalid token target. expected [array slice string] got [int]",
+		expected: expected{
+			value: []interface{}{
+				"one",
+				"two",
+				"three",
 			},
 		},
-		{
-			input: input{
-				token: &rangeToken{allowMap: true, allowString: true},
-				obj:   123,
-			},
-			expected: expected{
-				err: "range: invalid token target. expected [array slice map string] got [int]",
+	},
+	{
+		token: &rangeToken{
+			from: 1,
+		},
+		input: input{
+			current: []interface{}{
+				"one",
+				"two",
+				"three",
 			},
 		},
-		{
-			input: input{
-				token: &rangeToken{allowString: true},
-				obj:   "return after this:result text",
-				start: intPtr(18),
-			},
-			expected: expected{
-				obj: "result text",
+		expected: expected{
+			value: []interface{}{
+				"two",
+				"three",
 			},
 		},
-		{
-			input: input{
-				token: &rangeToken{},
-				obj:   testArray,
-				start: intPtr(15),
-			},
-			expected: expected{
-				obj: []interface{}{},
+	},
+	{
+		token: &rangeToken{
+			from: 1,
+			to:   2,
+		},
+		input: input{
+			current: []interface{}{
+				"one",
+				"two",
+				"three",
 			},
 		},
-		{
-			input: input{
-				token: &rangeToken{},
-				obj:   testArray,
-				end:   intPtr(15),
-			},
-			expected: expected{
-				obj: []interface{}{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, "ten", "eleven", "twelve", 13},
+		expected: expected{
+			value: []interface{}{
+				"two",
 			},
 		},
-		{
-			input: input{
-				token: &rangeToken{},
-				obj:   testArray,
-				step:  intPtr(0),
-			},
-			expected: expected{
-				err: "range: invalid token out of range",
+	},
+	{
+		token: &rangeToken{
+			from: 1,
+			step: 3,
+		},
+		input: input{
+			current: []interface{}{
+				"one",
+				"two",
+				"three",
 			},
 		},
-		{
-			input: input{
-				token: &rangeToken{},
-				obj:   testArray,
-			},
-			expected: expected{
-				obj: testArray,
+		expected: expected{
+			value: []interface{}{
+				"two",
 			},
 		},
-		{
-			input: input{
-				token: &rangeToken{},
-				obj:   testArray,
-				end:   nil,
-			},
-			expected: expected{
-				obj: testArray[0:14],
+	},
+	{
+		token: &rangeToken{
+			from: 0,
+			to:   3,
+			step: 2,
+		},
+		input: input{
+			current: []interface{}{
+				"one",
+				"two",
+				"three",
 			},
 		},
-		{
-			input: input{
-				token: &rangeToken{},
-				obj:   testArray,
-				end:   intPtr(-1),
-			},
-			expected: expected{
-				obj: testArray[0:13],
+		expected: expected{
+			value: []interface{}{
+				"one",
+				"three",
 			},
 		},
-		{
-			input: input{
-				token: &rangeToken{},
-				obj:   testArray,
-				end:   intPtr(-3),
-			},
-			expected: expected{
-				obj: testArray[0:11],
+	},
+	{
+		token: &rangeToken{
+			from: 0,
+			to:   2,
+		},
+		input: input{
+			current: []interface{}{
+				"one",
+				"two",
+				"three",
 			},
 		},
-		{
-			input: input{
-				token: &rangeToken{},
-				obj:   testArray,
-				start: intPtr(-3),
-				end:   intPtr(-1),
-			},
-			expected: expected{
-				obj: testArray[11:13],
+		expected: expected{
+			value: []interface{}{
+				"one",
+				"two",
 			},
 		},
-		{
-			input: input{
-				token: &rangeToken{},
-				obj:   []string{"one", "two", "three", "four", "five"},
-				step:  intPtr(2),
-			},
-			expected: expected{
-				obj: []interface{}{"one", "three", "five"},
+	},
+	{
+		token: &rangeToken{
+			from: 0,
+			to:   2,
+			step: 2,
+		},
+		input: input{
+			current: []interface{}{
+				"one",
+				"two",
+				"three",
 			},
 		},
-		{
-			input: input{
-				token: &rangeToken{},
-				obj:   []string{"one", "two", "three", "four", "five"},
-				start: intPtr(1),
-				step:  intPtr(2),
-			},
-			expected: expected{
-				obj: []interface{}{"two", "four"},
+		expected: expected{
+			value: []interface{}{
+				"one",
 			},
 		},
-		{
-			input: input{
-				token: &rangeToken{},
-				obj:   []string{"one", "two", "three", "four", "five"},
-				start: intPtr(1),
-				end:   intPtr(1),
-			},
-			expected: expected{
-				obj: []interface{}{},
+	},
+	{
+		token: &rangeToken{
+			from: 0,
+			step: 2,
+		},
+		input: input{
+			current: []interface{}{
+				"one",
+				"two",
+				"three",
 			},
 		},
-		{
-			input: input{
-				token: &rangeToken{},
-				obj:   []string{"one", "two", "three", "four", "five"},
-				start: intPtr(1),
-				end:   intPtr(2),
-			},
-			expected: expected{
-				obj: []interface{}{"two"},
+		expected: expected{
+			value: []interface{}{
+				"one",
+				"three",
 			},
 		},
-		{
-			input: input{
-				token: &rangeToken{allowMap: true},
-				obj: map[string]interface{}{
-					"b": "bee",
-					"a": "ae",
-					"c": "see",
-					"e": "ee",
-					"f": "eff",
-					"g": "gee",
-					"d": "dee",
+	},
+	{
+		token: &rangeToken{
+			from: 0,
+			to:   100,
+		},
+		input: input{
+			current: []interface{}{1, 2, 3},
+		},
+		expected: expected{
+			value: []interface{}{1, 2, 3},
+		},
+	},
+	{
+		token: &rangeToken{
+			from: "string",
+			to:   2,
+			step: 2,
+		},
+		input: input{
+			current: []interface{}{
+				"one",
+				"two",
+				"three",
+			},
+		},
+		expected: expected{
+			err: "range: invalid token argument. expected [int] got [string]",
+		},
+	},
+	{
+		token: &rangeToken{
+			from: 0,
+			to:   "string",
+			step: 2,
+		},
+		input: input{
+			current: []interface{}{
+				"one",
+				"two",
+				"three",
+			},
+		},
+		expected: expected{
+			err: "range: invalid token argument. expected [int] got [string]",
+		},
+	},
+	{
+		token: &rangeToken{
+			from: 0,
+			to:   1,
+			step: "string",
+		},
+		input: input{
+			current: []interface{}{
+				"one",
+				"two",
+				"three",
+			},
+		},
+		expected: expected{
+			err: "range: invalid token argument. expected [int] got [string]",
+		},
+	},
+	{
+		token: &rangeToken{
+			from: &expressionToken{
+				expression:         "",
+				compiledExpression: &testCompiledExpression{response: ""},
+			},
+		},
+		input: input{
+			current: []interface{}{
+				"one",
+				"two",
+				"three",
+			},
+		},
+		expected: expected{
+			err: "range: invalid token invalid expression. is empty",
+		},
+	},
+	{
+		token: &rangeToken{
+			from: &expressionToken{
+				expression:         "'key'",
+				compiledExpression: &testCompiledExpression{response: "key"},
+			},
+		},
+		input: input{
+			current: []interface{}{
+				"one",
+				"two",
+				"three",
+			},
+		},
+		expected: expected{
+			err: "range: invalid token unexpected expression result. expected [int] got [string]",
+		},
+	},
+	{
+		token: &rangeToken{
+			from: &indexToken{index: 0},
+		},
+		input: input{
+			current: []interface{}{
+				"one",
+				"two",
+				"three",
+			},
+		},
+		expected: expected{
+			err: "range: invalid token unexpected expression result. expected [int] got [string]",
+		},
+	},
+	{
+		token: &rangeToken{
+			from: &expressionToken{
+				expression:         "@.length-1",
+				compiledExpression: &testCompiledExpression{response: 2},
+			},
+		},
+		input: input{
+			current: []interface{}{
+				"one",
+				"two",
+				"three",
+			},
+		},
+		expected: expected{
+			value: []interface{}{
+				"three",
+			},
+		},
+	},
+	{
+		token: &rangeToken{
+			from: 0,
+			to: &expressionToken{
+				expression:         "",
+				compiledExpression: &testCompiledExpression{response: ""},
+			},
+		},
+		input: input{
+			current: []interface{}{
+				"one",
+				"two",
+				"three",
+			},
+		},
+		expected: expected{
+			err: "range: invalid token invalid expression. is empty",
+		},
+	},
+	{
+		token: &rangeToken{
+			from: 0,
+			to: &expressionToken{
+				expression:         "'key'",
+				compiledExpression: &testCompiledExpression{response: "key"},
+			},
+		},
+		input: input{
+			current: []interface{}{
+				"one",
+				"two",
+				"three",
+			},
+		},
+		expected: expected{
+			err: "range: invalid token unexpected expression result. expected [int] got [string]",
+		},
+	},
+	{
+		token: &rangeToken{
+			from: 0,
+			to:   &indexToken{index: 0},
+		},
+		input: input{
+			current: []interface{}{
+				"one",
+				"two",
+				"three",
+			},
+		},
+		expected: expected{
+			err: "range: invalid token unexpected expression result. expected [int] got [string]",
+		},
+	},
+	{
+		token: &rangeToken{
+			from: 0,
+			to: &expressionToken{
+				expression:         "@.length-2",
+				compiledExpression: &testCompiledExpression{response: 1},
+			},
+		},
+		input: input{
+			current: []interface{}{
+				"one",
+				"two",
+				"three",
+			},
+		},
+		expected: expected{
+			value: []interface{}{
+				"one",
+			},
+		},
+	},
+	{
+		token: &rangeToken{
+			from: 0,
+			step: &expressionToken{
+				expression:         "",
+				compiledExpression: &testCompiledExpression{response: ""},
+			},
+		},
+		input: input{
+			current: []interface{}{
+				"one",
+				"two",
+				"three",
+			},
+		},
+		expected: expected{
+			err: "range: invalid token invalid expression. is empty",
+		},
+	},
+	{
+		token: &rangeToken{
+			from: 0,
+			step: &expressionToken{
+				expression:         "'key'",
+				compiledExpression: &testCompiledExpression{response: "key"},
+			},
+		},
+		input: input{
+			current: []interface{}{
+				"one",
+				"two",
+				"three",
+			},
+		},
+		expected: expected{
+			err: "range: invalid token unexpected expression result. expected [int] got [string]",
+		},
+	},
+	{
+		token: &rangeToken{
+			from: 0,
+			step: &indexToken{index: 0},
+		},
+		input: input{
+			current: []interface{}{
+				"one",
+				"two",
+				"three",
+			},
+		},
+		expected: expected{
+			err: "range: invalid token unexpected expression result. expected [int] got [string]",
+		},
+	},
+	{
+		token: &rangeToken{
+			from: 0,
+			step: &expressionToken{
+				expression:         "@.length-1",
+				compiledExpression: &testCompiledExpression{response: 2},
+			},
+		},
+		input: input{
+			current: []interface{}{
+				"one",
+				"two",
+				"three",
+			},
+		},
+		expected: expected{
+			value: []interface{}{
+				"one",
+				"three",
+			},
+		},
+	},
+	{
+		token: &rangeToken{
+			from: 0,
+		},
+		input: input{
+			tokens: []Token{&keyToken{key: "name"}},
+			current: []map[string]interface{}{
+				{
+					"name": "one",
+				},
+				{
+					"name": "two",
+				},
+				{
+					"name": "three",
+				},
+				{
+					"name": "four",
+				},
+				{
+					"name": "five",
 				},
 			},
-			expected: expected{
-				obj: []interface{}{
-					"ae",
-					"bee",
-					"see",
-					"dee",
-					"ee",
-					"eff",
-					"gee",
+		},
+		expected: expected{
+			value: []interface{}{
+				"one",
+				"two",
+				"three",
+				"four",
+				"five",
+			},
+		},
+	},
+	{
+		token: &rangeToken{
+			from: 1,
+			to:   -2,
+		},
+		input: input{
+			tokens: []Token{&keyToken{key: "name"}},
+			current: []map[string]interface{}{
+				{
+					"name": "one",
+				},
+				{
+					"name": "two",
+				},
+				{
+					"name": "three",
+				},
+				{
+					"name": "four",
+				},
+				{
+					"name": "five",
 				},
 			},
 		},
-		{
-			input: input{
-				token: &rangeToken{allowMap: true},
-				obj: map[string]interface{}{
-					"b": "bee",
-					"a": "ae",
-					"c": "see",
-					"e": "ee",
-					"f": "eff",
-					"g": "gee",
-					"d": "dee",
+		expected: expected{
+			value: []interface{}{
+				"two",
+				"three",
+			},
+		},
+	},
+	{
+		token: &rangeToken{from: 10},
+		input: input{
+			current: "this is a substring",
+		},
+		expected: expected{
+			err: "range: invalid token target. expected [array slice] got [string]",
+		},
+	},
+	{
+		token: &rangeToken{from: 10, allowString: true},
+		input: input{
+			current: "this is a substring",
+		},
+		expected: expected{
+			value: "substring",
+		},
+	},
+	{
+		token: &rangeToken{from: -9, allowString: true},
+		input: input{
+			current: "this is a substring",
+			tokens: []Token{
+				&indexToken{index: 0, allowString: true},
+			},
+		},
+		expected: expected{
+			value: "s",
+		},
+	},
+	{
+		token: &rangeToken{from: 1},
+		input: input{
+			current: []interface{}{
+				"one",
+				"two",
+				"three",
+				"four",
+			},
+			tokens: []Token{
+				&indexToken{
+					index: 0,
 				},
-				step: intPtr(2),
-			},
-			expected: expected{
-				obj: []interface{}{
-					"ae",
-					"see",
-					"ee",
-					"gee",
-				},
 			},
 		},
-		{
-			input: input{
-				token: &rangeToken{allowMap: true},
-				obj: map[string]interface{}{
-					"b": "bee",
-					"a": "ae",
-					"c": "see",
-					"e": "ee",
-					"f": "eff",
-					"g": "gee",
-					"d": "dee",
-				},
-				start: intPtr(1),
-				end:   intPtr(-2),
-			},
-			expected: expected{
-				obj: []interface{}{
-					"bee",
-					"see",
-					"dee",
-					"ee",
-				},
+		expected: expected{
+			value: "two",
+		},
+	},
+	{
+		token: &rangeToken{
+			from: &expressionToken{
+				expression:         "nil",
+				compiledExpression: &testCompiledExpression{response: nil},
 			},
 		},
-		{
-			input: input{
-				token: &rangeToken{},
-				obj:   []string{"one", "two", "three", "four", "five"},
-				step:  intPtr(-1),
-			},
-			expected: expected{
-				obj: []interface{}{"five", "four", "three", "two", "one"},
+		input: input{
+			current: []interface{}{
+				"one",
+				"two",
+				"three",
+				"four",
 			},
 		},
-		{
-			input: input{
-				token: &rangeToken{allowString: true},
-				obj:   "abcdef",
-				step:  intPtr(-1),
-			},
-			expected: expected{
-				obj: "fedcba",
+		expected: expected{
+			err: "range: invalid token unexpected expression result. expected [int] got [nil]",
+		},
+	},
+	{
+		token: &rangeToken{
+			from: 0,
+			to: &expressionToken{
+				expression:         "nil",
+				compiledExpression: &testCompiledExpression{response: nil},
 			},
 		},
-		{
-			input: input{
-				token: &rangeToken{allowMap: true},
-				obj: map[string]interface{}{
-					"b": "bee",
-					"a": "ae",
-					"c": "see",
-					"e": "ee",
-					"d": "dee",
-				},
-				step: intPtr(-1),
-			},
-			expected: expected{
-				obj: []interface{}{"ee", "dee", "see", "bee", "ae"},
+		input: input{
+			current: []interface{}{
+				"one",
+				"two",
+				"three",
+				"four",
 			},
 		},
-		{
-			input: input{
-				token: &rangeToken{},
-				obj:   []string{"one", "two", "three", "four", "five"},
-				start: intPtr(1),
-				end:   intPtr(2),
-				step:  intPtr(-1),
-			},
-			expected: expected{
-				obj: []interface{}{"two"},
+		expected: expected{
+			err: "range: invalid token unexpected expression result. expected [int] got [nil]",
+		},
+	},
+	{
+		token: &rangeToken{
+			from: 0,
+			to:   1,
+			step: &expressionToken{
+				expression:         "nil",
+				compiledExpression: &testCompiledExpression{response: nil},
 			},
 		},
-		{
-			input: input{
-				token: &rangeToken{allowString: true},
-				obj:   "abcdef",
-				step:  intPtr(-1),
-				start: intPtr(1),
-				end:   intPtr(2),
-			},
-			expected: expected{
-				obj: "b",
+		input: input{
+			current: []interface{}{
+				"one",
+				"two",
+				"three",
+				"four",
 			},
 		},
-		{
-			input: input{
-				token: &rangeToken{},
-				obj: map[string]interface{}{
-					"b": "bee",
-					"a": "ae",
-					"c": "see",
-					"e": "ee",
-					"d": "dee",
-				},
-				start: intPtr(1),
-				end:   intPtr(2),
-				step:  intPtr(-1),
-			},
-			expected: expected{
-				err: "range: invalid token target. expected [array slice] got [map]",
+		expected: expected{
+			err: "range: invalid token unexpected expression result. expected [int] got [nil]",
+		},
+	},
+	{
+		token: &rangeToken{
+			from: 0,
+			to:   1,
+		},
+		input: input{
+			current: 123,
+		},
+		expected: expected{
+			err: "range: invalid token target. expected [array slice] got [int]",
+		},
+	},
+	{
+		token: &rangeToken{},
+		input: input{
+			current: nil,
+		},
+		expected: expected{
+			err: "range: invalid token target. expected [array slice] got [nil]",
+		},
+	},
+	{
+		token: &rangeToken{},
+		input: input{
+			current: 123,
+		},
+		expected: expected{
+			err: "range: invalid token target. expected [array slice] got [int]",
+		},
+	},
+	{
+		token: &rangeToken{allowMap: true},
+		input: input{
+			current: 123,
+		},
+		expected: expected{
+			err: "range: invalid token target. expected [array slice map] got [int]",
+		},
+	},
+	{
+		token: &rangeToken{allowString: true},
+		input: input{
+			current: 123,
+		},
+		expected: expected{
+			err: "range: invalid token target. expected [array slice string] got [int]",
+		},
+	},
+	{
+		token: &rangeToken{allowMap: true, allowString: true},
+		input: input{
+			current: 123,
+		},
+		expected: expected{
+			err: "range: invalid token target. expected [array slice map string] got [int]",
+		},
+	},
+	{
+		token: &rangeToken{
+			from:        18,
+			allowString: true,
+		},
+		input: input{
+			current: "return after this:result text",
+		},
+		expected: expected{
+			value: "result text",
+		},
+	},
+	{
+		token: &rangeToken{from: 15},
+		input: input{
+			current: []interface{}{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, "ten", "eleven", "twelve", 13},
+		},
+		expected: expected{
+			value: []interface{}{},
+		},
+	},
+	{
+		token: &rangeToken{to: 15},
+		input: input{
+			current: []interface{}{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, "ten", "eleven", "twelve", 13},
+		},
+		expected: expected{
+			value: []interface{}{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, "ten", "eleven", "twelve", 13},
+		},
+	},
+	{
+		token: &rangeToken{step: 0},
+		input: input{
+			current: []interface{}{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, "ten", "eleven", "twelve", 13},
+		},
+		expected: expected{
+			err: "range: invalid token out of range",
+		},
+	},
+	{
+		token: &rangeToken{},
+		input: input{
+			current: []interface{}{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, "ten", "eleven", "twelve", 13},
+		},
+		expected: expected{
+			value: []interface{}{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, "ten", "eleven", "twelve", 13},
+		},
+	},
+	{
+		token: &rangeToken{to: nil},
+		input: input{
+			current: []interface{}{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, "ten", "eleven", "twelve", 13},
+		},
+		expected: expected{
+			value: []interface{}{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, "ten", "eleven", "twelve", 13},
+		},
+	},
+	{
+		token: &rangeToken{to: -1},
+		input: input{
+			current: []interface{}{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, "ten", "eleven", "twelve", 13},
+		},
+		expected: expected{
+			value: []interface{}{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, "ten", "eleven", "twelve"},
+		},
+	},
+	{
+		token: &rangeToken{to: -3},
+		input: input{
+			current: []interface{}{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, "ten", "eleven", "twelve", 13},
+		},
+		expected: expected{
+			value: []interface{}{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, "ten"},
+		},
+	},
+	{
+		token: &rangeToken{
+			from: -3,
+			to:   -1,
+		},
+		input: input{
+			current: []interface{}{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, "ten", "eleven", "twelve", 13},
+		},
+		expected: expected{
+			value: []interface{}{"eleven", "twelve"},
+		},
+	},
+	{
+		token: &rangeToken{
+			step: 2,
+		},
+		input: input{
+			current: []string{"one", "two", "three", "four", "five"},
+		},
+		expected: expected{
+			value: []interface{}{"one", "three", "five"},
+		},
+	},
+	{
+		token: &rangeToken{from: 1, step: 2},
+		input: input{
+			current: []string{"one", "two", "three", "four", "five"},
+		},
+		expected: expected{
+			value: []interface{}{"two", "four"},
+		},
+	},
+	{
+		token: &rangeToken{from: 1, to: 1},
+		input: input{
+			current: []string{"one", "two", "three", "four", "five"},
+		},
+		expected: expected{
+			value: []interface{}{},
+		},
+	},
+	{
+		token: &rangeToken{
+			from: 1,
+			to:   2,
+		},
+		input: input{
+			current: []string{"one", "two", "three", "four", "five"},
+		},
+		expected: expected{
+			value: []interface{}{"two"},
+		},
+	},
+	{
+		token: &rangeToken{allowMap: true},
+		input: input{
+			current: map[string]interface{}{
+				"b": "bee",
+				"a": "ae",
+				"c": "see",
+				"e": "ee",
+				"f": "eff",
+				"g": "gee",
+				"d": "dee",
 			},
 		},
-		{
-			input: input{
-				token: &rangeToken{allowMap: true},
-				obj: map[string]interface{}{
-					"b": "bee",
-					"a": "ae",
-					"c": "see",
-					"e": "ee",
-					"d": "dee",
-				},
-				start: intPtr(1),
-				end:   intPtr(2),
-				step:  intPtr(-1),
-			},
-			expected: expected{
-				obj: []interface{}{"bee"},
+		expected: expected{
+			value: []interface{}{
+				"ae",
+				"bee",
+				"see",
+				"dee",
+				"ee",
+				"eff",
+				"gee",
 			},
 		},
-		{
-			input: input{
-				token: &rangeToken{},
-				obj:   []string{"one", "two", "three", "four", "five"},
-				step:  intPtr(-1),
-				start: intPtr(1),
-				end:   intPtr(5),
-			},
-			expected: expected{
-				obj: []interface{}{"five", "four", "three", "two"},
-			},
-		},
-		{
-			input: input{
-				token: &rangeToken{},
-				obj:   "abcdef",
-				step:  intPtr(-1),
-				start: intPtr(1),
-				end:   intPtr(5),
-			},
-			expected: expected{
-				err: "range: invalid token target. expected [array slice] got [string]",
+	},
+	{
+		token: &rangeToken{allowMap: true, step: 2},
+		input: input{
+			current: map[string]interface{}{
+				"b": "bee",
+				"a": "ae",
+				"c": "see",
+				"e": "ee",
+				"f": "eff",
+				"g": "gee",
+				"d": "dee",
 			},
 		},
-		{
-			input: input{
-				token: &rangeToken{allowString: true},
-				obj:   "abcdef",
-				step:  intPtr(-1),
-				start: intPtr(1),
-				end:   intPtr(5),
-			},
-			expected: expected{
-				obj: "edcb",
+		expected: expected{
+			value: []interface{}{
+				"ae",
+				"see",
+				"ee",
+				"gee",
 			},
 		},
-		{
-			input: input{
-				token: &rangeToken{allowMap: true},
-				obj: map[string]interface{}{
-					"b": "bee",
-					"a": "ae",
-					"c": "see",
-					"e": "ee",
-					"d": "dee",
-				},
-				step:  intPtr(-1),
-				start: intPtr(1),
-				end:   intPtr(5),
-			},
-			expected: expected{
-				obj: []interface{}{"ee", "dee", "see", "bee"},
+	},
+	{
+		token: &rangeToken{allowMap: true, from: 1, to: -2},
+		input: input{
+			current: map[string]interface{}{
+				"b": "bee",
+				"a": "ae",
+				"c": "see",
+				"e": "ee",
+				"f": "eff",
+				"g": "gee",
+				"d": "dee",
 			},
 		},
-		{
-			input: input{
-				token: &rangeToken{},
-				obj:   []string{"one", "two", "three", "four", "five"},
-				start: intPtr(-10),
-			},
-			expected: expected{
-				obj: []interface{}{"one", "two", "three", "four", "five"},
+		expected: expected{
+			value: []interface{}{
+				"bee",
+				"see",
+				"dee",
+				"ee",
 			},
 		},
-		{
-			input: input{
-				token: &rangeToken{},
-				obj:   []string{"one", "two", "three", "four", "five"},
-				start: intPtr(0),
-				end:   intPtr(-10),
-			},
-			expected: expected{
-				obj: []interface{}{},
+	},
+	{
+		token: &rangeToken{step: -1},
+		input: input{
+			current: []string{"one", "two", "three", "four", "five"},
+		},
+		expected: expected{
+			value: []interface{}{"five", "four", "three", "two", "one"},
+		},
+	},
+	{
+		token: &rangeToken{allowString: true, step: -1},
+		input: input{
+			current: "abcdef",
+		},
+		expected: expected{
+			value: "fedcba",
+		},
+	},
+	{
+		token: &rangeToken{allowMap: true, step: -1},
+		input: input{
+			current: map[string]interface{}{
+				"b": "bee",
+				"a": "ae",
+				"c": "see",
+				"e": "ee",
+				"d": "dee",
 			},
 		},
-	}
-
-	for idx, test := range tests {
-		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
-			obj, err := test.input.token.getRange(test.input.obj, test.input.start, test.input.end, test.input.step)
-
-			if test.expected.obj == nil {
-				assert.Nil(t, obj)
-			} else {
-				assert.Equal(t, test.expected.obj, obj)
-			}
-
-			if test.expected.err == "" {
-				assert.Nil(t, err)
-			} else {
-				assert.EqualError(t, err, test.expected.err)
-			}
-		})
-	}
+		expected: expected{
+			value: []interface{}{"ee", "dee", "see", "bee", "ae"},
+		},
+	},
+	{
+		token: &rangeToken{from: 1, to: 2, step: -1},
+		input: input{
+			current: []string{"one", "two", "three", "four", "five"},
+		},
+		expected: expected{
+			value: []interface{}{"two"},
+		},
+	},
+	{
+		token: &rangeToken{allowString: true, from: 1, to: 2, step: -1},
+		input: input{
+			current: "abcdef",
+		},
+		expected: expected{
+			value: "b",
+		},
+	},
+	{
+		token: &rangeToken{from: 1, to: 2, step: -1},
+		input: input{
+			current: map[string]interface{}{
+				"b": "bee",
+				"a": "ae",
+				"c": "see",
+				"e": "ee",
+				"d": "dee",
+			},
+		},
+		expected: expected{
+			err: "range: invalid token target. expected [array slice] got [map]",
+		},
+	},
+	{
+		token: &rangeToken{allowMap: true, from: 1, to: 2, step: -1},
+		input: input{
+			current: map[string]interface{}{
+				"b": "bee",
+				"a": "ae",
+				"c": "see",
+				"e": "ee",
+				"d": "dee",
+			},
+		},
+		expected: expected{
+			value: []interface{}{"bee"},
+		},
+	},
+	{
+		token: &rangeToken{from: 1, to: 5, step: -1},
+		input: input{
+			current: []string{"one", "two", "three", "four", "five"},
+		},
+		expected: expected{
+			value: []interface{}{"five", "four", "three", "two"},
+		},
+	},
+	{
+		token: &rangeToken{from: 1, to: 5, step: -1},
+		input: input{
+			current: "abcdef",
+		},
+		expected: expected{
+			err: "range: invalid token target. expected [array slice] got [string]",
+		},
+	},
+	{
+		token: &rangeToken{allowString: true, from: 1, to: 5, step: -1},
+		input: input{
+			current: "abcdef",
+		},
+		expected: expected{
+			value: "edcb",
+		},
+	},
+	{
+		token: &rangeToken{allowMap: true, from: 1, to: 5, step: -1},
+		input: input{
+			current: map[string]interface{}{
+				"b": "bee",
+				"a": "ae",
+				"c": "see",
+				"e": "ee",
+				"d": "dee",
+			},
+		},
+		expected: expected{
+			value: []interface{}{"ee", "dee", "see", "bee"},
+		},
+	},
+	{
+		token: &rangeToken{from: -10},
+		input: input{
+			current: []string{"one", "two", "three", "four", "five"},
+		},
+		expected: expected{
+			value: []interface{}{"one", "two", "three", "four", "five"},
+		},
+	},
+	{
+		token: &rangeToken{from: 0, to: -10},
+		input: input{
+			current: []string{"one", "two", "three", "four", "five"},
+		},
+		expected: expected{
+			value: []interface{}{},
+		},
+	},
+	{
+		token: &rangeToken{},
+		input: input{
+			current: []string{"one", "two", "three", "four", "five"},
+			tokens:  []Token{&keyToken{"key"}},
+		},
+		expected: expected{
+			value: []interface{}{},
+		},
+	},
+	{
+		token: &rangeToken{},
+		input: input{
+			current: []string{"one", "two", "three", "four", "five"},
+			tokens:  []Token{&testToken{value: nil}},
+		},
+		expected: expected{
+			value: []interface{}{},
+		},
+	},
 }

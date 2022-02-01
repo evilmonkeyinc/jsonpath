@@ -72,49 +72,52 @@ func Test_ExpressionToken_Type(t *testing.T) {
 	assert.Equal(t, "expression", (&expressionToken{}).Type())
 }
 
+var expressionTests = []*tokenTest{
+	{
+		token: &expressionToken{},
+		input: input{},
+		expected: expected{
+			err: "invalid expression. is empty",
+		},
+	},
+	{
+		token: &expressionToken{
+			expression:         "any",
+			compiledExpression: &testCompiledExpression{err: fmt.Errorf("engine error")},
+		},
+		input: input{},
+		expected: expected{
+			err: "invalid expression. engine error",
+		},
+	},
+	{
+		token: &expressionToken{
+			expression:         "any",
+			compiledExpression: &testCompiledExpression{response: true},
+		},
+		input: input{},
+		expected: expected{
+			value: true,
+		},
+	},
+	{
+		token: &expressionToken{
+			expression:         "any",
+			compiledExpression: &testCompiledExpression{response: false},
+		},
+		input: input{
+			tokens: []Token{&currentToken{}},
+		},
+		expected: expected{
+			value: false,
+		},
+	},
+}
+
 func Test_ExpressionToken_Apply(t *testing.T) {
+	batchTokenTests(t, expressionTests)
+}
 
-	tests := []*tokenTest{
-		{
-			token: &expressionToken{},
-			input: input{},
-			expected: expected{
-				err: "invalid expression. is empty",
-			},
-		},
-		{
-			token: &expressionToken{
-				expression:         "any",
-				compiledExpression: &testCompiledExpression{err: fmt.Errorf("engine error")},
-			},
-			input: input{},
-			expected: expected{
-				err: "invalid expression. engine error",
-			},
-		},
-		{
-			token: &expressionToken{
-				expression:         "any",
-				compiledExpression: &testCompiledExpression{response: true},
-			},
-			input: input{},
-			expected: expected{
-				value: true,
-			},
-		},
-		{
-			token: &expressionToken{
-				expression:         "any",
-				compiledExpression: &testCompiledExpression{response: false},
-			},
-			input: input{
-				tokens: []Token{&currentToken{}},
-			},
-			expected: expected{
-				value: false,
-			},
-		},
-	}
-
-	batchTokenTests(t, tests)
+func Benchmark_ExpressionToken_Apply(b *testing.B) {
+	batchTokenBenchmarks(b, expressionTests)
 }

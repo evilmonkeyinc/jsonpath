@@ -46,415 +46,418 @@ func Test_FilterToken_Type(t *testing.T) {
 	assert.Equal(t, "filter", (&filterToken{}).Type())
 }
 
+func getNilPointer() *sampleStruct {
+	return nil
+}
+
+var filterTests = []*tokenTest{
+	{
+		token: &filterToken{},
+		input: input{},
+		expected: expected{
+			err: "invalid expression. is empty",
+		},
+	},
+	{
+		token: &filterToken{
+			expression:         "nil current",
+			compiledExpression: &testCompiledExpression{},
+		},
+		input: input{},
+		expected: expected{
+			err: "filter: invalid token target. expected [array map slice] got [nil]",
+		},
+	},
+	{
+		token: &filterToken{
+			expression:         "invalid current",
+			compiledExpression: &testCompiledExpression{},
+		},
+		input: input{
+			current: "string",
+		},
+		expected: expected{
+			err: "filter: invalid token target. expected [array map slice] got [string]",
+		},
+	},
+	{
+		token: &filterToken{
+			expression:         "empty array",
+			compiledExpression: &testCompiledExpression{},
+		},
+		input: input{
+			current: []interface{}{},
+		},
+		expected: expected{
+			value: []interface{}{},
+		},
+	},
+	{
+		token: &filterToken{
+			expression: "failed evaluate array",
+			compiledExpression: &testCompiledExpression{
+				err: fmt.Errorf("compiled failed"),
+			},
+		},
+		input: input{
+			current: [3]interface{}{1, 2, 3},
+		},
+		expected: expected{
+			value: []interface{}{},
+		},
+	},
+	{
+		token: &filterToken{
+			expression: "true evaluate array",
+			compiledExpression: &testCompiledExpression{
+				response: true,
+			},
+		},
+		input: input{
+			current: [3]interface{}{1, 2, 3},
+		},
+		expected: expected{
+			value: []interface{}{1, 2, 3},
+		},
+	},
+	{
+		token: &filterToken{
+			expression: "false evaluate array",
+			compiledExpression: &testCompiledExpression{
+				response: false,
+			},
+		},
+		input: input{
+			current: [3]interface{}{1, 2, 3},
+		},
+		expected: expected{
+			value: []interface{}{},
+		},
+	},
+	{
+		token: &filterToken{
+			expression: "empty string evaluate array",
+			compiledExpression: &testCompiledExpression{
+				response: "",
+			},
+		},
+		input: input{
+			current: [3]interface{}{1, 2, 3},
+		},
+		expected: expected{
+			value: []interface{}{},
+		},
+	},
+	{
+		token: &filterToken{
+			expression: "non-empty string evaluate array",
+			compiledExpression: &testCompiledExpression{
+				response: "add this",
+			},
+		},
+		input: input{
+			current: [3]interface{}{1, 2, 3},
+		},
+		expected: expected{
+			value: []interface{}{1, 2, 3},
+		},
+	},
+	{
+		token: &filterToken{
+			expression: "other evaluate array",
+			compiledExpression: &testCompiledExpression{
+				response: 3.14,
+			},
+		},
+		input: input{
+			current: [3]interface{}{1, 2, 3},
+		},
+		expected: expected{
+			value: []interface{}{1, 2, 3},
+		},
+	},
+	{
+		token: &filterToken{
+			expression:         "empty map",
+			compiledExpression: &testCompiledExpression{},
+		},
+		input: input{
+			current: map[string]interface{}{},
+		},
+		expected: expected{
+			value: []interface{}{},
+		},
+	},
+	{
+		token: &filterToken{
+			expression: "failed evaluate map",
+			compiledExpression: &testCompiledExpression{
+				err: fmt.Errorf("compiled failed"),
+			},
+		},
+		input: input{
+			current: map[string]interface{}{"key": "value"},
+		},
+		expected: expected{
+			value: []interface{}{},
+		},
+	},
+	{
+		token: &filterToken{
+			expression: "true evaluate map",
+			compiledExpression: &testCompiledExpression{
+				response: true,
+			},
+		},
+		input: input{
+			current: map[string]interface{}{"key": "value"},
+		},
+		expected: expected{
+			value: []interface{}{"value"},
+		},
+	},
+	{
+		token: &filterToken{
+			expression: "false evaluate map",
+			compiledExpression: &testCompiledExpression{
+				response: false,
+			},
+		},
+		input: input{
+			current: map[string]interface{}{"key": "value"},
+		},
+		expected: expected{
+			value: []interface{}{},
+		},
+	},
+	{
+		token: &filterToken{
+			expression: "empty string evaluate map",
+			compiledExpression: &testCompiledExpression{
+				response: "",
+			},
+		},
+		input: input{
+			current: map[string]interface{}{"key": "value"},
+		},
+		expected: expected{
+			value: []interface{}{},
+		},
+	},
+	{
+		token: &filterToken{
+			expression: "non-empty string evaluate map",
+			compiledExpression: &testCompiledExpression{
+				response: "add this",
+			},
+		},
+		input: input{
+			current: map[string]interface{}{"key": "value"},
+		},
+		expected: expected{
+			value: []interface{}{"value"},
+		},
+	},
+	{
+		token: &filterToken{
+			expression: "other evaluate map",
+			compiledExpression: &testCompiledExpression{
+				response: 3.14,
+			},
+		},
+		input: input{
+			current: map[string]interface{}{"key": "value"},
+		},
+		expected: expected{
+			value: []interface{}{"value"},
+		},
+	},
+	{
+		token: &filterToken{
+			expression:         "next is index",
+			compiledExpression: &testCompiledExpression{response: true},
+		},
+		input: input{
+			current: []interface{}{1, 2, 3, 4, 5},
+			tokens:  []Token{&indexToken{index: 1}},
+		},
+		expected: expected{
+			value: 2,
+		},
+	},
+	{
+		token: &filterToken{
+			expression:         "next is not index",
+			compiledExpression: &testCompiledExpression{response: true},
+		},
+		input: input{
+			current: []interface{}{
+				map[string]interface{}{"key": "one"},
+				map[string]interface{}{"key": "two"},
+				map[string]interface{}{"key": "three"},
+			},
+			tokens: []Token{&keyToken{key: "key"}},
+		},
+		expected: expected{
+			value: []interface{}{"one", "two", "three"},
+		},
+	},
+	{
+		token: &filterToken{
+			expression: "array",
+			compiledExpression: &testCompiledExpression{
+				response: [1]string{"one"},
+			},
+		},
+		input: input{
+			current: []interface{}{1, 2, 3},
+		},
+		expected: expected{
+			value: []interface{}{1, 2, 3},
+			err:   "",
+		},
+	},
+	{
+		token: &filterToken{
+			expression: "slice",
+			compiledExpression: &testCompiledExpression{
+				response: []string{"one"},
+			},
+		},
+		input: input{
+			current: []interface{}{1, 2, 3},
+		},
+		expected: expected{
+			value: []interface{}{1, 2, 3},
+			err:   "",
+		},
+	},
+	{
+		token: &filterToken{
+			expression: "empty array",
+			compiledExpression: &testCompiledExpression{
+				response: [0]string{},
+			},
+		},
+		input: input{
+			current: []interface{}{1, 2, 3},
+		},
+		expected: expected{
+			value: []interface{}{},
+			err:   "",
+		},
+	},
+	{
+		token: &filterToken{
+			expression: "map",
+			compiledExpression: &testCompiledExpression{
+				response: map[string]interface{}{"key": "value"},
+			},
+		},
+		input: input{
+			current: []interface{}{1, 2, 3},
+		},
+		expected: expected{
+			value: []interface{}{1, 2, 3},
+			err:   "",
+		},
+	},
+	{
+		token: &filterToken{
+			expression: "empty map",
+			compiledExpression: &testCompiledExpression{
+				response: map[string]interface{}{},
+			},
+		},
+		input: input{
+			current: []interface{}{1, 2, 3},
+		},
+		expected: expected{
+			value: []interface{}{},
+			err:   "",
+		},
+	},
+	{
+		token: &filterToken{
+			expression: "nil pointer",
+			compiledExpression: &testCompiledExpression{
+				response: getNilPointer(),
+			},
+		},
+		input: input{
+			current: []interface{}{1, 2, 3},
+		},
+		expected: expected{
+			value: []interface{}{},
+			err:   "",
+		},
+	},
+	{
+		token: &filterToken{
+			expression: "single quotes empty",
+			compiledExpression: &testCompiledExpression{
+				response: "''",
+			},
+		},
+		input: input{
+			current: []interface{}{1, 2, 3},
+		},
+		expected: expected{
+			value: []interface{}{},
+			err:   "",
+		},
+	},
+	{
+		token: &filterToken{
+			expression: "single quotes not empty",
+			compiledExpression: &testCompiledExpression{
+				response: "' '",
+			},
+		},
+		input: input{
+			current: []interface{}{1, 2, 3},
+		},
+		expected: expected{
+			value: []interface{}{1, 2, 3},
+			err:   "",
+		},
+	},
+	{
+		token: &filterToken{
+			expression: "double quotes empty",
+			compiledExpression: &testCompiledExpression{
+				response: `""`,
+			},
+		},
+		input: input{
+			current: []interface{}{1, 2, 3},
+		},
+		expected: expected{
+			value: []interface{}{},
+			err:   "",
+		},
+	},
+	{
+		token: &filterToken{
+			expression: "double quotes not empty",
+			compiledExpression: &testCompiledExpression{
+				response: `" "`,
+			},
+		},
+		input: input{
+			current: []interface{}{1, 2, 3},
+		},
+		expected: expected{
+			value: []interface{}{1, 2, 3},
+			err:   "",
+		},
+	},
+}
+
 func Test_FilterToken_Apply(t *testing.T) {
+	batchTokenTests(t, filterTests)
+}
 
-	getNilPointer := func() *filterToken {
-		return nil
-	}
-
-	tests := []*tokenTest{
-		{
-			token: &filterToken{},
-			input: input{},
-			expected: expected{
-				err: "invalid expression. is empty",
-			},
-		},
-		{
-			token: &filterToken{
-				expression:         "nil current",
-				compiledExpression: &testCompiledExpression{},
-			},
-			input: input{},
-			expected: expected{
-				err: "filter: invalid token target. expected [array map slice] got [nil]",
-			},
-		},
-		{
-			token: &filterToken{
-				expression:         "invalid current",
-				compiledExpression: &testCompiledExpression{},
-			},
-			input: input{
-				current: "string",
-			},
-			expected: expected{
-				err: "filter: invalid token target. expected [array map slice] got [string]",
-			},
-		},
-		{
-			token: &filterToken{
-				expression:         "empty array",
-				compiledExpression: &testCompiledExpression{},
-			},
-			input: input{
-				current: []interface{}{},
-			},
-			expected: expected{
-				value: []interface{}{},
-			},
-		},
-		{
-			token: &filterToken{
-				expression: "failed evaluate array",
-				compiledExpression: &testCompiledExpression{
-					err: fmt.Errorf("compiled failed"),
-				},
-			},
-			input: input{
-				current: [3]interface{}{1, 2, 3},
-			},
-			expected: expected{
-				value: []interface{}{},
-			},
-		},
-		{
-			token: &filterToken{
-				expression: "true evaluate array",
-				compiledExpression: &testCompiledExpression{
-					response: true,
-				},
-			},
-			input: input{
-				current: [3]interface{}{1, 2, 3},
-			},
-			expected: expected{
-				value: []interface{}{1, 2, 3},
-			},
-		},
-		{
-			token: &filterToken{
-				expression: "false evaluate array",
-				compiledExpression: &testCompiledExpression{
-					response: false,
-				},
-			},
-			input: input{
-				current: [3]interface{}{1, 2, 3},
-			},
-			expected: expected{
-				value: []interface{}{},
-			},
-		},
-		{
-			token: &filterToken{
-				expression: "empty string evaluate array",
-				compiledExpression: &testCompiledExpression{
-					response: "",
-				},
-			},
-			input: input{
-				current: [3]interface{}{1, 2, 3},
-			},
-			expected: expected{
-				value: []interface{}{},
-			},
-		},
-		{
-			token: &filterToken{
-				expression: "non-empty string evaluate array",
-				compiledExpression: &testCompiledExpression{
-					response: "add this",
-				},
-			},
-			input: input{
-				current: [3]interface{}{1, 2, 3},
-			},
-			expected: expected{
-				value: []interface{}{1, 2, 3},
-			},
-		},
-		{
-			token: &filterToken{
-				expression: "other evaluate array",
-				compiledExpression: &testCompiledExpression{
-					response: 3.14,
-				},
-			},
-			input: input{
-				current: [3]interface{}{1, 2, 3},
-			},
-			expected: expected{
-				value: []interface{}{1, 2, 3},
-			},
-		},
-		{
-			token: &filterToken{
-				expression:         "empty map",
-				compiledExpression: &testCompiledExpression{},
-			},
-			input: input{
-				current: map[string]interface{}{},
-			},
-			expected: expected{
-				value: []interface{}{},
-			},
-		},
-		{
-			token: &filterToken{
-				expression: "failed evaluate map",
-				compiledExpression: &testCompiledExpression{
-					err: fmt.Errorf("compiled failed"),
-				},
-			},
-			input: input{
-				current: map[string]interface{}{"key": "value"},
-			},
-			expected: expected{
-				value: []interface{}{},
-			},
-		},
-		{
-			token: &filterToken{
-				expression: "true evaluate map",
-				compiledExpression: &testCompiledExpression{
-					response: true,
-				},
-			},
-			input: input{
-				current: map[string]interface{}{"key": "value"},
-			},
-			expected: expected{
-				value: []interface{}{"value"},
-			},
-		},
-		{
-			token: &filterToken{
-				expression: "false evaluate map",
-				compiledExpression: &testCompiledExpression{
-					response: false,
-				},
-			},
-			input: input{
-				current: map[string]interface{}{"key": "value"},
-			},
-			expected: expected{
-				value: []interface{}{},
-			},
-		},
-		{
-			token: &filterToken{
-				expression: "empty string evaluate map",
-				compiledExpression: &testCompiledExpression{
-					response: "",
-				},
-			},
-			input: input{
-				current: map[string]interface{}{"key": "value"},
-			},
-			expected: expected{
-				value: []interface{}{},
-			},
-		},
-		{
-			token: &filterToken{
-				expression: "non-empty string evaluate map",
-				compiledExpression: &testCompiledExpression{
-					response: "add this",
-				},
-			},
-			input: input{
-				current: map[string]interface{}{"key": "value"},
-			},
-			expected: expected{
-				value: []interface{}{"value"},
-			},
-		},
-		{
-			token: &filterToken{
-				expression: "other evaluate map",
-				compiledExpression: &testCompiledExpression{
-					response: 3.14,
-				},
-			},
-			input: input{
-				current: map[string]interface{}{"key": "value"},
-			},
-			expected: expected{
-				value: []interface{}{"value"},
-			},
-		},
-		{
-			token: &filterToken{
-				expression:         "next is index",
-				compiledExpression: &testCompiledExpression{response: true},
-			},
-			input: input{
-				current: []interface{}{1, 2, 3, 4, 5},
-				tokens:  []Token{&indexToken{index: 1}},
-			},
-			expected: expected{
-				value: 2,
-			},
-		},
-		{
-			token: &filterToken{
-				expression:         "next is not index",
-				compiledExpression: &testCompiledExpression{response: true},
-			},
-			input: input{
-				current: []interface{}{
-					map[string]interface{}{"key": "one"},
-					map[string]interface{}{"key": "two"},
-					map[string]interface{}{"key": "three"},
-				},
-				tokens: []Token{&keyToken{key: "key"}},
-			},
-			expected: expected{
-				value: []interface{}{"one", "two", "three"},
-			},
-		},
-		{
-			token: &filterToken{
-				expression: "array",
-				compiledExpression: &testCompiledExpression{
-					response: [1]string{"one"},
-				},
-			},
-			input: input{
-				current: []interface{}{1, 2, 3},
-			},
-			expected: expected{
-				value: []interface{}{1, 2, 3},
-				err:   "",
-			},
-		},
-		{
-			token: &filterToken{
-				expression: "slice",
-				compiledExpression: &testCompiledExpression{
-					response: []string{"one"},
-				},
-			},
-			input: input{
-				current: []interface{}{1, 2, 3},
-			},
-			expected: expected{
-				value: []interface{}{1, 2, 3},
-				err:   "",
-			},
-		},
-		{
-			token: &filterToken{
-				expression: "empty array",
-				compiledExpression: &testCompiledExpression{
-					response: [0]string{},
-				},
-			},
-			input: input{
-				current: []interface{}{1, 2, 3},
-			},
-			expected: expected{
-				value: []interface{}{},
-				err:   "",
-			},
-		},
-		{
-			token: &filterToken{
-				expression: "map",
-				compiledExpression: &testCompiledExpression{
-					response: map[string]interface{}{"key": "value"},
-				},
-			},
-			input: input{
-				current: []interface{}{1, 2, 3},
-			},
-			expected: expected{
-				value: []interface{}{1, 2, 3},
-				err:   "",
-			},
-		},
-		{
-			token: &filterToken{
-				expression: "empty map",
-				compiledExpression: &testCompiledExpression{
-					response: map[string]interface{}{},
-				},
-			},
-			input: input{
-				current: []interface{}{1, 2, 3},
-			},
-			expected: expected{
-				value: []interface{}{},
-				err:   "",
-			},
-		},
-		{
-			token: &filterToken{
-				expression: "nil pointer",
-				compiledExpression: &testCompiledExpression{
-					response: getNilPointer(),
-				},
-			},
-			input: input{
-				current: []interface{}{1, 2, 3},
-			},
-			expected: expected{
-				value: []interface{}{},
-				err:   "",
-			},
-		},
-		{
-			token: &filterToken{
-				expression: "single quotes empty",
-				compiledExpression: &testCompiledExpression{
-					response: "''",
-				},
-			},
-			input: input{
-				current: []interface{}{1, 2, 3},
-			},
-			expected: expected{
-				value: []interface{}{},
-				err:   "",
-			},
-		},
-		{
-			token: &filterToken{
-				expression: "single quotes not empty",
-				compiledExpression: &testCompiledExpression{
-					response: "' '",
-				},
-			},
-			input: input{
-				current: []interface{}{1, 2, 3},
-			},
-			expected: expected{
-				value: []interface{}{1, 2, 3},
-				err:   "",
-			},
-		},
-		{
-			token: &filterToken{
-				expression: "double quotes empty",
-				compiledExpression: &testCompiledExpression{
-					response: `""`,
-				},
-			},
-			input: input{
-				current: []interface{}{1, 2, 3},
-			},
-			expected: expected{
-				value: []interface{}{},
-				err:   "",
-			},
-		},
-		{
-			token: &filterToken{
-				expression: "double quotes not empty",
-				compiledExpression: &testCompiledExpression{
-					response: `" "`,
-				},
-			},
-			input: input{
-				current: []interface{}{1, 2, 3},
-			},
-			expected: expected{
-				value: []interface{}{1, 2, 3},
-				err:   "",
-			},
-		},
-	}
-
-	batchTokenTests(t, tests)
+func Benchmark_FilterToken_Apply(b *testing.B) {
+	batchTokenBenchmarks(b, filterTests)
 }

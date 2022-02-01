@@ -21,39 +21,42 @@ func Test_CurrentToken_Type(t *testing.T) {
 	assert.Equal(t, "current", (&currentToken{}).Type())
 }
 
+var currentTests = []*tokenTest{
+	{
+		token: &currentToken{},
+		input: input{
+			current: map[string]interface{}{
+				"name": "first",
+			},
+		},
+		expected: expected{
+			value: map[string]interface{}{
+				"name": "first",
+			},
+		},
+	},
+	{
+		token: &currentToken{},
+		input: input{
+			current: map[string]interface{}{
+				"name": "first",
+			},
+			tokens: []Token{
+				&keyToken{
+					key: "name",
+				},
+			},
+		},
+		expected: expected{
+			value: "first",
+		},
+	},
+}
+
 func Test_CurrentToken_Apply(t *testing.T) {
+	batchTokenTests(t, currentTests)
+}
 
-	tests := []*tokenTest{
-		{
-			token: &currentToken{},
-			input: input{
-				current: map[string]interface{}{
-					"name": "first",
-				},
-			},
-			expected: expected{
-				value: map[string]interface{}{
-					"name": "first",
-				},
-			},
-		},
-		{
-			token: &currentToken{},
-			input: input{
-				current: map[string]interface{}{
-					"name": "first",
-				},
-				tokens: []Token{
-					&keyToken{
-						key: "name",
-					},
-				},
-			},
-			expected: expected{
-				value: "first",
-			},
-		},
-	}
-
-	batchTokenTests(t, tests)
+func Benchmark_CurrentToken_Apply(b *testing.B) {
+	batchTokenBenchmarks(b, currentTests)
 }

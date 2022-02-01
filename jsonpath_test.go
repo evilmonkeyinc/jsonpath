@@ -8,7 +8,6 @@ import (
 )
 
 func Benchmark_Selector(b *testing.B) {
-
 	selectors := []string{
 		"$.store.book[*].author",
 		"$..author",
@@ -25,17 +24,62 @@ func Benchmark_Selector(b *testing.B) {
 		"$..*",
 	}
 
-	for _, selector := range selectors {
-		b.Run(fmt.Sprintf("%s", selector), func(b *testing.B) {
-			var err error
-			for i := 0; i < b.N; i++ {
-				_, err = QueryString(selector, sampleDataString)
-				if err != nil {
-					b.Error()
+	b.Run("QueryString", func(b *testing.B) {
+		for _, selector := range selectors {
+			b.Run(fmt.Sprintf("%s", selector), func(b *testing.B) {
+				var err error
+				for i := 0; i < b.N; i++ {
+					_, err = QueryString(selector, sampleDataString)
+					if err != nil {
+						b.Error()
+					}
 				}
-			}
-		})
-	}
+			})
+		}
+	})
+
+	compiledSelectors := make([]*Selector, 0)
+	b.Run("Compile", func(b *testing.B) {
+		for _, selector := range selectors {
+			b.Run(fmt.Sprintf("%s", selector), func(b *testing.B) {
+				var err error
+				var compiled *Selector
+				for i := 0; i < b.N; i++ {
+					compiled, err = Compile(selector)
+					if err != nil {
+						b.Error()
+					}
+				}
+				compiledSelectors = append(compiledSelectors, compiled)
+			})
+		}
+	})
+
+	b.Run("Selector.QueryString", func(b *testing.B) {
+		for _, selector := range compiledSelectors {
+			b.Run(fmt.Sprintf("%s", selector.selector), func(b *testing.B) {
+				for i := 0; i < b.N; i++ {
+					_, err := selector.QueryString(sampleDataString)
+					if err != nil {
+						b.Error()
+					}
+				}
+			})
+		}
+	})
+
+	b.Run("Selector.Query", func(b *testing.B) {
+		for _, selector := range compiledSelectors {
+			b.Run(fmt.Sprintf("%s", selector.selector), func(b *testing.B) {
+				for i := 0; i < b.N; i++ {
+					_, err := selector.Query(sampleDataObject)
+					if err != nil {
+						b.Error()
+					}
+				}
+			})
+		}
+	})
 }
 
 // Tests designed after the examples in the specification document

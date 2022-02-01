@@ -31,17 +31,6 @@ func (token *wildcardToken) Apply(root, current interface{}, next []Token) (inte
 		futureTokens = next[1:]
 	}
 
-	handleNext := func(item interface{}) (interface{}, bool) {
-		if nextToken == nil {
-			return item, true
-		}
-		result, _ := nextToken.Apply(root, item, futureTokens)
-		if result == nil {
-			return nil, false
-		}
-		return result, true
-	}
-
 	objType, objVal := getTypeAndValue(current)
 	if objType == nil {
 		return nil, getInvalidTokenTargetNilError(
@@ -56,7 +45,7 @@ func (token *wildcardToken) Apply(root, current interface{}, next []Token) (inte
 		sortMapKeys(keys)
 		for _, kv := range keys {
 			value := objVal.MapIndex(kv).Interface()
-			if item, add := handleNext(value); add {
+			if item, add := token.handleNext(root, value, nextToken, futureTokens); add {
 				elements = append(elements, item)
 			}
 		}
@@ -65,7 +54,7 @@ func (token *wildcardToken) Apply(root, current interface{}, next []Token) (inte
 		length := objVal.Len()
 		for i := 0; i < length; i++ {
 			value := objVal.Index(i).Interface()
-			if item, add := handleNext(value); add {
+			if item, add := token.handleNext(root, value, nextToken, futureTokens); add {
 				elements = append(elements, item)
 			}
 		}
@@ -73,7 +62,7 @@ func (token *wildcardToken) Apply(root, current interface{}, next []Token) (inte
 		fields := getStructFields(objVal, true)
 		for _, field := range fields {
 			value := objVal.FieldByName(field.Name).Interface()
-			if item, add := handleNext(value); add {
+			if item, add := token.handleNext(root, value, nextToken, futureTokens); add {
 				elements = append(elements, item)
 			}
 		}
@@ -87,4 +76,15 @@ func (token *wildcardToken) Apply(root, current interface{}, next []Token) (inte
 	}
 
 	return elements, nil
+}
+
+func (token *wildcardToken) handleNext(root, item interface{}, nextToken Token, futureTokens []Token) (interface{}, bool) {
+	if nextToken == nil {
+		return item, true
+	}
+	result, _ := nextToken.Apply(root, item, futureTokens)
+	if result == nil {
+		return nil, false
+	}
+	return result, true
 }

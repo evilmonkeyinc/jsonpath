@@ -65,95 +65,80 @@ func (token *unionToken) Apply(root, current interface{}, next []Token) (interfa
 	indices := make([]int64, 0)
 
 	for _, arg := range arguments {
-		if argToken, ok := arg.(Token); ok {
-			result, err := argToken.Apply(root, current, nil)
-			if err != nil {
-				return nil, getInvalidTokenError(token.Type(), err)
-			}
-			arg = result
+		argument, kind, err := token.parseArgument(root, current, arg)
+		if err != nil {
+			return nil, err
 		}
 
-		if arg == nil {
-			return nil, getInvalidTokenArgumentNilError(token.Type(), reflect.Int, reflect.String)
-		}
-
-		if strArg, ok := arg.(string); ok {
-			keys = append(keys, strArg)
+		switch kind {
+		case reflect.String:
+			keys = append(keys, argument.(string))
 			if len(indices) > 0 {
 				return nil, getInvalidTokenArgumentError(token.Type(), reflect.String, reflect.Int)
 			}
-		} else if intArg, ok := isInteger(arg); ok {
-			indices = append(indices, intArg)
+			break
+		case reflect.Int64:
+			indices = append(indices, argument.(int64))
 			if len(keys) > 0 {
 				return nil, getInvalidTokenArgumentError(token.Type(), reflect.Int, reflect.String)
 			}
-		} else {
-			argType := reflect.TypeOf(arg)
-			return nil, getInvalidTokenArgumentError(token.Type(), argType.Kind(), reflect.Int, reflect.String)
+			break
 		}
 	}
-
-	var unionValue interface{}
 
 	if len(keys) > 0 {
-		var err error
-		unionValue, err = token.getUnionByKey(current, keys)
-		if err != nil {
-			return nil, getInvalidTokenError(token.Type(), err)
-		}
-	} else if len(indices) > 0 {
-		var err error
-		unionValue, err = token.getUnionByIndex(current, indices)
-		if err != nil {
-			return nil, getInvalidTokenError(token.Type(), err)
-		}
+		return token.getUnionByKey(root, current, keys, next)
 	}
-
-	if strValue, ok := unionValue.(string); ok {
-		if len(next) > 0 {
-			return next[0].Apply(root, strValue, next[1:])
-		}
-		return strValue, nil
-	}
-
-	elements := unionValue.([]interface{})
-
-	if len(next) > 0 {
-		nextToken := next[0]
-		futureTokens := next[1:]
-
-		if indexToken, ok := nextToken.(*indexToken); ok {
-			// if next is asking for specific index
-			return indexToken.Apply(current, elements, futureTokens)
-		}
-		// any other token type
-		results := make([]interface{}, 0)
-
-		for _, item := range elements {
-			result, _ := nextToken.Apply(root, item, futureTokens)
-			if result != nil {
-				results = append(results, result)
-			}
-		}
-
-		return results, nil
-	}
-
-	return elements, nil
+	return token.getUnionByIndex(root, current, indices, next)
 }
 
-func (token *unionToken) getUnionByKey(obj interface{}, keys []string) ([]interface{}, error) {
-	objType, objVal := getTypeAndValue(obj)
+func (token *unionToken) parseArgument(root, current, argument interface{}) (interface{}, reflect.Kind, error) {
+	if argToken, ok := argument.(Token); ok {
+		result, err := argToken.Apply(root, current, nil)
+		if err != nil {
+			return nil, reflect.Invalid, getInvalidTokenError(token.Type(), err)
+		}
+		argument = result
+	}
+
+	if argument == nil {
+		return nil, reflect.Invalid, getInvalidTokenArgumentNilError(token.Type(), reflect.Int, reflect.String)
+	}
+
+	if strArg, ok := argument.(string); ok {
+		return strArg, reflect.String, nil
+	} else if intArg, ok := isInteger(argument); ok {
+		return intArg, reflect.Int64, nil
+	}
+	argType := reflect.TypeOf(argument)
+	return nil, reflect.Invalid, getInvalidTokenArgumentError(token.Type(), argType.Kind(), reflect.Int, reflect.String)
+}
+
+func (token *unionToken) getUnionByKey(root, current interface{}, keys []string, next []Token) (interface{}, error) {
+	objType, objVal := getTypeAndValue(current)
 	if objType == nil {
 		return nil, getInvalidTokenTargetNilError(token.Type(), reflect.Map)
 	}
+
+	var nextToken Token
+	var futureTokens []Token
+	forEach := false
+
+	if len(next) > 0 {
+		nextToken = next[0]
+		futureTokens = next[1:]
+
+		if _, ok := nextToken.(*indexToken); !ok {
+			forEach = true
+		}
+	}
+
+	elements := make([]interface{}, 0)
 
 	switch objType.Kind() {
 	case reflect.Map:
 		mapKeys := objVal.MapKeys()
 		sortMapKeys(mapKeys)
-
-		elements := make([]interface{}, 0)
 
 		keysMap := make(map[string]reflect.Value)
 		for _, key := range mapKeys {
@@ -164,7 +149,10 @@ func (token *unionToken) getUnionByKey(obj interface{}, keys []string) ([]interf
 
 		for _, requestedKey := range keys {
 			if key, ok := keysMap[requestedKey]; ok {
-				elements = append(elements, objVal.MapIndex(key).Interface())
+				val := objVal.MapIndex(key).Interface()
+				if item, add := token.handleNext(root, val, forEach, nextToken, futureTokens); add {
+					elements = append(elements, item)
+				}
 			} else {
 				missingKeys = append(missingKeys, requestedKey)
 			}
@@ -174,17 +162,16 @@ func (token *unionToken) getUnionByKey(obj interface{}, keys []string) ([]interf
 			sort.Strings(missingKeys)
 			return nil, getInvalidTokenKeyNotFoundError(token.Type(), strings.Join(missingKeys, ","))
 		}
-
-		return elements, nil
 	case reflect.Struct:
-		elements := make([]interface{}, 0)
-
 		keysMap := getStructFields(objVal, false)
 		missingKeys := make([]string, 0)
 
 		for _, requestedKey := range keys {
 			if field, ok := keysMap[requestedKey]; ok {
-				elements = append(elements, objVal.FieldByName(field.Name).Interface())
+				val := objVal.FieldByName(field.Name).Interface()
+				if item, add := token.handleNext(root, val, forEach, nextToken, futureTokens); add {
+					elements = append(elements, item)
+				}
 			} else {
 				missingKeys = append(missingKeys, requestedKey)
 			}
@@ -194,8 +181,6 @@ func (token *unionToken) getUnionByKey(obj interface{}, keys []string) ([]interf
 			sort.Strings(missingKeys)
 			return nil, getInvalidTokenKeyNotFoundError(token.Type(), strings.Join(missingKeys, ","))
 		}
-
-		return elements, nil
 	default:
 		return nil, getInvalidTokenTargetError(
 			token.Type(),
@@ -203,9 +188,15 @@ func (token *unionToken) getUnionByKey(obj interface{}, keys []string) ([]interf
 			reflect.Map,
 		)
 	}
+
+	if !forEach && nextToken != nil {
+		return nextToken.Apply(root, elements, futureTokens)
+	}
+
+	return elements, nil
 }
 
-func (token *unionToken) getUnionByIndex(obj interface{}, indices []int64) (interface{}, error) {
+func (token *unionToken) getUnionByIndex(root, current interface{}, indices []int64, next []Token) (interface{}, error) {
 	allowedType := []reflect.Kind{
 		reflect.Array,
 		reflect.Slice,
@@ -217,12 +208,25 @@ func (token *unionToken) getUnionByIndex(obj interface{}, indices []int64) (inte
 		allowedType = append(allowedType, reflect.String)
 	}
 
-	objType, objVal := getTypeAndValue(obj)
+	objType, objVal := getTypeAndValue(current)
 	if objType == nil {
 		return nil, getInvalidTokenTargetNilError(
 			token.Type(),
 			allowedType...,
 		)
+	}
+
+	var nextToken Token
+	var futureTokens []Token
+	forEach := false
+
+	if len(next) > 0 {
+		nextToken = next[0]
+		futureTokens = next[1:]
+
+		if _, ok := nextToken.(*indexToken); !ok {
+			forEach = true
+		}
 	}
 
 	var length int64
@@ -282,20 +286,47 @@ func (token *unionToken) getUnionByIndex(obj interface{}, indices []int64) (inte
 
 		if mapKeys != nil {
 			key := mapKeys[idx]
-			values = append(values, objVal.MapIndex(key).Interface())
+			val := objVal.MapIndex(key).Interface()
+			if item, add := token.handleNext(root, val, forEach, nextToken, futureTokens); add {
+				values = append(values, item)
+			}
 		} else if isString {
 			value := objVal.Index(int(idx)).Interface()
 			if u, ok := value.(uint8); ok {
 				substring += fmt.Sprintf("%c", u)
 			}
 		} else {
-			values = append(values, objVal.Index(int(idx)).Interface())
+			val := objVal.Index(int(idx)).Interface()
+			if item, add := token.handleNext(root, val, forEach, nextToken, futureTokens); add {
+				values = append(values, item)
+			}
 		}
 	}
 
 	if isString {
+		if nextToken != nil {
+			return nextToken.Apply(root, substring, futureTokens)
+		}
 		return substring, nil
 	}
 
+	if !forEach && nextToken != nil {
+		return nextToken.Apply(root, values, futureTokens)
+	}
+
 	return values, nil
+}
+
+func (token *unionToken) handleNext(root, item interface{}, forEach bool, nextToken Token, futureTokens []Token) (interface{}, bool) {
+	if !forEach {
+		return item, true
+	}
+	val, err := nextToken.Apply(root, item, futureTokens)
+	if err != nil {
+		return nil, false
+	}
+	if val == nil {
+		return nil, false
+	}
+	return val, true
 }

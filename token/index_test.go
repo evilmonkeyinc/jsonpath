@@ -148,226 +148,229 @@ func Test_IndexToken_Type(t *testing.T) {
 	assert.Equal(t, "index", (&indexToken{}).Type())
 }
 
-func Test_IndexToken_Apply(t *testing.T) {
-
-	tests := []*tokenTest{
-		{
-			token: &indexToken{index: 0},
-			input: input{
-				current: nil,
-			},
-			expected: expected{
-				err: "index: invalid token target. expected [array slice] got [nil]",
-			},
+var indexTest = []*tokenTest{
+	{
+		token: &indexToken{index: 0},
+		input: input{
+			current: nil,
 		},
-		{
-			token: &indexToken{index: 0},
-			input: input{
-				current: 123,
-			},
-			expected: expected{
-				err: "index: invalid token target. expected [array slice] got [int]",
-			},
+		expected: expected{
+			err: "index: invalid token target. expected [array slice] got [nil]",
 		},
-		{
-			token: &indexToken{index: 0, allowMap: true},
-			input: input{
-				current: 123,
-			},
-			expected: expected{
-				err: "index: invalid token target. expected [array slice map] got [int]",
-			},
+	},
+	{
+		token: &indexToken{index: 0},
+		input: input{
+			current: 123,
 		},
-		{
-			token: &indexToken{index: 0, allowString: true},
-			input: input{
-				current: 123,
-			},
-			expected: expected{
-				err: "index: invalid token target. expected [array slice string] got [int]",
-			},
+		expected: expected{
+			err: "index: invalid token target. expected [array slice] got [int]",
 		},
-		{
-			token: &indexToken{index: 0, allowMap: true, allowString: true},
-			input: input{
-				current: 123,
-			},
-			expected: expected{
-				err: "index: invalid token target. expected [array slice map string] got [int]",
-			},
+	},
+	{
+		token: &indexToken{index: 0, allowMap: true},
+		input: input{
+			current: 123,
 		},
-		{
-			token: &indexToken{index: 5},
-			input: input{
-				current: "Find(X)",
-			},
-			expected: expected{
-				err: "index: invalid token target. expected [array slice] got [string]",
-			},
+		expected: expected{
+			err: "index: invalid token target. expected [array slice map] got [int]",
 		},
-		{
-			token: &indexToken{index: 5, allowString: true},
-			input: input{
-				current: "Find(X)",
-			},
-			expected: expected{
-				value: "X",
-			},
+	},
+	{
+		token: &indexToken{index: 0, allowString: true},
+		input: input{
+			current: 123,
 		},
-		{
-			token: &indexToken{index: 0},
-			input: input{
-				current: [3]string{"one", "two", "three"},
-			},
-			expected: expected{
-				value: "one",
-			},
+		expected: expected{
+			err: "index: invalid token target. expected [array slice string] got [int]",
 		},
-		{
-			token: &indexToken{index: 0},
-			input: input{
-				current: []string{"one", "two", "three"},
-			},
-			expected: expected{
-				value: "one",
-			},
+	},
+	{
+		token: &indexToken{index: 0, allowMap: true, allowString: true},
+		input: input{
+			current: 123,
 		},
-		{
-			token: &indexToken{index: 2},
-			input: input{
-				current: []string{"one", "two", "three"},
-			},
-			expected: expected{
-				value: "three",
-			},
+		expected: expected{
+			err: "index: invalid token target. expected [array slice map string] got [int]",
 		},
-		{
-			token: &indexToken{index: 4},
-			input: input{
-				current: []string{"one", "two", "three"},
-			},
-			expected: expected{
-				err: "index: invalid token out of range",
-			},
+	},
+	{
+		token: &indexToken{index: 5},
+		input: input{
+			current: "Find(X)",
 		},
-		{
-			token: &indexToken{index: 1},
-			input: input{
-				current: []interface{}{"one", 2, "three"},
-			},
-			expected: expected{
-				value: 2,
-			},
+		expected: expected{
+			err: "index: invalid token target. expected [array slice] got [string]",
 		},
-		{
-			token: &indexToken{index: -1},
-			input: input{
-				current: []interface{}{"one", 2, "three"},
-			},
-			expected: expected{
-				value: "three",
-			},
+	},
+	{
+		token: &indexToken{index: 5, allowString: true},
+		input: input{
+			current: "Find(X)",
 		},
-		{
-			token: &indexToken{index: -2},
-			input: input{
-				current: []interface{}{"one", 2, "three"},
-			},
-			expected: expected{
-				value: 2,
-			},
+		expected: expected{
+			value: "X",
 		},
-		{
-			token: &indexToken{index: -3},
-			input: input{
-				current: []interface{}{"one", 2, "three"},
-			},
-			expected: expected{
-				value: "one",
-			},
+	},
+	{
+		token: &indexToken{index: 0},
+		input: input{
+			current: [3]string{"one", "two", "three"},
 		},
-		{
-			token: &indexToken{index: -4},
-			input: input{
-				current: []interface{}{"one", 2, "three"},
-			},
-			expected: expected{
-				err: "index: invalid token out of range",
-			},
+		expected: expected{
+			value: "one",
 		},
-		{
-			token: &indexToken{index: 1},
-			input: input{
-				current: []interface{}{
-					map[string]interface{}{
-						"name":  "one",
-						"value": 1,
-					},
-					map[string]interface{}{
-						"name":  "two",
-						"value": 2,
-					},
-					map[string]interface{}{
-						"name":  "three",
-						"value": 3,
-					},
+	},
+	{
+		token: &indexToken{index: 0},
+		input: input{
+			current: []string{"one", "two", "three"},
+		},
+		expected: expected{
+			value: "one",
+		},
+	},
+	{
+		token: &indexToken{index: 2},
+		input: input{
+			current: []string{"one", "two", "three"},
+		},
+		expected: expected{
+			value: "three",
+		},
+	},
+	{
+		token: &indexToken{index: 4},
+		input: input{
+			current: []string{"one", "two", "three"},
+		},
+		expected: expected{
+			err: "index: invalid token out of range",
+		},
+	},
+	{
+		token: &indexToken{index: 1},
+		input: input{
+			current: []interface{}{"one", 2, "three"},
+		},
+		expected: expected{
+			value: 2,
+		},
+	},
+	{
+		token: &indexToken{index: -1},
+		input: input{
+			current: []interface{}{"one", 2, "three"},
+		},
+		expected: expected{
+			value: "three",
+		},
+	},
+	{
+		token: &indexToken{index: -2},
+		input: input{
+			current: []interface{}{"one", 2, "three"},
+		},
+		expected: expected{
+			value: 2,
+		},
+	},
+	{
+		token: &indexToken{index: -3},
+		input: input{
+			current: []interface{}{"one", 2, "three"},
+		},
+		expected: expected{
+			value: "one",
+		},
+	},
+	{
+		token: &indexToken{index: -4},
+		input: input{
+			current: []interface{}{"one", 2, "three"},
+		},
+		expected: expected{
+			err: "index: invalid token out of range",
+		},
+	},
+	{
+		token: &indexToken{index: 1},
+		input: input{
+			current: []interface{}{
+				map[string]interface{}{
+					"name":  "one",
+					"value": 1,
 				},
-				tokens: []Token{
-					&keyToken{key: "name"},
+				map[string]interface{}{
+					"name":  "two",
+					"value": 2,
+				},
+				map[string]interface{}{
+					"name":  "three",
+					"value": 3,
 				},
 			},
-			expected: expected{
-				value: "two",
+			tokens: []Token{
+				&keyToken{key: "name"},
 			},
 		},
-		{
-			token: &indexToken{index: 1},
-			input: input{
-				current: map[string]interface{}{
-					"a": map[string]interface{}{
-						"name":  "one",
-						"value": 1,
-					},
-					"c": map[string]interface{}{
-						"name":  "three",
-						"value": 3,
-					},
-					"b": map[string]interface{}{
-						"name":  "two",
-						"value": 2,
-					},
-				},
-			},
-			expected: expected{
-				err: "index: invalid token target. expected [array slice] got [map]",
-			},
+		expected: expected{
+			value: "two",
 		},
-		{
-			token: &indexToken{index: 1, allowMap: true},
-			input: input{
-				current: map[string]interface{}{
-					"a": map[string]interface{}{
-						"name":  "one",
-						"value": 1,
-					},
-					"c": map[string]interface{}{
-						"name":  "three",
-						"value": 3,
-					},
-					"b": map[string]interface{}{
-						"name":  "two",
-						"value": 2,
-					},
+	},
+	{
+		token: &indexToken{index: 1},
+		input: input{
+			current: map[string]interface{}{
+				"a": map[string]interface{}{
+					"name":  "one",
+					"value": 1,
 				},
-			},
-			expected: expected{
-				value: map[string]interface{}{
+				"c": map[string]interface{}{
+					"name":  "three",
+					"value": 3,
+				},
+				"b": map[string]interface{}{
 					"name":  "two",
 					"value": 2,
 				},
 			},
 		},
-	}
+		expected: expected{
+			err: "index: invalid token target. expected [array slice] got [map]",
+		},
+	},
+	{
+		token: &indexToken{index: 1, allowMap: true},
+		input: input{
+			current: map[string]interface{}{
+				"a": map[string]interface{}{
+					"name":  "one",
+					"value": 1,
+				},
+				"c": map[string]interface{}{
+					"name":  "three",
+					"value": 3,
+				},
+				"b": map[string]interface{}{
+					"name":  "two",
+					"value": 2,
+				},
+			},
+		},
+		expected: expected{
+			value: map[string]interface{}{
+				"name":  "two",
+				"value": 2,
+			},
+		},
+	},
+}
 
-	batchTokenTests(t, tests)
+func Test_IndexToken_Apply(t *testing.T) {
+	batchTokenTests(t, indexTest)
+}
+
+func Benchmark_IndexToken_Apply(b *testing.B) {
+	batchTokenBenchmarks(b, indexTest)
 }
