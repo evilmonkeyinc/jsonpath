@@ -79,7 +79,7 @@ jobs:
       - name: Get changed files
         id: changes
         run: |
-          echo "::set-output name=changes::$(git diff --name-only --diff-filter=ACMRT ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep 'go.mod\|.go$' | grep -v _test.go$ | xargs)"
+          echo "::set-output name=changes::$(git diff --name-only --diff-filter=ACMRT ${{ github.event.pull_request.base.sha }} | grep 'go.mod\|.go$' | grep -v _test.go$ | xargs)"
   release:
     runs-on: ubuntu-latest
     needs: [release_check]
