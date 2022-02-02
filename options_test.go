@@ -100,7 +100,7 @@ func Test_QueryOptions(t *testing.T) {
 		assert.Nil(t, err)
 
 		err = option2.Apply(selector)
-		assert.Nil(t, err)
+		assert.EqualError(t, err, "option already set")
 
 		assert.Equal(t, input1, selector.Options)
 		assert.NotEqual(t, input2, selector.Options)

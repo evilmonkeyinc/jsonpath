@@ -61,5 +61,5 @@ jobs:
         id: changes
         run: |
           echo "::set-output name=changes::$(git diff --name-only --diff-filter=ACMRT ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep 'go.mod\|.go$' | grep -v _test.go$ | xargs)"
-          echo "${{ steps.changes.outputs.changes}}"
+          echo ${{ steps.changes.outputs.changes}}
   
