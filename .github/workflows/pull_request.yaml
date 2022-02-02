@@ -61,23 +61,5 @@ jobs:
         id: changes
         run: |
           echo "::set-output name=changes::$(git diff --name-only --diff-filter=ACMRT ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep 'go.mod\|.go$' | grep -v _test.go$ | xargs)"
-  dry_run:
-    runs-on: ubuntu-latest
-    needs: release_check
-    if: ${{needs.release_check.outputs.changes}}
-    outputs:
-      version: ${{ steps.release.outputs.version }}
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-      - uses: go-semantic-release/action@v1
-        id: release
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          allow-initial-development-versions: true
-          force-bump-patch-version: true
-          dry: true
-      - name: Expected Version
-        run: |
-          echo ${{ steps.release.outputs.version }}
+          echo "${{ steps.changes.outputs.changes}}"
+  
