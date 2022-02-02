@@ -34,7 +34,8 @@ func QueryOptions(options *option.QueryOptions) Option {
 	return OptionFunction(func(selector *Selector) error {
 		if selector.Options == nil {
 			selector.Options = options
+			return nil
 		}
-		return nil
+		return errOptionAlreadySet
 	})
 }

@@ -9,6 +9,7 @@ import (
 
 var (
 	errDataIsUnexpectedTypeOrNil error = fmt.Errorf("unexpected type or nil")
+	errOptionAlreadySet          error = fmt.Errorf("option already set")
 )
 
 func getInvalidJSONData(reason error) error {
