@@ -1,6 +1,7 @@
 package jsonpath
 
 import (
+	"github.com/evilmonkeyinc/jsonpath/option"
 	"github.com/evilmonkeyinc/jsonpath/script"
 )
 
@@ -23,6 +24,16 @@ func ScriptEngine(engine script.Engine) Option {
 	return OptionFunction(func(selector *Selector) error {
 		if selector.engine == nil {
 			selector.engine = engine
+		}
+		return nil
+	})
+}
+
+// QueryOptions allows you to set the query options for the JSONPath selector
+func QueryOptions(options *option.QueryOptions) Option {
+	return OptionFunction(func(selector *Selector) error {
+		if selector.Options == nil {
+			selector.Options = options
 		}
 		return nil
 	})

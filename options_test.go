@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/evilmonkeyinc/jsonpath/option"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -67,6 +68,42 @@ func Test_ScriptEngine(t *testing.T) {
 
 		assert.Equal(t, engine1, selector.engine)
 		assert.NotEqual(t, engine2, selector.engine)
+
+	})
+
+}
+
+func Test_QueryOptions(t *testing.T) {
+
+	t.Run("first", func(t *testing.T) {
+
+		input := &option.QueryOptions{AllowMapReferenceByIndex: true, AllowStringReferenceByIndex: true}
+		option := QueryOptions(input)
+		selector := &Selector{}
+
+		err := option.Apply(selector)
+		assert.Nil(t, err)
+		assert.Equal(t, input, selector.Options)
+
+	})
+	t.Run("second", func(t *testing.T) {
+
+		input1 := &option.QueryOptions{AllowMapReferenceByIndex: true, AllowStringReferenceByIndex: true}
+		input2 := &option.QueryOptions{AllowMapReferenceByIndex: false, AllowStringReferenceByIndex: false}
+
+		option1 := QueryOptions(input1)
+		option2 := QueryOptions(input2)
+
+		selector := &Selector{}
+
+		err := option1.Apply(selector)
+		assert.Nil(t, err)
+
+		err = option2.Apply(selector)
+		assert.Nil(t, err)
+
+		assert.Equal(t, input1, selector.Options)
+		assert.NotEqual(t, input2, selector.Options)
 
 	})
 
