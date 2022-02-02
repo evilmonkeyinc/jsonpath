@@ -21,7 +21,7 @@ func Test_RootToken_Type(t *testing.T) {
 	assert.Equal(t, "root", (&rootToken{}).Type())
 }
 
-var tests = []*tokenTest{
+var rootTests = []*tokenTest{
 	{
 		token: &rootToken{},
 		input: input{
@@ -52,9 +52,9 @@ var tests = []*tokenTest{
 }
 
 func Test_RootToken_Apply(t *testing.T) {
-	batchTokenTests(t, tests)
+	batchTokenTests(t, rootTests)
 }
 
 func Benchmark_RootToken_Apply(b *testing.B) {
-	batchTokenBenchmarks(b, tests)
+	batchTokenBenchmarks(b, rootTests)
 }

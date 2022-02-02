@@ -429,11 +429,11 @@ var unionTests = []*tokenTest{
 }
 
 func Test_UnionToken_Apply(t *testing.T) {
-	batchTokenTests(t, tests)
+	batchTokenTests(t, unionTests)
 }
 
 func Benchmark_UnionToken_Apply(b *testing.B) {
-	batchTokenBenchmarks(b, tests)
+	batchTokenBenchmarks(b, unionTests)
 }
 
 func Test_UnionToken_getUnionByIndex(t *testing.T) {
