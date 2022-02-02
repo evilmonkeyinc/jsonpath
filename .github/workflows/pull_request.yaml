@@ -76,3 +76,6 @@ jobs:
           allow-initial-development-versions: true
           force-bump-patch-version: true
           dry: true
+      - name: Expected Version
+        run: |
+          echo ${{ steps.release.outputs.version }}
