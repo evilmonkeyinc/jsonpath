@@ -56,10 +56,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
         with:
-          fetch-depth: 2
-      - name: Get changed files
-        id: changes
+          fetch-depth: 0
+      - name: Check Diff
+        uses: technote-space/get-diff-action@v6
+        with:
+          PATTERNS: |
+            +**/*.go
+            !**/*_test.go
+          FILES: |
+            go.mod
+      - name: Output Diff
+        if: env.GIT_DIFF
         run: |
-          echo "::set-output name=changes::$(git diff --name-only --diff-filter=ACMRT ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep 'go.mod\|.go$' | grep -v _test.go$ | xargs)"
-          echo ${{ steps.changes.outputs.changes}}
-  
+          echo ${{ env.GIT_DIFF }}
