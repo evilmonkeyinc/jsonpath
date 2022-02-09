@@ -11,7 +11,6 @@ import (
 )
 
 func Test_getInvalidJSONData(t *testing.T) {
-
 	tests := []struct {
 		input    error
 		expected string
@@ -36,7 +35,6 @@ func Test_getInvalidJSONData(t *testing.T) {
 }
 
 func Test_getInvalidJSONPathSelector(t *testing.T) {
-
 	tests := []struct {
 		input    string
 		expected string
@@ -65,7 +63,6 @@ func Test_getInvalidJSONPathSelector(t *testing.T) {
 }
 
 func Test_getInvalidJSONPathSelectorWithReason(t *testing.T) {
-
 	type input struct {
 		selector string
 		reason   error
