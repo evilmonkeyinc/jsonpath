@@ -90,7 +90,7 @@ jobs:
       - name: Output Diff
         if: env.GIT_DIFF
         run: |
-          echo "::set-output name=git_diff::{{env.GIT_DIFF}}"
+          echo "::set-output name=git_diff::${{ env.GIT_DIFF }}"
   release:
     runs-on: ubuntu-latest
     needs: [release_check]

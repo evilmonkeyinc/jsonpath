@@ -50,6 +50,8 @@ jobs:
         golint -set_exit_status=1 ./...
   release_check:  
     runs-on: ubuntu-latest
+    outputs:
+      git_diff: ${{ steps.changes.outputs.git_diff }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -66,4 +68,13 @@ jobs:
       - name: Output Diff
         if: env.GIT_DIFF
         run: |
-          echo ${{ env.GIT_DIFF }}
+          echo "::set-output name=git_diff::${{ env.GIT_DIFF }}"
+  release:
+    runs-on: ubuntu-latest
+    needs: [release_check]
+    if: ${{ needs.release_check.outputs.git_diff }}
+    steps:
+      - name: output
+        run: |
+          echo "${{ needs.release_check.outputs.git_diff }}";
+          echo "This pull request will create a release"
