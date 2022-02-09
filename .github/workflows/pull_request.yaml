@@ -50,8 +50,6 @@ jobs:
         golint -set_exit_status=1 ./...
   release_check:  
     runs-on: ubuntu-latest
-    outputs:
-      changes: ${{ steps.changes.outputs.changes}}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
