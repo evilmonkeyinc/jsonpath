@@ -72,21 +72,27 @@ jobs:
   release_check:  
     runs-on: ubuntu-latest
     needs: [test, lint]
-    outputs:
-      changes: ${{ steps.changes.outputs.changes}}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
         with:
-          fetch-depth: 2
-      - name: Get changed files
-        id: changes
+          fetch-depth: 0
+      - name: Check Diff
+        uses: technote-space/get-diff-action@v6
+        with:
+          PATTERNS: |
+            +**/*.go
+            !**/*_test.go
+          FILES: |
+            go.mod
+      - name: Output Diff
+        if: env.GIT_DIFF
         run: |
-          echo "::set-output name=changes::$(git diff --name-only --diff-filter=ACMRT origin/main origin/${GITHUB_HEAD_REF} | grep 'go.mod\|.go$' | grep -v _test.go$ | xargs)"
+          echo ${{ env.GIT_DIFF }}
   release:
     runs-on: ubuntu-latest
     needs: [release_check]
-    if: ${{needs.release_check.outputs.changes}}
+    if: env.GIT_DIFF
     outputs:
       version: ${{ steps.release.outputs.version }}
     steps:
