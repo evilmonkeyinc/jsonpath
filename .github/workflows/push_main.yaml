@@ -72,6 +72,8 @@ jobs:
   release_check:  
     runs-on: ubuntu-latest
     needs: [test, lint]
+    outputs:
+      git_diff: ${{ steps.changes.outputs.git_diff }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -88,11 +90,11 @@ jobs:
       - name: Output Diff
         if: env.GIT_DIFF
         run: |
-          echo ${{ env.GIT_DIFF }}
+          echo "::set-output name=git_diff::{{env.GIT_DIFF}}"
   release:
     runs-on: ubuntu-latest
     needs: [release_check]
-    if: env.GIT_DIFF
+    if: ${{ needs.release_check.outputs.git_diff }}
     outputs:
       version: ${{ steps.release.outputs.version }}
     steps:
