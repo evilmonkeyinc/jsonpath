@@ -8,15 +8,13 @@ import (
 	"github.com/evilmonkeyinc/jsonpath/script"
 )
 
-// TODO : add tests for what is in readme
-// TODO : update readme to give more details, maybe add readme to this package and link from main
 // TODO : add support for bitwise operators | &^ ^ &  << >> after + and -
 var defaultTokens []string = []string{
 	"||", "&&",
 	"==", "!=", "<=", ">=", "<", ">", "=~", "!",
 	"+", "-",
 	"**", "*", "/", "%",
-	"@", "$",
+	"not in", "in", "@", "$",
 }
 
 // ScriptEngine standard implementation of the script engine interface
@@ -120,6 +118,16 @@ func (engine *ScriptEngine) buildOperators(expression string, tokens []string, o
 		return selector, nil
 	case "=~":
 		return &regexOperator{
+			arg1: leftside,
+			arg2: rightside,
+		}, nil
+	case "not in":
+		return &notInOperator{
+			arg1: leftside,
+			arg2: rightside,
+		}, nil
+	case "in":
+		return &inOperator{
 			arg1: leftside,
 			arg2: rightside,
 		}, nil

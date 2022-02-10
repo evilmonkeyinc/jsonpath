@@ -716,6 +716,39 @@ func Test_ScriptEngine_buildOperators(t *testing.T) {
 				err:      "",
 			},
 		},
+		{
+			input: input{
+				expression: "1 in [1]",
+				tokens:     defaultTokens,
+			},
+			expected: expected{
+				operator: &inOperator{arg1: "1", arg2: []interface{}{float64(1)}},
+				err:      "",
+			},
+		},
+		{
+			input: input{
+				expression: "1 not in [1]",
+				tokens:     defaultTokens,
+			},
+			expected: expected{
+				operator: &notInOperator{arg1: "1", arg2: []interface{}{float64(1)}},
+				err:      "",
+			},
+		},
+		{
+			input: input{
+				expression: "1 in [1] && 1 not in [2]",
+				tokens:     defaultTokens,
+			},
+			expected: expected{
+				operator: &andOperator{
+					arg1: &inOperator{arg1: "1", arg2: []interface{}{float64(1)}},
+					arg2: &notInOperator{arg1: "1", arg2: []interface{}{float64(2)}},
+				},
+				err: "",
+			},
+		},
 	}
 
 	for idx, test := range tests {

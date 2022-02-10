@@ -89,3 +89,45 @@ func (op *selectorOperator) Evaluate(parameters map[string]interface{}) (interfa
 	}
 	return value, nil
 }
+
+type inOperator struct {
+	arg1, arg2 interface{}
+}
+
+func (op *inOperator) Evaluate(parameters map[string]interface{}) (interface{}, error) {
+	var item interface{} = op.arg1
+	if numValue, err := getNumber(op.arg1, parameters); err == nil {
+		item = numValue
+	} else if strValue, err := getString(op.arg1, parameters); err == nil {
+		item = strValue
+	} else if boolValue, err := getBoolean(op.arg1, parameters); err == nil {
+		item = boolValue
+	}
+
+	elements, err := getElements(op.arg2, parameters)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, element := range elements {
+		if element == item {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+type notInOperator struct {
+	arg1, arg2 interface{}
+}
+
+func (op *notInOperator) Evaluate(parameters map[string]interface{}) (interface{}, error) {
+	inOperator := &inOperator{arg1: op.arg1, arg2: op.arg2}
+	val, err := inOperator.Evaluate(parameters)
+	if err != nil {
+		return nil, err
+	}
+	boolVal := val.(bool)
+	return !boolVal, nil
+}
