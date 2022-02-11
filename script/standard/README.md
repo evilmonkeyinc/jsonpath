@@ -22,6 +22,8 @@ The standard script engine is a basic implementation of the script.Engine interf
 |`*`|multiplication|number|return the left-side number multiplied by the right-side number|
 |`/`|division|number|return the left-side number divided by the right-side number|
 |`%`|modulus|integer|return the remainder of the left-side number divided by the right-side number|
+|`in`|in|number\|string\|boolean and collection|return true if the left-side argument is in the right-side collection|
+|`not in`|in|number\|string\|boolean and collection|return true if the left-side argument is not in the right-side collection|
 
 All operators have a left-side and right-side argument, expect the not `!` operator which only as a right-side argument. The arguments can be strings, numbers, boolean values, arrays, objects, a special parameter, or other expressions, for example `true && true || false` includes the logical AND operator with left-side `true` and right-side a logical OR operator with left-side `true` and right-side `false`.
 
@@ -32,6 +34,10 @@ The regex operator will perform a regex match check using the left side argument
 The right side pattern should be passed as a string, between single or double quotes, to ensure that no characters are mistaken for other operators.
 
 > the regex operation is handled by the standard [`regexp`](https://pkg.go.dev/regexp) golang library `Match` function.
+
+### In and Not In
+
+The `in` and `not in` operators will check if the left-side value, treated either as a number, string, or boolean value, is included in the right-side collection values, a collection can either be an array, slice, or the values of a map.
 
 ## Special Parameters
 
