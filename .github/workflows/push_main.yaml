@@ -83,6 +83,7 @@ jobs:
         uses: technote-space/get-diff-action@v6
         with:
           PATTERNS: |
+            !**/*_test.go
             **/*.go
           FILES: |
             go.mod
