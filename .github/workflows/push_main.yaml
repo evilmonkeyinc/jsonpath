@@ -26,7 +26,7 @@ jobs:
         go mod download
     - name: Run Test
       run: |
-        go test -v -count=10 ./...
+        go test -count=10 ./...
   lint:
     strategy:
       matrix:
@@ -61,7 +61,7 @@ jobs:
         go mod download
     - name: Run Test
       run: |
-        go test -v -coverprofile=coverage.txt -covermode=atomic -count=10 ./...
+        go test -coverprofile=coverage.txt -covermode=atomic -count=10 ./...
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v2
       with:
@@ -83,8 +83,8 @@ jobs:
         uses: technote-space/get-diff-action@v6
         with:
           PATTERNS: |
-            +**/*.go
-            !**/*_test.go
+            +/**/*.go
+            !/**/*_test.go
           FILES: |
             go.mod
       - name: Output Diff
