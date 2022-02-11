@@ -73,7 +73,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [test, lint]
     outputs:
-      git_diff: ${{ steps.changes.outputs.git_diff }}
+      git_diff: ${{ steps.output.outputs.git_diff }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -89,6 +89,7 @@ jobs:
             go.mod
       - name: Output Diff
         if: env.GIT_DIFF
+        id: output
         run: |
           echo "::set-output name=git_diff::${{ env.GIT_DIFF }}"
   release:
