@@ -593,7 +593,7 @@ func Test_getElements(t *testing.T) {
 				assert.EqualError(t, err, test.expected.err)
 			}
 
-			assert.EqualValues(t, test.expected.value, actual)
+			assert.ElementsMatch(t, test.expected.value, actual)
 		})
 	}
 }

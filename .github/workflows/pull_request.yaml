@@ -61,8 +61,7 @@ jobs:
         uses: technote-space/get-diff-action@v6
         with:
           PATTERNS: |
-            '*.go'
-            '!*_test.go'
+            **/*.go
           FILES: |
             go.mod
       - name: Output Diff
