@@ -440,20 +440,21 @@ var filterTests []testData = []testData{
 		expectedError: "",
 	},
 	{
-		selector:      `$[?(@.d in [2, 3])]`, // TODO : in keywork will not work
-		data:          `[{"d": 1}, {"d": 2}, {"d": 1}, {"d": 3}, {"d": 4}]`,
-		expected:      []interface{}{},
+		selector: `$[?(@.d in [2, 3])]`,
+		data:     `[{"d": 1}, {"d": 2}, {"d": 1}, {"d": 3}, {"d": 4}]`,
+		expected: []interface{}{
+			map[string]interface{}{"d": float64(2)},
+			map[string]interface{}{"d": float64(3)},
+		},
 		consensus:     nil,
 		expectedError: "",
 	},
 	{
-		selector: `$[?(2 in @.d)]`, // TODO : in keywork will not work
+		selector: `$[?(2 in @.d)]`,
 		data:     `[{"d": [1, 2, 3]}, {"d": [2]}, {"d": [1]}, {"d": [3, 4]}, {"d": [4, 2]}]`,
 		expected: []interface{}{
 			map[string]interface{}{"d": []interface{}{float64(1), float64(2), float64(3)}},
 			map[string]interface{}{"d": []interface{}{float64(2)}},
-			map[string]interface{}{"d": []interface{}{float64(1)}},
-			map[string]interface{}{"d": []interface{}{float64(3), float64(4)}},
 			map[string]interface{}{"d": []interface{}{float64(4), float64(2)}},
 		},
 		consensus:     nil,

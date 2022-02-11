@@ -436,3 +436,164 @@ func Test_getString(t *testing.T) {
 		})
 	}
 }
+
+func Test_getElements(t *testing.T) {
+
+	currentKeySelector, _ := newSelectorOperator("@.key", &ScriptEngine{}, nil)
+
+	getPtr := func(in []interface{}) *[]interface{} {
+		return &in
+	}
+	var nilPtr *string = nil
+
+	type input struct {
+		argument   interface{}
+		parameters map[string]interface{}
+	}
+
+	type expected struct {
+		value []interface{}
+		err   string
+	}
+
+	tests := []struct {
+		input    input
+		expected expected
+	}{
+		{
+			input: input{
+				argument: nil,
+			},
+			expected: expected{
+				err: "invalid argument. is nil",
+			},
+		},
+		{
+			input: input{
+				argument: "[,,]",
+			},
+			expected: expected{
+				err: "invalid argument",
+			},
+		},
+		{
+			input: input{
+				argument: `["one","two","three"]`,
+			},
+			expected: expected{
+				value: []interface{}{
+					"one",
+					"two",
+					"three",
+				},
+			},
+		},
+		{
+			input: input{
+				argument: "{{}",
+			},
+			expected: expected{
+				err: "invalid argument",
+			},
+		},
+		{
+			input: input{
+				argument: `{"one":"one","two":"two"}`,
+			},
+			expected: expected{
+				value: []interface{}{"one", "two"},
+			},
+		},
+		{
+			input: input{
+				argument: "@",
+				parameters: map[string]interface{}{
+					"@": []string{"one", "two", "three"},
+				},
+			},
+			expected: expected{
+				value: []interface{}{"one", "two", "three"},
+			},
+		},
+		{
+			input: input{
+				argument: "null",
+				parameters: map[string]interface{}{
+					"null": nil,
+				},
+			},
+			expected: expected{
+				err: "invalid argument. is nil",
+			},
+		},
+		{
+			input: input{
+				argument: "ptr",
+				parameters: map[string]interface{}{
+					"ptr": getPtr([]interface{}{"one", "two"}),
+				},
+			},
+			expected: expected{
+				value: []interface{}{"one", "two"},
+			},
+		},
+		{
+			input: input{
+				argument: "ptr",
+				parameters: map[string]interface{}{
+					"ptr": nilPtr,
+				},
+			},
+			expected: expected{
+				err: "invalid argument. is nil",
+			},
+		},
+		{
+			input: input{
+				argument: "str",
+				parameters: map[string]interface{}{
+					"str": "string",
+				},
+			},
+			expected: expected{
+				err: "invalid argument. expected array, map, or slice",
+			},
+		},
+		{
+			input: input{
+				argument: currentKeySelector,
+				parameters: map[string]interface{}{
+					"@": map[string]interface{}{
+						"key": []interface{}{"one"},
+					},
+				},
+			},
+			expected: expected{
+				value: []interface{}{"one"},
+			},
+		},
+		{
+			input: input{
+				argument:   &plusOperator{arg1: "", arg2: ""},
+				parameters: map[string]interface{}{},
+			},
+			expected: expected{
+				err: "invalid argument. expected number",
+			},
+		},
+	}
+
+	for idx, test := range tests {
+		t.Run(fmt.Sprintf("%d", idx), func(t *testing.T) {
+			actual, err := getElements(test.input.argument, test.input.parameters)
+
+			if test.expected.err == "" {
+				assert.Nil(t, err)
+			} else {
+				assert.EqualError(t, err, test.expected.err)
+			}
+
+			assert.ElementsMatch(t, test.expected.value, actual)
+		})
+	}
+}

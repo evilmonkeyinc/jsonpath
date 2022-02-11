@@ -1,7 +1,9 @@
 package standard
 
 import (
+	"encoding/json"
 	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 )
@@ -150,4 +152,75 @@ func getString(argument interface{}, parameters map[string]interface{}) (string,
 	}
 
 	return fmt.Sprintf("%v", argument), nil
+}
+
+func getElements(argument interface{}, parameters map[string]interface{}) ([]interface{}, error) {
+	if argument == nil {
+		return nil, errInvalidArgumentNil
+	}
+
+	if sub, ok := argument.(operator); ok {
+		arg, err := sub.Evaluate(parameters)
+		if err != nil {
+			return nil, err
+		}
+		argument = arg
+	}
+
+	if strValue, ok := argument.(string); ok {
+		if param, ok := parameters[strValue]; ok {
+			argument = param
+		} else {
+			if strings.HasPrefix(strValue, "{") && strings.HasSuffix(strValue, "}") {
+				// object
+				root := make(map[string]interface{})
+				if err := json.Unmarshal([]byte(strValue), &root); err != nil {
+					return nil, errInvalidArgument
+				}
+				argument = root
+			} else if strings.HasPrefix(strValue, "[") && strings.HasSuffix(strValue, "]") {
+				// array
+				root := make([]interface{}, 0)
+				if err := json.Unmarshal([]byte(strValue), &root); err != nil {
+					return nil, errInvalidArgument
+				}
+				argument = root
+			}
+		}
+	}
+
+	objType := reflect.TypeOf(argument)
+	if objType == nil {
+		return nil, errInvalidArgumentNil
+	}
+	objValue := reflect.ValueOf(argument)
+
+	if objType.Kind() == reflect.Ptr {
+		if objValue.IsNil() {
+			return nil, errInvalidArgumentNil
+		}
+		objType = objType.Elem()
+		objValue = objValue.Elem()
+	}
+
+	elements := make([]interface{}, 0)
+
+	switch objType.Kind() {
+	case reflect.Array, reflect.Slice:
+		length := objValue.Len()
+		for i := 0; i < length; i++ {
+			elements = append(elements, objValue.Index(i).Interface())
+		}
+		break
+	case reflect.Map:
+		keys := objValue.MapKeys()
+		for _, key := range keys {
+			elements = append(elements, objValue.MapIndex(key).Interface())
+		}
+		break
+	default:
+		return nil, errInvalidArgumentExpectedCollection
+	}
+
+	return elements, nil
 }

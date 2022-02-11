@@ -27,7 +27,7 @@ jobs:
         go mod download
     - name: Run Test
       run: |
-        go test -v -count=10 ./...
+        go test -count=10 ./...
   lint:
     strategy:
       matrix:
@@ -51,7 +51,7 @@ jobs:
   release_check:  
     runs-on: ubuntu-latest
     outputs:
-      git_diff: ${{ steps.changes.outputs.git_diff }}
+      git_diff: ${{ steps.output.outputs.git_diff }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -61,11 +61,12 @@ jobs:
         uses: technote-space/get-diff-action@v6
         with:
           PATTERNS: |
-            +**/*.go
+            **/*.go
             !**/*_test.go
           FILES: |
             go.mod
       - name: Output Diff
+        id: output
         if: env.GIT_DIFF
         run: |
           echo "::set-output name=git_diff::${{ env.GIT_DIFF }}"

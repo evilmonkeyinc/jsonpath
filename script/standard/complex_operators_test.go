@@ -173,3 +173,163 @@ func Test_selectorOperator(t *testing.T) {
 	}
 	batchOperatorTests(t, tests)
 }
+
+func Test_inOperator(t *testing.T) {
+	currentDSelector, _ := newSelectorOperator("@.d", &ScriptEngine{}, nil)
+
+	tests := []*operatorTest{
+		{
+			input: operatorTestInput{
+				operator:  &inOperator{arg1: nil, arg2: nil},
+				paramters: map[string]interface{}{},
+			},
+			expected: operatorTestExpected{
+				err: "invalid argument. is nil",
+			},
+		},
+		{
+			input: operatorTestInput{
+				operator:  &inOperator{arg1: nil, arg2: []interface{}{"one"}},
+				paramters: map[string]interface{}{},
+			},
+			expected: operatorTestExpected{
+				value: false,
+			},
+		},
+		{
+			input: operatorTestInput{
+				operator:  &inOperator{arg1: "one", arg2: []interface{}{"one"}},
+				paramters: map[string]interface{}{},
+			},
+			expected: operatorTestExpected{
+				value: true,
+			},
+		},
+		{
+			input: operatorTestInput{
+				operator:  &inOperator{arg1: "one", arg2: `["one","two"]`},
+				paramters: map[string]interface{}{},
+			},
+			expected: operatorTestExpected{
+				value: true,
+			},
+		},
+		{
+			input: operatorTestInput{
+				operator:  &inOperator{arg1: "one", arg2: `{"1":"one","2":"two"}`},
+				paramters: map[string]interface{}{},
+			},
+			expected: operatorTestExpected{
+				value: true,
+			},
+		},
+		{
+			input: operatorTestInput{
+				operator:  &inOperator{arg1: "1", arg2: `[1,2,3]`},
+				paramters: map[string]interface{}{},
+			},
+			expected: operatorTestExpected{
+				value: true,
+			},
+		},
+		{
+			input: operatorTestInput{
+				operator:  &inOperator{arg1: "1", arg2: `["1","2","3"]`},
+				paramters: map[string]interface{}{},
+			},
+			expected: operatorTestExpected{
+				value: false,
+			},
+		},
+		{
+			input: operatorTestInput{
+				operator: &inOperator{
+					arg1: "2",
+					arg2: currentDSelector,
+				},
+				paramters: map[string]interface{}{
+					"@": map[string]interface{}{
+						"d": []interface{}{
+							float64(1),
+							float64(2),
+							float64(3),
+						},
+					},
+				},
+			},
+			expected: operatorTestExpected{
+				value: true,
+			},
+		},
+	}
+	batchOperatorTests(t, tests)
+}
+
+func Test_notInOperator(t *testing.T) {
+	tests := []*operatorTest{
+		{
+			input: operatorTestInput{
+				operator:  &notInOperator{arg1: nil, arg2: nil},
+				paramters: map[string]interface{}{},
+			},
+			expected: operatorTestExpected{
+				err: "invalid argument. is nil",
+			},
+		},
+		{
+			input: operatorTestInput{
+				operator:  &notInOperator{arg1: nil, arg2: []interface{}{"one"}},
+				paramters: map[string]interface{}{},
+			},
+			expected: operatorTestExpected{
+				value: true,
+			},
+		},
+		{
+			input: operatorTestInput{
+				operator:  &notInOperator{arg1: "one", arg2: []interface{}{"one"}},
+				paramters: map[string]interface{}{},
+			},
+			expected: operatorTestExpected{
+				value: false,
+			},
+		},
+		{
+			input: operatorTestInput{
+				operator:  &notInOperator{arg1: "one", arg2: `["one","two"]`},
+				paramters: map[string]interface{}{},
+			},
+			expected: operatorTestExpected{
+				value: false,
+			},
+		},
+		{
+			input: operatorTestInput{
+				operator:  &notInOperator{arg1: "one", arg2: `{"1":"one","2":"two"}`},
+				paramters: map[string]interface{}{},
+			},
+			expected: operatorTestExpected{
+				value: false,
+			},
+		},
+		{
+			input: operatorTestInput{
+				operator:  &notInOperator{arg1: "1", arg2: `[1,2,3]`},
+				paramters: map[string]interface{}{},
+			},
+			expected: operatorTestExpected{
+				value: false,
+			},
+		},
+		{
+			input: operatorTestInput{
+				operator:  &notInOperator{arg1: "1", arg2: `["1","2","3"]`},
+				paramters: map[string]interface{}{},
+			},
+			expected: operatorTestExpected{
+				value: true,
+			},
+		},
+	}
+	batchOperatorTests(t, tests)
+}
