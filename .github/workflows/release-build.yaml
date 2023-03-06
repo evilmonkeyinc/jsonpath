@@ -21,7 +21,7 @@ jobs:
           - goarch: arm64
             goos: windows 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Set BUILD_VERSION env
       run: echo "RELEASE_TAG=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
     - uses: wangyoucao577/go-release-action@v1.35
