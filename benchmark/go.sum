@@ -13,6 +13,8 @@ github.com/evilmonkeyinc/jsonpath v0.7.2 h1:QfnIN8jFo3JOQNLkwhuAg8uPJbJz4NcCV+LR
 github.com/evilmonkeyinc/jsonpath v0.7.2/go.mod h1:exI6Yme6vucFk2m/1iVtxPaHGI17Dy9uWfsqbJ4iGHM=
 github.com/evilmonkeyinc/jsonpath v0.8.0 h1:pbpYmBeA1Cu1iPYP+O+VPrkv2dDOGhtK0y4baLYp3Rg=
 github.com/evilmonkeyinc/jsonpath v0.8.0/go.mod h1:exI6Yme6vucFk2m/1iVtxPaHGI17Dy9uWfsqbJ4iGHM=
+github.com/evilmonkeyinc/jsonpath v0.8.1 h1:W8K4t8u7aipkQE0hcTICGAdAN0Xph349LtjgSoofvVo=
+github.com/evilmonkeyinc/jsonpath v0.8.1/go.mod h1:EQhs0ZsoD4uD56ZJbO30gMTfHLQ6DEa0/5rT5Ymy42s=
 github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852 h1:Yl0tPBa8QPjGmesFh1D0rDy+q1Twx6FyU7VWHi8wZbI=
 github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852/go.mod h1:eqOVx5Vwu4gd2mmMZvVZsgIqNSaW3xxRThUJ0k/TPk4=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
