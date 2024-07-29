@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/PaesslerAG/jsonpath v0.1.1
-	github.com/bhmj/jsonslice v1.1.2
+	github.com/bhmj/jsonslice v1.1.3
 	github.com/evilmonkeyinc/jsonpath v0.8.0
 	github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852
 	github.com/spyzhov/ajson v0.7.2

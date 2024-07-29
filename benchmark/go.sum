@@ -5,6 +5,8 @@ github.com/PaesslerAG/jsonpath v0.1.1 h1:c1/AToHQMVsduPAa4Vh6xp2U0evy4t8SWp8imEs
 github.com/PaesslerAG/jsonpath v0.1.1/go.mod h1:lVboNxFGal/VwW6d9JzIy56bUsYAP6tH/x80vjnCseY=
 github.com/bhmj/jsonslice v1.1.2 h1:Lzen2S9iG3HsESpiIAnTM7Obs1QiTz83ZXa5YrpTTWI=
 github.com/bhmj/jsonslice v1.1.2/go.mod h1:O3ZoA0zdEefdbk1dkU5aWPOA36zQhhS/HV6RQFLTlnU=
+github.com/bhmj/jsonslice v1.1.3 h1:aVYmtuQ8Gg1L3mAOFq3NMtfip8teUvC+DNArhv7IRDY=
+github.com/bhmj/jsonslice v1.1.3/go.mod h1:O3ZoA0zdEefdbk1dkU5aWPOA36zQhhS/HV6RQFLTlnU=
 github.com/bhmj/xpression v0.9.1 h1:N7bX/nWx9oFi/zsiMTx2ehoRApTDAWdQadq/5o2wMGk=
 github.com/bhmj/xpression v0.9.1/go.mod h1:j9oYmEXJjeL9mrgW1+ZDBKJXnbupsCPGhlO9J5YhS1Q=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
