@@ -7,7 +7,7 @@ require (
 	github.com/bhmj/jsonslice v1.1.2
 	github.com/evilmonkeyinc/jsonpath v0.8.0
 	github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852
-	github.com/spyzhov/ajson v0.7.2
+	github.com/spyzhov/ajson v0.9.5
 )
 
 require (
