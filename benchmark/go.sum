@@ -15,6 +15,8 @@ github.com/evilmonkeyinc/jsonpath v0.8.0 h1:pbpYmBeA1Cu1iPYP+O+VPrkv2dDOGhtK0y4b
 github.com/evilmonkeyinc/jsonpath v0.8.0/go.mod h1:exI6Yme6vucFk2m/1iVtxPaHGI17Dy9uWfsqbJ4iGHM=
 github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852 h1:Yl0tPBa8QPjGmesFh1D0rDy+q1Twx6FyU7VWHi8wZbI=
 github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852/go.mod h1:eqOVx5Vwu4gd2mmMZvVZsgIqNSaW3xxRThUJ0k/TPk4=
+github.com/oliveagle/jsonpath v0.1.4 h1:Sr/ffH5YSyQKjSNfvDFkQqAqh3kn/QxF/7j2jjpfOAI=
+github.com/oliveagle/jsonpath v0.1.4/go.mod h1:diWEHhuLqib29heQcHYHyaLcxFC3KpKa/5ihkZBs1Z8=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/spyzhov/ajson v0.7.0 h1:iDvpu9sYuWS2QvWjne/hJM7kdlgA6xyJCH7/y+kEbMI=
